@@ -1426,67 +1426,85 @@ export function App() {
         ))}
       </div>
 
-      {/* Top Cartoon Header Bar */}
-      <header className="w-full max-w-7xl mx-auto px-4 pt-4 pb-2 flex items-center justify-between gap-2">
-        <div
-          onClick={() => {
-            if (room) handleLeaveRoom();
-          }}
-          className="flex items-center gap-3 cursor-pointer group"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-[#ff595e] border-4 border-[#161426] shadow-[0_5px_0_#161426] flex items-center justify-center group-hover:scale-105 transition-transform">
-            <GameController weight="fill" className="w-7 h-7 text-[#ffca3a]" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#fff9ec] drop-shadow-[0_3px_0_#161426] leading-none">
-              {t.appTitle}
-            </h1>
-            <span className="text-xs font-bold text-[#ffca3a] block mt-0.5">
-              {t.appSubtitle}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => openHowToPlayFor(room ? activeGameId : homeSelectedGame)}
-            className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
+      {/* Top Cartoon Header Bar (Hidden in Immersive Fullscreen Board/Tabletop Mode to maximize vertical space!) */}
+      {!(
+        room &&
+        room.status !== 'lobby' &&
+        room.status !== 'finished' &&
+        (activeGameId === 'trix' ||
+          activeGameId === 'monopoly' ||
+          activeGameId === 'snakes')
+      ) && (
+        <header className="w-full max-w-7xl mx-auto px-4 pt-4 pb-2 flex items-center justify-between gap-2">
+          <div
+            onClick={() => {
+              if (room) handleLeaveRoom();
+            }}
+            className="flex items-center gap-3 cursor-pointer group"
           >
-            <Question weight="fill" className="w-5 h-5" />
-            <span className="hidden sm:inline">{t.howToPlay}</span>
-          </button>
+            <div className="w-12 h-12 rounded-2xl bg-[#ff595e] border-4 border-[#161426] shadow-[0_5px_0_#161426] flex items-center justify-center group-hover:scale-105 transition-transform">
+              <GameController weight="fill" className="w-7 h-7 text-[#ffca3a]" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#fff9ec] drop-shadow-[0_3px_0_#161426] leading-none">
+                {t.appTitle}
+              </h1>
+              <span className="text-xs font-bold text-[#ffca3a] block mt-0.5">
+                {t.appSubtitle}
+              </span>
+            </div>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
-            className="cartoon-btn bg-[#00bbf9] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
-          >
-            <Globe weight="bold" className="w-5 h-5" />
-            <span>{t.langToggle}</span>
-          </button>
-
-          {room && (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleLeaveRoom}
-              className="cartoon-btn bg-[#ff595e] text-white px-3 py-2 text-sm md:text-base flex items-center gap-1"
-              title={t.leaveRoom}
+              onClick={() => openHowToPlayFor(room ? activeGameId : homeSelectedGame)}
+              className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
             >
-              <SignOut weight="bold" className="w-5 h-5" />
-              <span className="hidden sm:inline">{t.leaveRoom}</span>
+              <Question weight="fill" className="w-5 h-5" />
+              <span className="hidden sm:inline">{t.howToPlay}</span>
             </button>
-          )}
-        </div>
-      </header>
+
+            <button
+              type="button"
+              onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+              className="cartoon-btn bg-[#00bbf9] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
+            >
+              <Globe weight="bold" className="w-5 h-5" />
+              <span>{t.langToggle}</span>
+            </button>
+
+            {room && (
+              <button
+                type="button"
+                onClick={handleLeaveRoom}
+                className="cartoon-btn bg-[#ff595e] text-white px-3 py-2 text-sm md:text-base flex items-center gap-1"
+                title={t.leaveRoom}
+              >
+                <SignOut weight="bold" className="w-5 h-5" />
+                <span className="hidden sm:inline">{t.leaveRoom}</span>
+              </button>
+            )}
+          </div>
+        </header>
+      )}
 
       {/* MAIN CONTENT */}
       <main
-        className={`w-full max-w-7xl mx-auto px-4 flex-1 flex flex-col ${
+        className={`w-full ${
+          room &&
+          room.status !== 'lobby' &&
+          room.status !== 'finished' &&
+          (activeGameId === 'trix' ||
+            activeGameId === 'monopoly' ||
+            activeGameId === 'snakes')
+            ? 'max-w-[1680px] px-2 sm:px-4 my-1.5'
+            : 'max-w-7xl px-4 my-3'
+        } mx-auto flex-1 flex flex-col ${
           !room || room.status === 'lobby' || room.status === 'finished'
             ? 'justify-center'
             : 'justify-start'
-        } my-3 [overflow-anchor:none]`}
+        } [overflow-anchor:none]`}
       >
         {!room ? (
           /* ================= REDESIGNED 14-GAME ARCADE HUB HOME PAGE ================= */
@@ -2231,19 +2249,53 @@ export function App() {
                 </div>
               )}
 
-              {/* Room Total Score */}
-              <div className="cartoon-badge bg-[#8ac926] text-[#161426] px-4 py-1 text-sm flex items-center gap-1.5">
-                <Trophy weight="fill" className="w-4 h-4" />
-                <span>
-                  {t.totalScore}: {room.coop_score}
-                </span>
+              {/* Room Total Score + Quick Lang/Exit in Immersive Tabletop Mode */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="cartoon-badge bg-[#8ac926] text-[#161426] px-3.5 py-1 text-xs sm:text-sm flex items-center gap-1.5">
+                  <Trophy weight="fill" className="w-4 h-4" />
+                  <span>
+                    {t.totalScore}: {room.coop_score}
+                  </span>
+                </div>
+
+                {(activeGameId === 'trix' ||
+                  activeGameId === 'monopoly' ||
+                  activeGameId === 'snakes') && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+                      className="cartoon-btn bg-[#00bbf9] text-[#161426] px-2.5 py-1 text-xs flex items-center gap-1"
+                    >
+                      <Globe weight="bold" className="w-4 h-4" />
+                      <span>{t.langToggle}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleLeaveRoom}
+                      className="cartoon-btn bg-[#ff595e] text-white px-2.5 py-1 text-xs flex items-center gap-1"
+                      title={t.leaveRoom}
+                    >
+                      <SignOut weight="bold" className="w-4 h-4" />
+                      <span className="hidden sm:inline">{t.leaveRoom}</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* MAIN 2-COLUMN GAMEPLAY + LEADERBOARD GRID */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* MAIN GAMEPLAY + LEADERBOARD GRID (Full-width 12 cols for Board & Card Table Games!) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
               {/* Primary Game Column */}
-              <div className="lg:col-span-8 space-y-3">
+              <div
+                className={`${
+                  activeGameId === 'trix' ||
+                  activeGameId === 'monopoly' ||
+                  activeGameId === 'snakes'
+                    ? 'lg:col-span-12'
+                    : 'lg:col-span-8'
+                } space-y-3`}
+              >
                 {activeGameId === 'chameleon' ? (
                   <ChameleonGame
                     gameData={
@@ -2457,7 +2509,8 @@ export function App() {
                 ) : activeGameId === 'trix' ? (
                   <TrixGame
                     gameData={
-                      Array.isArray(room.game_data?.seats)
+                      Array.isArray(room.game_data?.seats) &&
+                      room.game_data?.rulesVersion === 2
                         ? room.game_data
                         : (buildInitialGameData('trix', players) as TrixGameState)
                     }
@@ -2821,8 +2874,16 @@ export function App() {
                 </div>
               </div>
 
-              {/* LEADERBOARD SIDEBAR */}
-              <aside className="lg:col-span-4 lg:sticky lg:top-4 cartoon-panel-dark p-5 space-y-4">
+              {/* LEADERBOARD SIDEBAR (Drops to a sleek full-width bar when playing full-screen board/tabletop games) */}
+              <aside
+                className={`${
+                  activeGameId === 'trix' ||
+                  activeGameId === 'monopoly' ||
+                  activeGameId === 'snakes'
+                    ? 'lg:col-span-12'
+                    : 'lg:col-span-4 lg:sticky lg:top-4'
+                } cartoon-panel-dark p-4 sm:p-5 space-y-3.5`}
+              >
                 <div className="flex items-center justify-between border-b-3 border-[#120f29] pb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-9 h-9 rounded-xl bg-[#ffca3a] border-3 border-[#161426] flex items-center justify-center">

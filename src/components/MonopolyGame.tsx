@@ -2206,12 +2206,12 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({
       </div>
 
       {/* Main Layout: 7x7 Square Monopoly Board + Side Property Inspector */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-3.5 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         {/* 7x7 PERIMETER BOARD (Forced LTR grid coordinates so clockwise never flips!) */}
-        <div className="xl:col-span-8 cartoon-card p-2 sm:p-3 bg-[#d8f3dc] border-4 border-[#161426]">
+        <div className="xl:col-span-8 cartoon-card p-2.5 sm:p-4 bg-[#d8f3dc] border-4 border-[#161426] shadow-[0_8px_0_#161426]">
           <div
             dir="ltr"
-            className="grid grid-cols-7 grid-rows-7 gap-1 sm:gap-1.5 aspect-square w-full max-w-[720px] mx-auto"
+            className="grid grid-cols-7 grid-rows-7 gap-1.5 sm:gap-2 h-[540px] sm:h-[650px] lg:h-[740px] w-full"
           >
             {BOARD_SPACES.map((sp) => {
               const ownerId = state.owners[sp.index];
@@ -2233,9 +2233,9 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({
                     gridColumn: sp.gridCol,
                     gridRow: sp.gridRow,
                   }}
-                  className={`relative rounded-lg sm:rounded-xl border-2 border-[#161426] flex flex-col justify-between overflow-hidden text-center p-0.5 sm:p-1 transition-transform ${
+                  className={`relative rounded-xl sm:rounded-2xl border-3 border-[#161426] flex flex-col justify-between overflow-hidden text-center p-1 sm:p-1.5 transition-transform shadow-[0_3px_0_#161426] ${
                     isSelected
-                      ? 'ring-3 ring-[#ffca3a] scale-[1.03] z-10 bg-white'
+                      ? 'ring-4 ring-[#ffca3a] scale-[1.03] z-10 bg-white'
                       : sp.kind === 'go' ||
                         sp.kind === 'jail' ||
                         sp.kind === 'parking' ||
@@ -2247,13 +2247,13 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({
                   {/* Color Band for Properties / Airports / Utility */}
                   {sp.colorHex ? (
                     <div
-                      className="w-full h-2.5 sm:h-3.5 rounded-t-[5px] border-b border-[#161426] flex items-center justify-center px-0.5 shrink-0"
+                      className="w-full h-3.5 sm:h-5 rounded-t-lg border-b-2 border-[#161426] flex items-center justify-center px-1 shrink-0"
                       style={{ backgroundColor: sp.colorHex }}
                     >
                       <BuildingBadgeSvg level={houseLvl} />
                     </div>
                   ) : (
-                    <div className="pt-0.5 flex justify-center shrink-0">
+                    <div className="pt-1 flex justify-center shrink-0">
                       <SpaceSpecialSvg kind={sp.kind} />
                     </div>
                   )}
@@ -2261,7 +2261,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({
                   {/* City / Tile Name */}
                   <div
                     dir={isAr ? 'rtl' : 'ltr'}
-                    className="font-black text-[8.5px] sm:text-[10.5px] md:text-xs leading-[1.08] text-[#161426] px-0.5 line-clamp-2 my-auto"
+                    className="font-black text-[10px] sm:text-xs md:text-sm leading-tight text-[#161426] px-0.5 line-clamp-2 my-auto"
                   >
                     {isAr ? sp.nameAr : sp.nameEn}
                   </div>
@@ -2270,13 +2270,13 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({
                   <div className="w-full flex items-center justify-center gap-0.5 pb-0.5">
                     {ownerMeta ? (
                       <span
-                        className="px-1.5 py-0.2 rounded-full text-[8px] sm:text-[9px] font-black text-white border border-[#161426] truncate max-w-full"
+                        className="px-2 py-0.5 rounded-full text-[9px] sm:text-[11px] font-black text-white border-2 border-[#161426] truncate max-w-full shadow-[0_1px_0_#161426]"
                         style={{ backgroundColor: ownerMeta.color }}
                       >
-                        {ownerMeta.name.slice(0, 6)}
+                        {ownerMeta.name.slice(0, 8)}
                       </span>
                     ) : sp.price ? (
-                      <span className="text-[8px] sm:text-[10px] font-extrabold text-[#3f3b5c]">
+                      <span className="px-1.5 py-0.2 rounded bg-[#161426]/10 text-[9px] sm:text-xs font-black text-[#161426]">
                         ${sp.price}
                       </span>
                     ) : null}
@@ -2284,13 +2284,13 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({
 
                   {/* Player Pawns on this Square */}
                   {pawnsHere.length > 0 && (
-                    <div className="absolute inset-x-0.5 bottom-3.5 sm:bottom-4 flex flex-wrap items-center justify-center gap-0.5 pointer-events-none">
+                    <div className="absolute inset-x-0.5 bottom-4 sm:bottom-5 flex flex-wrap items-center justify-center gap-1 pointer-events-none">
                       {pawnsHere.map((pid) => {
                         const pm = getPlayerMeta(pid);
                         return (
                           <span
                             key={pid}
-                            className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 rounded-full border-2 border-[#161426] shadow-[0_2px_0_#161426] flex items-center justify-center text-[8px] font-black text-white"
+                            className="w-4.5 h-4.5 sm:w-6 sm:h-6 rounded-full border-2 border-[#161426] shadow-[0_2px_0_#161426] flex items-center justify-center text-[9px] sm:text-[11px] font-black text-white"
                             style={{ backgroundColor: pm.color }}
                           >
                             {pm.name.slice(0, 1)}

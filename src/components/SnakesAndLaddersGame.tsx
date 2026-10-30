@@ -1905,7 +1905,7 @@ export const SnakesAndLaddersGame: React.FC<SnakesGameProps> = ({
   return (
     <div
       dir={isAr ? 'rtl' : 'ltr'}
-      className="w-full max-w-6xl mx-auto space-y-4 select-none [overflow-anchor:none]"
+      className="w-full space-y-4 select-none [overflow-anchor:none]"
     >
       {/* Top Mode & Legend Header Bar */}
       <div className="cartoon-panel-dark px-4 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -1971,7 +1971,7 @@ export const SnakesAndLaddersGame: React.FC<SnakesGameProps> = ({
       {/* Main Responsive 2-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* LEFT / MAIN: Crisp 10x10 Vector Board */}
-        <div className="lg:col-span-7 space-y-3">
+        <div className="lg:col-span-8 space-y-3">
           <div className="relative cartoon-card bg-[#1e1a3d] p-2 sm:p-3.5 overflow-hidden">
             {/* Floating Dramatic Event Popup Banner */}
             <AnimatePresence>
@@ -2038,7 +2038,7 @@ export const SnakesAndLaddersGame: React.FC<SnakesGameProps> = ({
             </AnimatePresence>
 
             {/* 10x10 Pure Vector SVG Board (0.0px misalignment across every screen!) */}
-            <div className="w-full aspect-square rounded-2xl overflow-hidden border-4 border-[#161426] bg-[#fff9ec]">
+            <div className="w-full max-w-[740px] max-h-[740px] mx-auto aspect-square rounded-2xl overflow-hidden border-4 border-[#161426] bg-[#fff9ec]">
               <svg
                 viewBox="0 0 1000 1000"
                 className="w-full h-full block"
@@ -2288,7 +2288,7 @@ export const SnakesAndLaddersGame: React.FC<SnakesGameProps> = ({
         </div>
 
         {/* RIGHT / SIDEBAR: Victory Podium, 3D Dice Roller, Standings & Live Action Feed */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-4 space-y-4">
           {/* Victory Celebration Card */}
           {gameData.phase === 'finished' && winnerPlayer && (
             <div className="cartoon-card bg-[#fef9c3] p-5 space-y-4 text-center">
