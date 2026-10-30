@@ -1272,68 +1272,39 @@ export function App() {
       <main className="w-full max-w-6xl mx-auto px-4 flex-1 flex flex-col justify-center my-2">
         {!room ? (
           /* ================= HOME SCREEN / LANDING ================= */
-          <div className="space-y-5 my-auto py-3">
-            {/* Top 5-Party-Games Selector Strip on Home Screen */}
-            <div className="cartoon-panel-dark p-3.5 md:p-4">
-              <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                <div className="flex items-center gap-2">
-                  <Sparkle weight="fill" className="w-5 h-5 text-[#ffca3a]" />
-                  <span className="text-sm md:text-base font-extrabold text-[#ffca3a]">
-                    {lang === 'ar'
-                      ? 'اختار لعبة السهرة اللي بدكم تبدأوا فيها (بتقدروا تبدلوا بين الألعاب جوا الغرفة كمان!):'
-                      : 'Choose Your Starting Party Game (You can switch games anytime inside the room!):'}
-                  </span>
-                </div>
-                <span className="cartoon-badge bg-[#8ac926] text-[#161426] px-3 py-0.5 text-xs">
-                  {lang === 'ar' ? '5 ألعاب جماعية بغرفة وحدة!' : '5 Party Games in 1 Room!'}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-                {partyGamesCatalog.map((g) => {
-                  const isPicked = homeSelectedGame === g.id;
-                  return (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => setHomeSelectedGame(g.id)}
-                      className={`cartoon-btn p-3 text-right flex flex-col justify-between transition-all cursor-pointer ${
-                        isPicked
-                          ? 'bg-[#ffca3a] text-[#161426] ring-4 ring-white scale-[1.02]'
-                          : 'bg-[#231f42] hover:bg-[#2d2854] text-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between w-full gap-1 mb-1">
-                        <span className="text-2xl">{g.emoji}</span>
-                        {isPicked && (
-                          <span className="px-2 py-0.5 rounded-full bg-[#161426] text-[#ffca3a] text-[10px] font-extrabold">
-                            {lang === 'ar' ? 'مختارة ✓' : 'Selected ✓'}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-extrabold text-sm md:text-base leading-tight">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center my-auto py-3">
+            {/* Left / Interactive Party Games Showcase Column */}
+            <div className="lg:col-span-7 flex flex-col items-center text-center space-y-4">
+              {/* Sleek Pill Dock to Switch Between the 5 Party Games */}
+              <div className="w-full max-w-2xl bg-[#231f42]/95 p-2 rounded-3xl border-4 border-[#120f29] shadow-[0_6px_0_#120f29]">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                  {partyGamesCatalog.map((g) => {
+                    const isPicked = homeSelectedGame === g.id;
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setHomeSelectedGame(g.id)}
+                        className={`px-2.5 py-2.5 rounded-2xl font-extrabold text-xs sm:text-sm flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                          isPicked
+                            ? 'bg-[#ffca3a] text-[#161426] border-3 border-[#161426] shadow-[0_4px_0_#161426] -translate-y-0.5'
+                            : 'text-[#fff9ec]/85 hover:bg-[#2f2959] hover:text-white border-3 border-transparent'
+                        }`}
+                      >
+                        <span className="text-2xl leading-none drop-shadow-sm">{g.emoji}</span>
+                        <span className="leading-tight truncate max-w-full">
                           {lang === 'ar' ? g.name_ar : g.name_en}
-                        </div>
-                        <div
-                          className={`text-[11px] font-bold mt-0.5 leading-snug ${
-                            isPicked ? 'text-[#161426]/80' : 'text-[#d9d4f7]/75'
-                          }`}
-                        >
-                          {lang === 'ar' ? g.desc_ar : g.desc_en}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              {/* Left / Hero Preview Column */}
-              <div className="lg:col-span-7 flex flex-col items-center text-center">
-                {homeSelectedGame === 'wavelength' ? (
-                  <div className="w-full max-w-[460px]">
+              {/* Dynamic Interactive Hero Preview for Each Game */}
+              <div className="w-full max-w-[490px] min-h-[300px] flex flex-col items-center justify-center">
+                {homeSelectedGame === 'wavelength' && (
+                  <div className="w-full animate-in fade-in zoom-in-95 duration-200">
                     <WavelengthWheel
                       targetAngle={18}
                       dialAngle={demoDialAngle}
@@ -1343,51 +1314,205 @@ export function App() {
                       lang={lang}
                     />
                   </div>
-                ) : (
-                  <div className="w-full max-w-[460px] cartoon-card p-6 md:p-8 text-center space-y-4">
-                    <div className="w-24 h-24 mx-auto rounded-3xl bg-[#ffca3a] border-4 border-[#161426] shadow-[0_6px_0_#161426] flex items-center justify-center text-5xl">
-                      {partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.emoji}
+                )}
+
+                {homeSelectedGame === 'chameleon' && (
+                  <div className="w-full rounded-3xl bg-[#5c73b8] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-3">
+                    <div className="flex items-center justify-between text-xs font-extrabold">
+                      <span className="px-3 py-1 rounded-full bg-white/20 border border-white/30">
+                        🍔 {lang === 'ar' ? 'أكل ومطاعم' : 'Food & Dining'}
+                      </span>
+                      <span className="px-3 py-1 rounded-full bg-[#ff595e] border-2 border-[#161426] shadow-[0_2px_0_#161426]">
+                        🕵️‍♂️ {lang === 'ar' ? 'واحد بينكم برّا السالفة!' : '1 Impostor Among You!'}
+                      </span>
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-extrabold text-[#161426]">
+
+                    <div className="flex items-center justify-center gap-4 py-2">
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-20 rounded-full bg-[#dce3f2] border-4 border-[#ffca3a] shadow-[0_4px_0_#161426] flex items-center justify-center text-4xl">
+                          🦊
+                        </div>
+                        <span className="-mt-2.5 px-3.5 py-0.5 rounded-full bg-[#ffca3a] text-[#161426] border-2 border-[#161426] font-extrabold text-xs">
+                          {lang === 'ar' ? 'زيد' : 'Zaid'}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center">
+                        <span className="text-xs font-extrabold uppercase bg-[#161426]/40 px-2.5 py-1 rounded-full">
+                          {lang === 'ar' ? 'يسأل 🎤' : 'asks 🎤'}
+                        </span>
+                        <span className="text-2xl font-extrabold text-[#ffca3a] mt-1">
+                          {lang === 'ar' ? '⬅️' : '➡️'}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-20 rounded-full bg-[#eef1f8] border-4 border-[#ff595e] shadow-[0_4px_0_#161426] flex items-center justify-center text-4xl">
+                          🐼
+                        </div>
+                        <span className="-mt-2.5 px-3.5 py-0.5 rounded-full bg-[#ff595e] text-white border-2 border-[#161426] font-extrabold text-xs">
+                          {lang === 'ar' ? 'نور' : 'Noor'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-2xl bg-[#161426]/35 text-xs md:text-sm font-bold text-white/95">
                       {lang === 'ar'
-                        ? partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_ar
-                        : partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_en}
-                    </h3>
-                    <p className="text-sm md:text-base font-bold text-[#3f3b5c]">
-                      {homeSelectedGame === 'chameleon'
-                        ? lang === 'ar'
-                          ? 'كل اللاعبين بيعرفوا الكلمة السرية إلا شخص واحد "برّا السالفة"! اسألوا بعض بالترتيب واكشفوا الجاسوس قبل ما يحزر الكلمة!'
-                          : 'Everyone knows the secret word except one player who is Out of the Loop! Ask each other questions and catch the impostor!'
-                        : homeSelectedGame === 'ito'
-                        ? lang === 'ar'
-                          ? 'كل لاعب بيطلعله رقم سري من 1 لـ 100! أوصف رقمك بتلميح ذكي بدون ما تقوله، ورتبوا بطاقاتكم من الأصغر للأكبر!'
-                          : 'Each player gets a secret number from 1 to 100! Give themed clues and sort everyone from lowest to highest!'
-                        : homeSelectedGame === 'fibbage'
-                        ? lang === 'ar'
-                          ? 'سؤال غريب وإجابته الحقيقية مستحيل تخطر عالبال! ألّف كذبة مقنعة لتخدع أصحابك وحاول تكتشف الجواب الحقيقي!'
-                          : 'A wild trivia question! Write a convincing lie to trick your friends and spot the real truth!'
-                        : lang === 'ar'
-                        ? 'قنبلة موقوتة بتنتقل بينكم! لازم تكتب كلمة فيها الحروف المطلوبة بسرعة قبل ما تنفجر القنبلة بوجهك!'
-                        : 'A ticking bomb passes from player to player! Type a valid word containing the target letters before it explodes!'}
+                        ? 'اسألوا بعض بالترتيب بدون ما تفضحوا الكلمة السرية، وصوّتوا عالجاسوس قبل ما يحزر السالفة!'
+                        : 'Question each other carefully without spoiling the secret word, then vote out the impostor!'}
+                    </div>
+                  </div>
+                )}
+
+                {homeSelectedGame === 'ito' && (
+                  <div className="w-full rounded-3xl bg-[#25204d] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-4">
+                    <div className="inline-block cartoon-badge bg-[#00bbf9] text-[#161426] px-4 py-1 text-xs">
+                      🔢 {lang === 'ar' ? 'المقياس: أشياء بتعصّب من 1 لـ 100' : 'Scale: Annoying Things (1 to 100)'}
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2.5 pt-1">
+                      {[
+                        { num: '14', clueAr: 'نت بطيء شوي', clueEn: 'Slow Wi-Fi', bg: '#8ac926' },
+                        { num: '58', clueAr: 'زحمة طريق الصبح', clueEn: 'Morning Traffic', bg: '#ffca3a' },
+                        { num: '96', clueAr: 'يطفي جوالك 1%', clueEn: 'Phone dies at 1%', bg: '#ff595e' },
+                      ].map((card, i) => (
+                        <div
+                          key={i}
+                          style={{ backgroundColor: card.bg }}
+                          className="p-3 rounded-2xl border-3 border-[#161426] shadow-[0_4px_0_#161426] text-[#161426] flex flex-col items-center justify-between"
+                        >
+                          <span className="text-2xl md:text-3xl font-extrabold">#{card.num}</span>
+                          <span className="text-[11px] md:text-xs font-extrabold bg-white/90 px-2 py-1 rounded-xl border-2 border-[#161426] mt-2 w-full">
+                            &ldquo;{lang === 'ar' ? card.clueAr : card.clueEn}&rdquo;
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="text-xs md:text-sm font-bold text-[#d9d4f7]">
+                      {lang === 'ar'
+                        ? 'كل لاعب بيطلعله رقم سري من 1 لـ 100! أوصف رقمك بتلميح ذكي ورتبوا بطاقاتكم تصاعدياً!'
+                        : 'Everyone gets a secret number 1–100! Give a clever clue and sort everyone in order!'}
                     </p>
                   </div>
                 )}
 
-                <div className="mt-3 max-w-lg">
-                  <h2 className="text-2xl md:text-4xl font-extrabold text-[#ffca3a] drop-shadow-[0_4px_0_#161426]">
-                    {t.appSubtitle}
-                  </h2>
-                  <p className="text-sm md:text-base text-[#d9d4f7] font-semibold mt-1">
-                    {lang === 'ar'
-                      ? 'افتح غرفة مجانية بثانية، ابعت الرابط لأصحابك، والعبوا 5 ألعاب جماعية بنفس الغرفة ونفس لوحة الصدارة!'
-                      : 'Create a free room in one click, share the link with friends, and play 5 party games with a shared leaderboard!'}
-                  </p>
-                </div>
+                {homeSelectedGame === 'fibbage' && (
+                  <div className="w-full rounded-3xl bg-[#fff9ec] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-[#161426] animate-in fade-in zoom-in-95 duration-200 space-y-3">
+                    <div className="p-3 rounded-2xl bg-[#191636] text-white border-3 border-[#161426]">
+                      <span className="text-[11px] font-extrabold text-[#ffca3a] uppercase block">
+                        🤥 {lang === 'ar' ? 'سؤال حقيقي غريب' : 'Weird True Fact'}
+                      </span>
+                      <p className="text-sm md:text-base font-extrabold mt-0.5">
+                        {lang === 'ar'
+                          ? 'في سويسرا، ممنوع قانونياً تربي حيوان واحد بس من ___ لأنه بيشعر بالوحدة!'
+                          : 'In Switzerland, it is illegal to own just one ___ because they get lonely!'}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2 text-xs font-extrabold">
+                      <div className="p-2.5 rounded-xl bg-[#ffe4e6] border-3 border-[#161426]">
+                        🦩 {lang === 'ar' ? 'طائر الفلامنغو' : 'Flamingo'}
+                        <span className="block text-[10px] text-[#ff595e] mt-0.5">
+                          {lang === 'ar' ? 'كذبة سارة 🤥' : "Sara's Lie 🤥"}
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-[#8ac926] border-3 border-[#161426]">
+                        🐹 {lang === 'ar' ? 'خنزير غينيا' : 'Guinea Pig'}
+                        <span className="block text-[10px] text-[#161426] mt-0.5">
+                          {lang === 'ar' ? 'الجواب الصح ✅' : 'Real Truth ✅'}
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-[#ffe4e6] border-3 border-[#161426]">
+                        🦥 {lang === 'ar' ? 'حيوان الكسلان' : 'Sloth'}
+                        <span className="block text-[10px] text-[#ff595e] mt-0.5">
+                          {lang === 'ar' ? 'كذبة عمر 🤥' : "Omar's Lie 🤥"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {homeSelectedGame === 'wordbomb' && (
+                  <div className="w-full rounded-3xl bg-[#25204d] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-3">
+                    <div className="flex items-center justify-center gap-4">
+                      <div className="w-20 h-20 rounded-full bg-[#ff595e] border-4 border-[#161426] shadow-[0_5px_0_#161426] flex items-center justify-center text-5xl animate-bounce">
+                        💣
+                      </div>
+                      <div className="text-right">
+                        <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3 py-0.5 text-xs">
+                          ⏱️ {lang === 'ar' ? 'قبل الانفجار!' : 'Beat the Timer!'}
+                        </span>
+                        <div className="text-xl md:text-2xl font-extrabold mt-1">
+                          {lang === 'ar' ? 'كلمة فيها الحروف:' : 'Word containing:'}{' '}
+                          <span className="text-[#ffca3a] bg-[#161426] px-3 py-0.5 rounded-xl border-2 border-[#ffca3a]">
+                            {lang === 'ar' ? 'ب ر' : 'B R'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap justify-center gap-2 pt-1">
+                      {(lang === 'ar'
+                        ? ['⚡ برتقال', '⚡ بركان', '⚡ قبرص', '⚡ مبرد']
+                        : ['⚡ BRIDGE', '⚡ COBRA', '⚡ BRAIN']
+                      ).map((w, i) => (
+                        <span
+                          key={i}
+                          className="cartoon-badge bg-[#8ac926] text-[#161426] px-3 py-1 text-xs"
+                        >
+                          {w}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Headline & Feature Pills */}
+              <div className="max-w-lg space-y-2">
+                <h2 className="text-2xl md:text-4xl font-extrabold text-[#ffca3a] drop-shadow-[0_4px_0_#161426]">
+                  {lang === 'ar'
+                    ? `${partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.emoji} ${
+                        partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_ar
+                      }`
+                    : `${partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.emoji} ${
+                        partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_en
+                      }`}
+                </h2>
+                <p className="text-sm md:text-base text-[#d9d4f7] font-semibold">
+                  {lang === 'ar'
+                    ? 'افتح غرفة مجانية بثانية، ابعت الرابط لأصحابك، وبدّلوا بين 5 ألعاب جماعية بنفس الغرفة ونفس الـ Leaderboard!'
+                    : 'Create a free room in one click, invite friends, and switch between 5 party games with one shared Leaderboard!'}
+                </p>
+              </div>
+            </div>
 
             {/* Right / Cartoon Action Card */}
             <div className="lg:col-span-5">
-              <div className="cartoon-card p-6 md:p-7 space-y-5">
+              <div className="cartoon-card p-6 md:p-7 space-y-5 relative">
+                {/* Selected Game Indicator Pill at Top of Form */}
+                <div className="flex items-center justify-between bg-[#fff1c2] border-3 border-[#161426] rounded-2xl px-3.5 py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">
+                      {partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.emoji}
+                    </span>
+                    <div className=" leading-tight">
+                      <span className="text-[11px] font-bold text-[#3f3b5c] block">
+                        {lang === 'ar' ? 'اللعبة المختارة للبدء:' : 'Selected Starting Game:'}
+                      </span>
+                      <span className="text-sm font-extrabold text-[#161426]">
+                        {lang === 'ar'
+                          ? partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_ar
+                          : partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_en}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="cartoon-badge bg-[#8ac926] text-[#161426] px-2.5 py-0.5 text-[11px]">
+                    {lang === 'ar' ? '5 ألعاب بالغرفة' : '5-in-1 Room'}
+                  </span>
+                </div>
+
                 {errorMsg && (
                   <div className="p-3 rounded-2xl bg-[#ff595e] text-white border-3 border-[#161426] font-extrabold text-sm text-center">
                     {errorMsg}
@@ -1484,7 +1609,6 @@ export function App() {
                 </button>
               </div>
             </div>
-          </div>
           </div>
         ) : room.status === 'lobby' ? (
           /* ================= ONLINE ROOM LOBBY ================= */
