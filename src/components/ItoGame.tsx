@@ -9,6 +9,9 @@ import {
   PaperPlaneTilt,
   ArrowsClockwise,
   CheckCircle,
+  LockKey,
+  SortAscending,
+  Hash,
 } from '@phosphor-icons/react';
 
 export interface ItoGameState {
@@ -58,7 +61,6 @@ export const ItoGame: React.FC<ItoGameProps> = ({
   const currentViewer = players.find((p) => p.id === currentViewerId);
   const mySecretNumber = gameData.numbers?.[currentViewerId] ?? 50;
 
-  // Ensure all players are in orderedPlayerIds
   const orderedIds = Array.from(
     new Set([...(gameData.orderedPlayerIds || []), ...players.map((p) => p.id)])
   ).filter((id) => players.some((p) => p.id === id));
@@ -96,7 +98,6 @@ export const ItoGame: React.FC<ItoGameProps> = ({
   };
 
   const handleRevealOrder = () => {
-    // Check which players are in ascending order!
     const actualSortedIds = [...orderedIds].sort(
       (a, b) => (gameData.numbers?.[a] || 0) - (gameData.numbers?.[b] || 0)
     );
@@ -114,7 +115,7 @@ export const ItoGame: React.FC<ItoGameProps> = ({
 
     if (correctCount === orderedIds.length) {
       orderedIds.forEach((pid) => {
-        awards[pid] = 4; // Perfect team order!
+        awards[pid] = 4;
       });
     }
 
@@ -134,8 +135,11 @@ export const ItoGame: React.FC<ItoGameProps> = ({
       <div className="cartoon-card bg-[#ffca3a] p-5 space-y-3">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div>
-            <div className="text-xs font-extrabold uppercase text-[#161426]/75">
-              🔢 {lang === 'ar' ? 'موضوع مقياس الأرقام (1 إلى 100)' : 'Number Scale Theme (1 to 100)'}
+            <div className="text-xs font-extrabold uppercase text-[#161426]/75 flex items-center gap-1">
+              <Hash weight="bold" className="w-4 h-4" />
+              <span>
+                {lang === 'ar' ? 'موضوع مقياس الأرقام (1 إلى 100)' : 'Number Scale Theme (1 to 100)'}
+              </span>
             </div>
             <h2 className="text-2xl font-extrabold text-[#161426]">
               {lang === 'ar' ? theme.title_ar : theme.title_en}
@@ -159,11 +163,13 @@ export const ItoGame: React.FC<ItoGameProps> = ({
         </div>
 
         <div className="grid grid-cols-2 gap-3 pt-1">
-          <div className="p-3 rounded-2xl bg-[#38bdf8] border-3 border-[#161426] font-extrabold text-sm text-[#161426] text-center">
-            ⬇️ {lang === 'ar' ? theme.min_ar : theme.min_en}
+          <div className="p-3 rounded-2xl bg-[#38bdf8] border-3 border-[#161426] font-extrabold text-sm text-[#161426] flex items-center justify-center gap-1.5">
+            <ArrowDown weight="bold" className="w-4 h-4 shrink-0" />
+            <span>{lang === 'ar' ? theme.min_ar : theme.min_en}</span>
           </div>
-          <div className="p-3 rounded-2xl bg-[#fb7185] border-3 border-[#161426] font-extrabold text-sm text-[#161426] text-center">
-            ⬆️ {lang === 'ar' ? theme.max_ar : theme.max_en}
+          <div className="p-3 rounded-2xl bg-[#fb7185] border-3 border-[#161426] font-extrabold text-sm text-[#161426] flex items-center justify-center gap-1.5">
+            <ArrowUp weight="bold" className="w-4 h-4 shrink-0" />
+            <span>{lang === 'ar' ? theme.max_ar : theme.max_en}</span>
           </div>
         </div>
       </div>
@@ -204,11 +210,13 @@ export const ItoGame: React.FC<ItoGameProps> = ({
       {gameData.phase !== 'reveal' && (
         <div className="cartoon-card p-4 text-center space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <span className="font-extrabold text-base text-[#161426]">
-              🔒{' '}
-              {lang === 'ar'
-                ? `الرقم السري الخاص بـ (${currentViewer?.name || ''}) من 1 لـ 100`
-                : `Secret Number (1–100) for ${currentViewer?.name || ''}`}
+            <span className="font-extrabold text-base text-[#161426] flex items-center gap-1.5">
+              <LockKey weight="fill" className="w-5 h-5 text-[#ff595e]" />
+              <span>
+                {lang === 'ar'
+                  ? `الرقم السري الخاص بـ (${currentViewer?.name || ''}) من 1 لـ 100`
+                  : `Secret Number (1–100) for ${currentViewer?.name || ''}`}
+              </span>
             </span>
 
             <button
@@ -226,7 +234,7 @@ export const ItoGame: React.FC<ItoGameProps> = ({
               ) : (
                 <>
                   <Eye weight="bold" className="w-5 h-5" />
-                  <span>{lang === 'ar' ? 'اكشف رقمي بالسر 👁️' : 'Peek My Secret Number 👁️'}</span>
+                  <span>{lang === 'ar' ? 'اكشف رقمي بالسر' : 'Peek My Secret Number'}</span>
                 </>
               )}
             </button>
@@ -271,14 +279,16 @@ export const ItoGame: React.FC<ItoGameProps> = ({
       {/* Ordering Board (Smallest 1 -> Largest 100) */}
       <div className="cartoon-card p-5 space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <h3 className="font-extrabold text-lg text-[#161426]">
-            📊{' '}
-            {lang === 'ar'
-              ? 'رتّبوا البطاقات من الأصغر (فوق) للأكبر (تحت) حسب أمثلتكم!'
-              : 'Sort cards from Smallest (top) to Largest (bottom)!'}
+          <h3 className="font-extrabold text-lg text-[#161426] flex items-center gap-2">
+            <SortAscending weight="bold" className="w-6 h-6 text-[#1982c4]" />
+            <span>
+              {lang === 'ar'
+                ? 'رتّبوا البطاقات من الأصغر (فوق) للأكبر (تحت) حسب أمثلتكم!'
+                : 'Sort cards from Smallest (top) to Largest (bottom)!'}
+            </span>
           </h3>
           <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3 py-0.5 text-xs">
-            1 ⬆️ ... 100 ⬇️
+            1 — 100
           </span>
         </div>
 
@@ -354,8 +364,8 @@ export const ItoGame: React.FC<ItoGameProps> = ({
             <CheckCircle weight="fill" className="w-6 h-6" />
             <span>
               {lang === 'ar'
-                ? 'اعتمد الترتيب واكشف الأرقام السرية! 🎉'
-                : 'Lock Order & Reveal Secret Numbers! 🎉'}
+                ? 'اعتمد الترتيب واكشف الأرقام السرية!'
+                : 'Lock Order & Reveal Secret Numbers!'}
             </span>
           </button>
         ) : (
@@ -366,9 +376,10 @@ export const ItoGame: React.FC<ItoGameProps> = ({
               setActiveLocalIdx(0);
               onStartNewRound();
             }}
-            className="cartoon-btn bg-[#ffca3a] text-[#161426] w-full py-3.5 text-xl"
+            className="cartoon-btn bg-[#ffca3a] text-[#161426] w-full py-3.5 text-xl flex items-center justify-center gap-2"
           >
-            {lang === 'ar' ? 'جولة أرقام جديدة! 🔄' : 'Next Number Round! 🔄'}
+            <ArrowsClockwise weight="bold" className="w-6 h-6" />
+            <span>{lang === 'ar' ? 'جولة أرقام جديدة!' : 'Next Number Round!'}</span>
           </button>
         )}
       </div>

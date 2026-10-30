@@ -22,7 +22,6 @@ import {
   PartyGameId,
   CHAMELEON_TOPICS,
   ITO_THEMES,
-  FIBBAGE_QUESTIONS,
   WORD_BOMB_CHALLENGES,
 } from './data/partyGamesData';
 import { WavelengthWheel } from './components/WavelengthWheel';
@@ -30,8 +29,12 @@ import { SpectrumCard } from './components/SpectrumCard';
 import { HowToPlayModal, CustomCardModal } from './components/Modals';
 import { ChameleonGame, ChameleonGameState } from './components/ChameleonGame';
 import { ItoGame, ItoGameState } from './components/ItoGame';
-import { FibbageGame, FibbageGameState } from './components/FibbageGame';
 import { WordBombGame, WordBombGameState } from './components/WordBombGame';
+import {
+  PartyGameSvgIcon,
+  AnimatedBombSvg,
+  CartoonAvatarSvg,
+} from './components/CartoonIcons';
 import {
   Globe,
   Question,
@@ -52,6 +55,13 @@ import {
   Eye,
   EyeSlash,
   UserMinus,
+  Fire,
+  Lightning,
+  ForkKnife,
+  Detective,
+  ArrowLeft,
+  ArrowRight,
+  Medal,
 } from '@phosphor-icons/react';
 
 interface RoomState {
@@ -973,17 +983,6 @@ export function App() {
       return state;
     }
 
-    if (gameId === 'fibbage') {
-      const q = FIBBAGE_QUESTIONS[Math.floor(Math.random() * FIBBAGE_QUESTIONS.length)];
-      const state: FibbageGameState = {
-        phase: 'writing',
-        questionId: q.id,
-        lies: {},
-        votes: {},
-      };
-      return state;
-    }
-
     if (gameId === 'wordbomb') {
       const ch = WORD_BOMB_CHALLENGES[Math.floor(Math.random() * WORD_BOMB_CHALLENGES.length)];
       const firstHolder = validPlayers[Math.floor(Math.random() * validPlayers.length)];
@@ -1152,10 +1151,9 @@ export function App() {
       };
     }
   );
-  const partyGamesCatalog: { id: PartyGameId; emoji: string; name_ar: string; name_en: string; desc_ar: string; desc_en: string }[] = [
+  const partyGamesCatalog: { id: PartyGameId; name_ar: string; name_en: string; desc_ar: string; desc_en: string }[] = [
     {
       id: 'wavelength',
-      emoji: '🎯',
       name_ar: 'عَ نفس الموجة',
       name_en: 'Wavelength',
       desc_ar: 'تخاطر المؤشر والمقاييس',
@@ -1163,7 +1161,6 @@ export function App() {
     },
     {
       id: 'chameleon',
-      emoji: '🕵️‍♂️',
       name_ar: 'برّا السالفة',
       name_en: 'Chameleon',
       desc_ar: 'اكشف الجاسوس بينكم!',
@@ -1171,23 +1168,13 @@ export function App() {
     },
     {
       id: 'ito',
-      emoji: '🔢',
       name_ar: 'تخاطر الأرقام',
       name_en: 'Ito (1-100)',
       desc_ar: 'رتبوا أرقامكم السرية 1-100',
       desc_en: 'Sort secret numbers 1-100',
     },
     {
-      id: 'fibbage',
-      emoji: '🤥',
-      name_ar: 'كذّاب بس مقنع',
-      name_en: 'Fibbage',
-      desc_ar: 'ألّف كذبة واخدع الشلة!',
-      desc_en: 'Bluff your friends with lies!',
-    },
-    {
       id: 'wordbomb',
-      emoji: '💣',
       name_ar: 'قنبلة الحروف',
       name_en: 'Word Bomb',
       desc_ar: 'هات كلمة بسرعة قبل الانفجار!',
@@ -1275,9 +1262,9 @@ export function App() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center my-auto py-3">
             {/* Left / Interactive Party Games Showcase Column */}
             <div className="lg:col-span-7 flex flex-col items-center text-center space-y-4">
-              {/* Sleek Pill Dock to Switch Between the 5 Party Games */}
+              {/* Sleek Pill Dock to Switch Between the 4 Party Games */}
               <div className="w-full max-w-2xl bg-[#231f42]/95 p-2 rounded-3xl border-4 border-[#120f29] shadow-[0_6px_0_#120f29]">
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {partyGamesCatalog.map((g) => {
                     const isPicked = homeSelectedGame === g.id;
                     return (
@@ -1285,13 +1272,13 @@ export function App() {
                         key={g.id}
                         type="button"
                         onClick={() => setHomeSelectedGame(g.id)}
-                        className={`px-2.5 py-2.5 rounded-2xl font-extrabold text-xs sm:text-sm flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
+                        className={`px-3 py-2.5 rounded-2xl font-extrabold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
                           isPicked
                             ? 'bg-[#ffca3a] text-[#161426] border-3 border-[#161426] shadow-[0_4px_0_#161426] -translate-y-0.5'
                             : 'text-[#fff9ec]/85 hover:bg-[#2f2959] hover:text-white border-3 border-transparent'
                         }`}
                       >
-                        <span className="text-2xl leading-none drop-shadow-sm">{g.emoji}</span>
+                        <PartyGameSvgIcon gameId={g.id} className="w-8 h-8" />
                         <span className="leading-tight truncate max-w-full">
                           {lang === 'ar' ? g.name_ar : g.name_en}
                         </span>
@@ -1319,18 +1306,20 @@ export function App() {
                 {homeSelectedGame === 'chameleon' && (
                   <div className="w-full rounded-3xl bg-[#5c73b8] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-3">
                     <div className="flex items-center justify-between text-xs font-extrabold">
-                      <span className="px-3 py-1 rounded-full bg-white/20 border border-white/30">
-                        🍔 {lang === 'ar' ? 'أكل ومطاعم' : 'Food & Dining'}
+                      <span className="px-3 py-1 rounded-full bg-white/20 border border-white/30 flex items-center gap-1.5">
+                        <ForkKnife weight="fill" className="w-4 h-4 text-[#ffca3a]" />
+                        <span>{lang === 'ar' ? 'أكل ومطاعم' : 'Food & Dining'}</span>
                       </span>
-                      <span className="px-3 py-1 rounded-full bg-[#ff595e] border-2 border-[#161426] shadow-[0_2px_0_#161426]">
-                        🕵️‍♂️ {lang === 'ar' ? 'واحد بينكم برّا السالفة!' : '1 Impostor Among You!'}
+                      <span className="px-3 py-1 rounded-full bg-[#ff595e] border-2 border-[#161426] shadow-[0_2px_0_#161426] flex items-center gap-1">
+                        <Detective weight="fill" className="w-4 h-4 text-[#ffca3a]" />
+                        <span>{lang === 'ar' ? 'واحد بينكم برّا السالفة!' : '1 Impostor Among You!'}</span>
                       </span>
                     </div>
 
                     <div className="flex items-center justify-center gap-4 py-2">
                       <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 rounded-full bg-[#dce3f2] border-4 border-[#ffca3a] shadow-[0_4px_0_#161426] flex items-center justify-center text-4xl">
-                          🦊
+                        <div className="w-20 h-20 rounded-full bg-[#dce3f2] border-4 border-[#ffca3a] shadow-[0_4px_0_#161426] p-1.5 flex items-center justify-center">
+                          <CartoonAvatarSvg index={0} color="#ffca3a" />
                         </div>
                         <span className="-mt-2.5 px-3.5 py-0.5 rounded-full bg-[#ffca3a] text-[#161426] border-2 border-[#161426] font-extrabold text-xs">
                           {lang === 'ar' ? 'زيد' : 'Zaid'}
@@ -1339,16 +1328,18 @@ export function App() {
 
                       <div className="flex flex-col items-center">
                         <span className="text-xs font-extrabold uppercase bg-[#161426]/40 px-2.5 py-1 rounded-full">
-                          {lang === 'ar' ? 'يسأل 🎤' : 'asks 🎤'}
+                          {lang === 'ar' ? 'يسأل' : 'asks'}
                         </span>
-                        <span className="text-2xl font-extrabold text-[#ffca3a] mt-1">
-                          {lang === 'ar' ? '⬅️' : '➡️'}
-                        </span>
+                        {lang === 'ar' ? (
+                          <ArrowLeft weight="bold" className="w-7 h-7 text-[#ffca3a] mt-1" />
+                        ) : (
+                          <ArrowRight weight="bold" className="w-7 h-7 text-[#ffca3a] mt-1" />
+                        )}
                       </div>
 
                       <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 rounded-full bg-[#eef1f8] border-4 border-[#ff595e] shadow-[0_4px_0_#161426] flex items-center justify-center text-4xl">
-                          🐼
+                        <div className="w-20 h-20 rounded-full bg-[#eef1f8] border-4 border-[#ff595e] shadow-[0_4px_0_#161426] p-1.5 flex items-center justify-center">
+                          <CartoonAvatarSvg index={1} color="#00bbf9" />
                         </div>
                         <span className="-mt-2.5 px-3.5 py-0.5 rounded-full bg-[#ff595e] text-white border-2 border-[#161426] font-extrabold text-xs">
                           {lang === 'ar' ? 'نور' : 'Noor'}
@@ -1367,7 +1358,7 @@ export function App() {
                 {homeSelectedGame === 'ito' && (
                   <div className="w-full rounded-3xl bg-[#25204d] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-4">
                     <div className="inline-block cartoon-badge bg-[#00bbf9] text-[#161426] px-4 py-1 text-xs">
-                      🔢 {lang === 'ar' ? 'المقياس: أشياء بتعصّب من 1 لـ 100' : 'Scale: Annoying Things (1 to 100)'}
+                      {lang === 'ar' ? 'المقياس: أشياء بتعصّب من 1 لـ 100' : 'Scale: Annoying Things (1 to 100)'}
                     </div>
 
                     <div className="grid grid-cols-3 gap-2.5 pt-1">
@@ -1397,71 +1388,39 @@ export function App() {
                   </div>
                 )}
 
-                {homeSelectedGame === 'fibbage' && (
-                  <div className="w-full rounded-3xl bg-[#fff9ec] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-[#161426] animate-in fade-in zoom-in-95 duration-200 space-y-3">
-                    <div className="p-3 rounded-2xl bg-[#191636] text-white border-3 border-[#161426]">
-                      <span className="text-[11px] font-extrabold text-[#ffca3a] uppercase block">
-                        🤥 {lang === 'ar' ? 'سؤال حقيقي غريب' : 'Weird True Fact'}
-                      </span>
-                      <p className="text-sm md:text-base font-extrabold mt-0.5">
-                        {lang === 'ar'
-                          ? 'في سويسرا، ممنوع قانونياً تربي حيوان واحد بس من ___ لأنه بيشعر بالوحدة!'
-                          : 'In Switzerland, it is illegal to own just one ___ because they get lonely!'}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 text-xs font-extrabold">
-                      <div className="p-2.5 rounded-xl bg-[#ffe4e6] border-3 border-[#161426]">
-                        🦩 {lang === 'ar' ? 'طائر الفلامنغو' : 'Flamingo'}
-                        <span className="block text-[10px] text-[#ff595e] mt-0.5">
-                          {lang === 'ar' ? 'كذبة سارة 🤥' : "Sara's Lie 🤥"}
-                        </span>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-[#8ac926] border-3 border-[#161426]">
-                        🐹 {lang === 'ar' ? 'خنزير غينيا' : 'Guinea Pig'}
-                        <span className="block text-[10px] text-[#161426] mt-0.5">
-                          {lang === 'ar' ? 'الجواب الصح ✅' : 'Real Truth ✅'}
-                        </span>
-                      </div>
-                      <div className="p-2.5 rounded-xl bg-[#ffe4e6] border-3 border-[#161426]">
-                        🦥 {lang === 'ar' ? 'حيوان الكسلان' : 'Sloth'}
-                        <span className="block text-[10px] text-[#ff595e] mt-0.5">
-                          {lang === 'ar' ? 'كذبة عمر 🤥' : "Omar's Lie 🤥"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {homeSelectedGame === 'wordbomb' && (
                   <div className="w-full rounded-3xl bg-[#25204d] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-3">
                     <div className="flex items-center justify-center gap-4">
-                      <div className="w-20 h-20 rounded-full bg-[#ff595e] border-4 border-[#161426] shadow-[0_5px_0_#161426] flex items-center justify-center text-5xl animate-bounce">
-                        💣
-                      </div>
-                      <div className="text-right">
-                        <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3 py-0.5 text-xs">
-                          ⏱️ {lang === 'ar' ? 'قبل الانفجار!' : 'Beat the Timer!'}
+                      <AnimatedBombSvg
+                        secondsLeft={8}
+                        maxSeconds={12}
+                        letters={lang === 'ar' ? 'ب ر' : 'B R'}
+                        className="w-28 h-28"
+                      />
+                      <div className="text-start space-y-1">
+                        <span className="cartoon-badge bg-[#ff595e] text-white px-3 py-0.5 text-xs inline-flex items-center gap-1">
+                          <Fire weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />
+                          <span>{lang === 'ar' ? 'فتيل عشوائي مشتعل!' : 'Unpredictable Fuse!'}</span>
                         </span>
-                        <div className="text-xl md:text-2xl font-extrabold mt-1">
-                          {lang === 'ar' ? 'كلمة فيها الحروف:' : 'Word containing:'}{' '}
-                          <span className="text-[#ffca3a] bg-[#161426] px-3 py-0.5 rounded-xl border-2 border-[#ffca3a]">
-                            {lang === 'ar' ? 'ب ر' : 'B R'}
-                          </span>
+                        <div className="text-lg md:text-xl font-extrabold">
+                          {lang === 'ar'
+                            ? 'اكتب كلمة بسرعة وارمي القنبلة للي بعدك!'
+                            : 'Type a word fast and pass the bomb!'}
                         </div>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap justify-center gap-2 pt-1">
                       {(lang === 'ar'
-                        ? ['⚡ برتقال', '⚡ بركان', '⚡ قبرص', '⚡ مبرد']
-                        : ['⚡ BRIDGE', '⚡ COBRA', '⚡ BRAIN']
+                        ? ['برتقال', 'بركان', 'قبرص', 'مبرد']
+                        : ['BRIDGE', 'COBRA', 'BRAIN']
                       ).map((w, i) => (
                         <span
                           key={i}
-                          className="cartoon-badge bg-[#8ac926] text-[#161426] px-3 py-1 text-xs"
+                          className="cartoon-badge bg-[#8ac926] text-[#161426] px-3 py-1 text-xs inline-flex items-center gap-1"
                         >
-                          {w}
+                          <Lightning weight="fill" className="w-3.5 h-3.5" />
+                          <span>{w}</span>
                         </span>
                       ))}
                     </div>
@@ -1471,19 +1430,18 @@ export function App() {
 
               {/* Headline & Feature Pills */}
               <div className="max-w-lg space-y-2">
-                <h2 className="text-2xl md:text-4xl font-extrabold text-[#ffca3a] drop-shadow-[0_4px_0_#161426]">
-                  {lang === 'ar'
-                    ? `${partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.emoji} ${
-                        partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_ar
-                      }`
-                    : `${partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.emoji} ${
-                        partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_en
-                      }`}
+                <h2 className="text-2xl md:text-4xl font-extrabold text-[#ffca3a] drop-shadow-[0_4px_0_#161426] flex items-center justify-center gap-2.5">
+                  <PartyGameSvgIcon gameId={homeSelectedGame} className="w-9 h-9" />
+                  <span>
+                    {lang === 'ar'
+                      ? partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_ar
+                      : partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_en}
+                  </span>
                 </h2>
                 <p className="text-sm md:text-base text-[#d9d4f7] font-semibold">
                   {lang === 'ar'
-                    ? 'افتح غرفة مجانية بثانية، ابعت الرابط لأصحابك، وبدّلوا بين 5 ألعاب جماعية بنفس الغرفة ونفس الـ Leaderboard!'
-                    : 'Create a free room in one click, invite friends, and switch between 5 party games with one shared Leaderboard!'}
+                    ? 'افتح غرفة مجانية بثانية، ابعت الرابط لأصحابك، وبدّلوا بين 4 ألعاب جماعية بنفس الغرفة ونفس الـ Leaderboard!'
+                    : 'Create a free room in one click, invite friends, and switch between 4 party games with one shared Leaderboard!'}
                 </p>
               </div>
             </div>
@@ -1493,11 +1451,9 @@ export function App() {
               <div className="cartoon-card p-6 md:p-7 space-y-5 relative">
                 {/* Selected Game Indicator Pill at Top of Form */}
                 <div className="flex items-center justify-between bg-[#fff1c2] border-3 border-[#161426] rounded-2xl px-3.5 py-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">
-                      {partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.emoji}
-                    </span>
-                    <div className=" leading-tight">
+                  <div className="flex items-center gap-2.5">
+                    <PartyGameSvgIcon gameId={homeSelectedGame} className="w-8 h-8 shrink-0" />
+                    <div className="leading-tight">
                       <span className="text-[11px] font-bold text-[#3f3b5c] block">
                         {lang === 'ar' ? 'اللعبة المختارة للبدء:' : 'Selected Starting Game:'}
                       </span>
@@ -1509,7 +1465,7 @@ export function App() {
                     </div>
                   </div>
                   <span className="cartoon-badge bg-[#8ac926] text-[#161426] px-2.5 py-0.5 text-[11px]">
-                    {lang === 'ar' ? '5 ألعاب بالغرفة' : '5-in-1 Room'}
+                    {lang === 'ar' ? '4 ألعاب بالغرفة' : '4-in-1 Room'}
                   </span>
                 </div>
 
@@ -1748,7 +1704,7 @@ export function App() {
                   {/* Choose Party Game */}
                   <div>
                     <label className="block font-extrabold text-sm text-[#161426] mb-2">
-                      🎮 {lang === 'ar' ? 'اختار اللعبة للشلّة:' : 'Pick Party Game:'}
+                      {lang === 'ar' ? 'اختار اللعبة للشلّة:' : 'Pick Party Game:'}
                     </label>
                     <div className="grid grid-cols-1 gap-2">
                       {partyGamesCatalog.map((g) => (
@@ -1763,8 +1719,8 @@ export function App() {
                               : 'bg-white text-[#161426]'
                           }`}
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-xl">{g.emoji}</span>
+                          <div className="flex items-center gap-2.5">
+                            <PartyGameSvgIcon gameId={g.id} className="w-7 h-7 shrink-0" />
                             <div>
                               <div className="font-extrabold text-sm leading-tight">
                                 {lang === 'ar' ? g.name_ar : g.name_en}
@@ -1933,13 +1889,13 @@ export function App() {
                     type="button"
                     disabled={!isHost && !isPassAndPlay}
                     onClick={() => handleSelectPartyGame(g.id)}
-                    className={`cartoon-btn px-3.5 py-2 text-xs md:text-sm flex items-center gap-1.5 shrink-0 ${
+                    className={`cartoon-btn px-3.5 py-2 text-xs md:text-sm flex items-center gap-2 shrink-0 ${
                       isSelected
                         ? 'bg-[#ffca3a] text-[#161426]'
                         : 'bg-[#25204d] text-[#fff9ec]'
                     }`}
                   >
-                    <span className="text-base">{g.emoji}</span>
+                    <PartyGameSvgIcon gameId={g.id} className="w-6 h-6" />
                     <span>{lang === 'ar' ? g.name_ar : g.name_en}</span>
                   </button>
                 );
@@ -2031,21 +1987,6 @@ export function App() {
                     lang={lang}
                     onUpdateGameData={handleUpdateMiniGameData}
                     onStartNewRound={() => handleSelectPartyGame('ito')}
-                  />
-                ) : activeGameId === 'fibbage' ? (
-                  <FibbageGame
-                    gameData={
-                      room.game_data?.questionId
-                        ? room.game_data
-                        : (buildInitialGameData('fibbage', players) as FibbageGameState)
-                    }
-                    players={players}
-                    myPlayerId={playerId}
-                    isHost={isHost}
-                    isPassAndPlay={isPassAndPlay}
-                    lang={lang}
-                    onUpdateGameData={handleUpdateMiniGameData}
-                    onStartNewRound={() => handleSelectPartyGame('fibbage')}
                   />
                 ) : activeGameId === 'wordbomb' ? (
                   <WordBombGame
@@ -2433,14 +2374,6 @@ export function App() {
                     .sort((a, b) => (b.score || 0) - (a.score || 0))
                     .map((p, index) => {
                       const isCurrentPsychic = p.id === room.psychic_id;
-                      const rankMedal =
-                        index === 0
-                          ? '🥇'
-                          : index === 1
-                          ? '🥈'
-                          : index === 2
-                          ? '🥉'
-                          : `#${index + 1}`;
                       return (
                         <div
                           key={p.id}
@@ -2451,8 +2384,21 @@ export function App() {
                           }`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <span className="text-lg font-extrabold w-6 text-center shrink-0">
-                              {rankMedal}
+                            <span className="text-sm font-extrabold w-6 flex items-center justify-center shrink-0">
+                              {index < 3 ? (
+                                <Medal
+                                  weight="fill"
+                                  className={`w-6 h-6 ${
+                                    index === 0
+                                      ? 'text-[#ffca3a]'
+                                      : index === 1
+                                      ? 'text-[#cbd5e1]'
+                                      : 'text-[#fb923c]'
+                                  }`}
+                                />
+                              ) : (
+                                `#${index + 1}`
+                              )}
                             </span>
                             <div
                               style={{ backgroundColor: p.avatar_color }}

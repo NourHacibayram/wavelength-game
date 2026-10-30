@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { WORD_BOMB_CHALLENGES } from '../data/partyGamesData';
+import { AnimatedBombSvg } from './CartoonIcons';
 import {
   Fire,
   PaperPlaneTilt,
   WarningOctagon,
   ArrowsClockwise,
+  HourglassHigh,
+  Trophy,
+  WarningCircle,
 } from '@phosphor-icons/react';
 
 export interface WordBombGameState {
@@ -57,7 +61,7 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
 }) => {
   const [wordInput, setWordInput] = useState<string>('');
   const [errorHint, setErrorHint] = useState<string | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState<number>(12);
+  const [visualFuseStep, setVisualFuseStep] = useState<number>(10);
 
   const challenge =
     WORD_BOMB_CHALLENGES.find((c) => c.id === gameData.challengeId) ||
@@ -76,24 +80,33 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
     isPassAndPlay || gameData.holderPlayerId === myPlayerId;
   const lastAuthor = players.find((p) => p.id === gameData.lastAuthorId);
 
-  // Countdown timer for the bomb holder
+  // Secret unpredictable explosion duration (between 8 and 17 seconds, seeded by turnStartedAt)
+  const secretDurationSec = useMemo(() => {
+    const seed = Math.abs((gameData.turnStartedAt || 1) % 10);
+    return 8 + seed; // 8s to 17s — nobody knows when it will blow!
+  }, [gameData.turnStartedAt]);
+
+  // Hidden timer + suspenseful fuse animation that doesn't give away the exact second
   useEffect(() => {
     if (gameData.phase !== 'ticking') return;
-    setSecondsLeft(12);
+    setVisualFuseStep(10);
+    let elapsed = 0;
+
     const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          if (isMyBombTurn || isHost) {
-            triggerExplosion(gameData.holderPlayerId);
-          }
-          return 0;
+      elapsed += 1;
+      // Oscillate visual fuse between 3 and 8 after a few seconds so it looks unstable & suspenseful!
+      setVisualFuseStep((prev) => (prev > 4 ? prev - 1 : 4 + (elapsed % 3)));
+
+      if (elapsed >= secretDurationSec) {
+        clearInterval(interval);
+        if (isMyBombTurn || isHost) {
+          triggerExplosion(gameData.holderPlayerId);
         }
-        return prev - 1;
-      });
+      }
     }, 1000);
+
     return () => clearInterval(interval);
-  }, [gameData.turnStartedAt, gameData.holderPlayerId, gameData.phase]);
+  }, [gameData.turnStartedAt, gameData.holderPlayerId, gameData.phase, secretDurationSec]);
 
   const triggerExplosion = (loserId: string) => {
     if (gameData.phase === 'exploded') return;
@@ -130,8 +143,8 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
     if (alreadyUsed) {
       setErrorHint(
         lang === 'ar'
-          ? '⚠️ هاي الكلمة انكتبت من قبل بهاي الجولة! هات كلمة غيرها!'
-          : '⚠️ Word already used this round!'
+          ? 'هاي الكلمة انكتبت من قبل بهاي الجولة! هات كلمة غيرها!'
+          : 'Word already used this round!'
       );
       return;
     }
@@ -140,8 +153,8 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
     if (!hasAllLetters) {
       setErrorHint(
         lang === 'ar'
-          ? `⚠️ لازم الكلمة تحتوي على الحروف: (${requiredLettersRaw})`
-          : `⚠️ Word must contain: (${requiredLettersRaw})`
+          ? `لازم الكلمة تحتوي على الحروف: (${requiredLettersRaw})`
+          : `Word must contain: (${requiredLettersRaw})`
       );
       return;
     }
@@ -193,12 +206,12 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
         {gameData.phase === 'ticking' ? (
           <>
             <div className="flex items-center justify-between flex-wrap gap-2">
-              <span className="cartoon-badge bg-[#ff595e] text-white px-4 py-1 text-sm flex items-center gap-1.5">
-                <Fire weight="fill" className="w-4 h-4" />
+              <span className="cartoon-badge bg-[#ff595e] text-white px-4 py-1 text-sm flex items-center gap-1.5 animate-pulse">
+                <Fire weight="fill" className="w-4 h-4 text-[#ffca3a]" />
                 <span>
                   {lang === 'ar'
-                    ? `باقي ${secondsLeft} ثانية قبل الانفجار!`
-                    : `${secondsLeft}s before BOOM!`}
+                    ? 'الفتيل شغّال... ممكن تنفجر بأي لحظة!'
+                    : 'Fuse is burning... Could explode any second!'}
                 </span>
               </span>
 
@@ -209,35 +222,35 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
               </span>
             </div>
 
-            {/* Animated Cartoon Bomb */}
-            <div className="py-2">
-              <div
-                className={`w-28 h-28 mx-auto rounded-full bg-[#161426] border-4 border-[#ff595e] shadow-[0_8px_0_#161426] flex flex-col items-center justify-center text-white transition-transform ${
-                  secondsLeft <= 4 ? 'animate-bounce bg-[#ff595e]' : ''
-                }`}
-              >
-                <span className="text-3xl">💣</span>
-                <span className="text-2xl font-extrabold text-[#ffca3a] tracking-widest">
-                  {requiredLettersRaw}
-                </span>
-              </div>
+            {/* Custom SVG Animated Bomb with Unpredictable Burning Fuse & Sparks! */}
+            <div className="py-1 flex justify-center">
+              <AnimatedBombSvg
+                secondsLeft={visualFuseStep}
+                maxSeconds={12}
+                letters={requiredLettersRaw}
+                exploded={false}
+                className="w-48 h-48"
+              />
             </div>
 
             <div className="space-y-1">
               <div className="text-sm font-extrabold text-[#3f3b5c]">
                 {lang === 'ar' ? challenge.hint_ar : challenge.hint_en}
               </div>
-              <div className="text-xl md:text-2xl font-extrabold text-[#161426]">
-                🔥{' '}
-                {lang === 'ar'
-                  ? `القنبلة هلق بإيد: ${holderPlayer?.name || ''}!`
-                  : `Bomb is in ${holderPlayer?.name || ''}’s hands!`}
+              <div className="text-xl md:text-2xl font-extrabold text-[#161426] flex items-center justify-center gap-2">
+                <Fire weight="fill" className="w-6 h-6 text-[#ff595e]" />
+                <span>
+                  {lang === 'ar'
+                    ? `القنبلة هلق بإيد: ${holderPlayer?.name || ''}!`
+                    : `Bomb is in ${holderPlayer?.name || ''}’s hands!`}
+                </span>
               </div>
             </div>
 
             {errorHint && (
-              <div className="p-3 rounded-2xl bg-[#ff595e] text-white font-extrabold text-sm">
-                {errorHint}
+              <div className="p-3 rounded-2xl bg-[#ff595e] text-white font-extrabold text-sm flex items-center justify-center gap-2">
+                <WarningCircle weight="fill" className="w-5 h-5 shrink-0" />
+                <span>{errorHint}</span>
               </div>
             )}
 
@@ -265,18 +278,20 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
                 </button>
               </form>
             ) : (
-              <div className="p-4 rounded-2xl bg-[#191636] text-[#ffca3a] font-extrabold text-lg">
-                ⏳{' '}
-                {lang === 'ar'
-                  ? `${holderPlayer?.name || ''} عم يحاول يلاقي كلمة قبل ما تنفجر!`
-                  : `${holderPlayer?.name || ''} is trying to find a word!`}
+              <div className="p-4 rounded-2xl bg-[#191636] text-[#ffca3a] font-extrabold text-lg flex items-center justify-center gap-2">
+                <HourglassHigh weight="fill" className="w-6 h-6 animate-spin" />
+                <span>
+                  {lang === 'ar'
+                    ? `${holderPlayer?.name || ''} عم يحاول يلاقي كلمة قبل ما تنفجر!`
+                    : `${holderPlayer?.name || ''} is trying to find a word!`}
+                </span>
               </div>
             )}
           </>
         ) : (
-          /* Exploded State */
-          <div className="space-y-4 py-3 animate-in zoom-in-95 duration-200">
-            <div className="text-6xl">💥💣💥</div>
+          /* Exploded State with Custom Comic Explosion SVG */
+          <div className="space-y-4 py-3 animate-in zoom-in-95 duration-200 flex flex-col items-center">
+            <AnimatedBombSvg exploded={true} className="w-40 h-40" />
             <h2 className="text-3xl font-extrabold text-[#ff595e]">
               {lang === 'ar'
                 ? `بوووم! انفجرت القنبلة بإيد ${
@@ -286,11 +301,13 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
                     players.find((p) => p.id === gameData.explodedPlayerId)?.name || ''
                   }!`}
             </h2>
-            <p className="font-extrabold text-[#161426]">
-              🎉{' '}
-              {lang === 'ar'
-                ? 'باقي اللاعبين كسبوا +2 نقطة لنجاتهم من الانفجار!'
-                : 'All surviving players earned +2 points!'}
+            <p className="font-extrabold text-[#161426] flex items-center justify-center gap-2">
+              <Trophy weight="fill" className="w-6 h-6 text-[#ffca3a]" />
+              <span>
+                {lang === 'ar'
+                  ? 'باقي اللاعبين كسبوا +2 نقطة لنجاتهم من الانفجار!'
+                  : 'All surviving players earned +2 points!'}
+              </span>
             </p>
             <button
               type="button"
@@ -298,7 +315,7 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
               className="cartoon-btn bg-[#ffca3a] text-[#161426] w-full py-3.5 text-xl flex items-center justify-center gap-2"
             >
               <ArrowsClockwise weight="bold" className="w-6 h-6" />
-              <span>{lang === 'ar' ? 'جولة قنبلة جديدة! 🔄' : 'New Bomb Round! 🔄'}</span>
+              <span>{lang === 'ar' ? 'جولة قنبلة جديدة!' : 'New Bomb Round!'}</span>
             </button>
           </div>
         )}
@@ -327,8 +344,8 @@ export const WordBombGame: React.FC<WordBombGameProps> = ({
             <WarningOctagon weight="fill" className="w-5 h-5" />
             <span>
               {lang === 'ar'
-                ? '🚨 اعتراض! مافي هيك كلمة (رجّع القنبلة لإيده)'
-                : '🚨 Challenge! Reject Word & Return Bomb'}
+                ? 'اعتراض! مافي هيك كلمة (رجّع القنبلة لإيده)'
+                : 'Challenge! Reject Word & Return Bomb'}
             </span>
           </button>
         </div>

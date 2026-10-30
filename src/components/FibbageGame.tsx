@@ -6,6 +6,10 @@ import {
   ArrowsClockwise,
   CheckCircle,
   SmileyWink,
+  MagnifyingGlass,
+  MaskHappy,
+  Trophy,
+  WarningCircle,
 } from '@phosphor-icons/react';
 
 export interface FibbageGameState {
@@ -67,8 +71,8 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
     if (cleaned.toLowerCase() === truthText.toLowerCase()) {
       setWarnMsg(
         lang === 'ar'
-          ? '🤩 هاد هو الجواب الحقيقي فعلاً! اكتب كذبة مقنعة لتخدعهم!'
-          : '🤩 That’s the actual truth! Write a convincing lie to fool your friends!'
+          ? 'هاد هو الجواب الحقيقي فعلاً! اكتب كذبة مقنعة لتخدعهم!'
+          : 'That’s the actual truth! Write a convincing lie to fool your friends!'
       );
       return;
     }
@@ -98,7 +102,6 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
     if (allSubmitted) setActiveLocalIdx(0);
   };
 
-  // Build deterministic shuffled options list: all submitted lies + '__TRUTH__'
   const options = React.useMemo(() => {
     const items: { id: string; text: string }[] = [
       { id: '__TRUTH__', text: truthText },
@@ -110,7 +113,7 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
   }, [gameData.lies, truthText]);
 
   const handleVoteOption = (optionAuthorId: string) => {
-    if (optionAuthorId === currentViewerId) return; // Can't vote for your own lie
+    if (optionAuthorId === currentViewerId) return;
     const nextVotes = {
       ...(gameData.votes || {}),
       [currentViewerId]: optionAuthorId,
@@ -140,10 +143,8 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
     const awards: Record<string, number> = {};
     Object.entries(finalVotes).forEach(([voterId, chosenId]) => {
       if (chosenId === '__TRUTH__') {
-        // Found the real truth! +3 pts
         awards[voterId] = (awards[voterId] || 0) + 3;
       } else if (chosenId && chosenId !== voterId) {
-        // Fooled by another player's lie! Liar gets +2 pts!
         awards[chosenId] = (awards[chosenId] || 0) + 2;
       }
     });
@@ -163,8 +164,9 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
       {/* Question Card */}
       <div className="cartoon-card bg-[#ffca3a] p-5 space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <span className="cartoon-badge bg-[#161426] text-[#ffca3a] px-3.5 py-1 text-xs">
-            🤥 {categoryText}
+          <span className="cartoon-badge bg-[#161426] text-[#ffca3a] px-3.5 py-1 text-xs flex items-center gap-1.5">
+            <MaskHappy weight="fill" className="w-4 h-4" />
+            <span>{categoryText}</span>
           </span>
           {(isHost || isPassAndPlay) && (
             <button
@@ -222,7 +224,7 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
       {gameData.phase === 'writing' && (
         <div className="cartoon-card p-5 space-y-4">
           <div className="flex items-center gap-2 text-lg font-extrabold text-[#161426]">
-            <SmileyWink weight="fill" className="w-7 h-7 text-[#ff595e]" />
+            <SmileyWink weight="fill" className="w-7 h-7 text-[#ff595e] shrink-0" />
             <span>
               {lang === 'ar'
                 ? 'ألّف جواب كذبي بس مقنع ليصوتوا عليه أصحابك بدل الجواب الصحيح!'
@@ -231,8 +233,9 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
           </div>
 
           {warnMsg && (
-            <div className="p-3 rounded-2xl bg-[#ff595e] text-white font-extrabold text-sm text-center">
-              {warnMsg}
+            <div className="p-3 rounded-2xl bg-[#ff595e] text-white font-extrabold text-sm flex items-center justify-center gap-2">
+              <WarningCircle weight="fill" className="w-5 h-5 shrink-0" />
+              <span>{warnMsg}</span>
             </div>
           )}
 
@@ -282,9 +285,10 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
                 setActiveLocalIdx(0);
                 onUpdateGameData({ ...gameData, phase: 'voting' });
               }}
-              className="cartoon-btn bg-[#ff924c] text-[#161426] w-full py-2.5 text-base"
+              className="cartoon-btn bg-[#ff924c] text-[#161426] w-full py-2.5 text-base flex items-center justify-center gap-2"
             >
-              🗳️ {lang === 'ar' ? 'عرض الخيارات وبدء التصويت!' : 'Show Answers & Start Voting!'}
+              <MagnifyingGlass weight="bold" className="w-5 h-5" />
+              <span>{lang === 'ar' ? 'عرض الخيارات وبدء التصويت!' : 'Show Answers & Start Voting!'}</span>
             </button>
           )}
         </div>
@@ -293,11 +297,13 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
       {/* PHASE 2: Voting for the Truth */}
       {gameData.phase === 'voting' && (
         <div className="cartoon-card p-5 space-y-4 text-center">
-          <h3 className="font-extrabold text-xl text-[#161426]">
-            🔍{' '}
-            {lang === 'ar'
-              ? 'واحد بس من هدول هو الحقيقة والباقي تأليف أصحابك! وين الحقيقة؟'
-              : 'Only ONE of these is the real truth! Spot it:'}
+          <h3 className="font-extrabold text-xl text-[#161426] flex items-center justify-center gap-2">
+            <MagnifyingGlass weight="bold" className="w-6 h-6 text-[#1982c4]" />
+            <span>
+              {lang === 'ar'
+                ? 'واحد بس من هدول هو الحقيقة والباقي تأليف أصحابك! وين الحقيقة؟'
+                : 'Only ONE of these is the real truth! Spot it:'}
+            </span>
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -321,7 +327,7 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
                   <span>{opt.text}</span>
                   {isMyOwnLie && (
                     <span className="block text-xs mt-1">
-                      ({lang === 'ar' ? 'كذبتك إنت 😉' : 'Your Lie 😉'})
+                      ({lang === 'ar' ? 'كذبتك إنت' : 'Your Lie'})
                     </span>
                   )}
                 </button>
@@ -333,9 +339,10 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
             <button
               type="button"
               onClick={() => finishRoundAndScore(gameData.votes || {})}
-              className="cartoon-btn bg-[#8ac926] text-[#161426] w-full py-3 text-lg"
+              className="cartoon-btn bg-[#8ac926] text-[#161426] w-full py-3 text-lg flex items-center justify-center gap-2"
             >
-              🎉 {lang === 'ar' ? 'اكشف الجواب الحقيقي ومين انخدع!' : 'Reveal the Truth & Scores!'}
+              <Trophy weight="fill" className="w-6 h-6" />
+              <span>{lang === 'ar' ? 'اكشف الجواب الحقيقي ومين انخدع!' : 'Reveal the Truth & Scores!'}</span>
             </button>
           )}
         </div>
@@ -350,7 +357,7 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
               <span>{lang === 'ar' ? 'الحقيقة الصادمة!' : 'The Real Truth!'}</span>
             </span>
             <div className="text-3xl font-extrabold text-[#161426]">
-              ✅ &ldquo;{truthText}&rdquo;
+              &ldquo;{truthText}&rdquo;
             </div>
           </div>
 
@@ -371,14 +378,26 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
                 >
                   <div>
                     <div className="font-extrabold text-lg">&ldquo;{opt.text}&rdquo;</div>
-                    <div className="text-xs font-extrabold opacity-80">
-                      {isTruth
-                        ? lang === 'ar'
-                          ? '✨ الجواب الحقيقي (+3 نقاط للي عرفه)'
-                          : '✨ Real Truth (+3 pts)'
-                        : lang === 'ar'
-                        ? `🤥 كذبة من تأليف: ${author?.name || ''} (+2 عن كل شخص انخدع)`
-                        : `🤥 Lie written by: ${author?.name || ''}`}
+                    <div className="text-xs font-extrabold opacity-80 flex items-center gap-1">
+                      {isTruth ? (
+                        <>
+                          <CheckCircle weight="fill" className="w-4 h-4" />
+                          <span>
+                            {lang === 'ar'
+                              ? 'الجواب الحقيقي (+3 نقاط للي عرفه)'
+                              : 'Real Truth (+3 pts)'}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <SmileyWink weight="fill" className="w-4 h-4 text-[#ff595e]" />
+                          <span>
+                            {lang === 'ar'
+                              ? `كذبة من تأليف: ${author?.name || ''} (+2 عن كل شخص انخدع)`
+                              : `Lie written by: ${author?.name || ''}`}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -389,7 +408,11 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
                           key={fp.id}
                           className="cartoon-badge bg-[#ffca3a] text-[#161426] px-2.5 py-0.5 text-xs"
                         >
-                          {isTruth ? `👏 ${fp.name}` : `😂 انخدع فيها ${fp.name}`}
+                          {isTruth
+                            ? `${fp.name} ✓`
+                            : lang === 'ar'
+                            ? `انخدع فيها ${fp.name}`
+                            : `Fooled ${fp.name}`}
                         </span>
                       ))
                     ) : (
@@ -410,9 +433,10 @@ export const FibbageGame: React.FC<FibbageGameProps> = ({
               setLieInput('');
               onStartNewRound();
             }}
-            className="cartoon-btn bg-[#ffca3a] text-[#161426] w-full py-3.5 text-xl"
+            className="cartoon-btn bg-[#ffca3a] text-[#161426] w-full py-3.5 text-xl flex items-center justify-center gap-2"
           >
-            {lang === 'ar' ? 'سؤال جديد من كذّاب بس مقنع! 🔄' : 'Next Fibbage Question! 🔄'}
+            <ArrowsClockwise weight="bold" className="w-6 h-6" />
+            <span>{lang === 'ar' ? 'سؤال جديد من كذّاب بس مقنع!' : 'Next Fibbage Question!'}</span>
           </button>
         </div>
       )}
