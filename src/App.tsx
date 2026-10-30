@@ -1383,7 +1383,6 @@ export function App() {
   // Filtered Home Catalog
   const homeCategories: { id: PartyGameCategory; ar: string; en: string }[] = [
     { id: 'all', ar: `الكل (${PARTY_GAMES_CATALOG.length})`, en: `All (${PARTY_GAMES_CATALOG.length})` },
-    { id: 'board', ar: 'طاولة وشدّة (3)', en: 'Board & Cards (3)' },
     { id: 'telepathy', ar: 'تخاطر وخيال (6)', en: 'Mind & Art (6)' },
     { id: 'bluff', ar: 'خداع وجواسيس (4)', en: 'Bluff & Spies (4)' },
     { id: 'drawing', ar: 'رسم وإبداع (2)', en: 'Drawing (2)' },

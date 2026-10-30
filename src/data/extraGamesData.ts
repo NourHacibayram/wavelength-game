@@ -20,37 +20,7 @@ export interface PartyGameCatalogItem {
   isNew?: boolean;
 }
 
-export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
-  {
-    id: 'wavelength',
-    category: 'telepathy',
-    accent: '#ff595e',
-    bgTint: '#ffe8e8',
-    players_ar: '2–12 لاعب',
-    players_en: '2–12 Players',
-    tag_ar: 'تخاطر ومقاييس',
-    tag_en: 'Telepathy Dial',
-    name_ar: 'عَ نفس الموجة',
-    name_en: 'Wavelength',
-    desc_ar: 'تخاطر المؤشر السري بين طرفين متضادين!',
-    desc_en: 'Read your friend’s mind on a hidden spectrum!',
-    longDesc_ar:
-      'العرّاف يشوف مكان الهدف السري عالعجلة ويعطي كلمة تلميح، وكل لاعب يحرّك مؤشره الشخصي للمكان الصح!',
-    longDesc_en:
-      'One Psychic sees the hidden target wedge and gives a single clue while everyone locks their personal pointer!',
-    rules_ar: [
-      'لاعب واحد يكون العرّاف وهو الوحيد الذي يرى موقع الهدف الملوّن عالعجلة.',
-      'ينظر العرّاف لبطاقة المقياس (مثلاً: بارد — ساخن) ويكتب تلميحاً ذكياً بدون أرقام.',
-      'كل لاعب يحرّك مؤشره الشخصي للمكان الذي يتوقعه ويثبت تخمينه.',
-      'نفتح الغطاء! الإصابة بالمنتصف تعطي 4 نقاط، وبجانبها 3 أو 2 نقطة!',
-    ],
-    rules_en: [
-      'One player is the Psychic and peeks at the hidden target wedge on the wheel.',
-      'Look at the spectrum card (e.g. Cold — Hot) and give one conceptual clue.',
-      'Every player drags their personal needle and locks in their angle.',
-      'Open the screen! Center blue scores 4 pts, orange 3 pts, yellow 2 pts!',
-    ],
-  },
+export const ARCHIVED_BOARD_GAMES_CATALOG: PartyGameCatalogItem[] = [
   {
     id: 'trix',
     category: 'board',
@@ -143,6 +113,39 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
       'Reach Square 100 on the exact count to win — overshooting bounces back, right near the dreaded 99 Snake!',
     ],
     isNew: true,
+  },
+];
+
+export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
+  {
+    id: 'wavelength',
+    category: 'telepathy',
+    accent: '#ff595e',
+    bgTint: '#ffe8e8',
+    players_ar: '2–12 لاعب',
+    players_en: '2–12 Players',
+    tag_ar: 'تخاطر ومقاييس',
+    tag_en: 'Telepathy Dial',
+    name_ar: 'عَ نفس الموجة',
+    name_en: 'Wavelength',
+    desc_ar: 'تخاطر المؤشر السري بين طرفين متضادين!',
+    desc_en: 'Read your friend’s mind on a hidden spectrum!',
+    longDesc_ar:
+      'العرّاف يشوف مكان الهدف السري عالعجلة ويعطي كلمة تلميح، وكل لاعب يحرّك مؤشره الشخصي للمكان الصح!',
+    longDesc_en:
+      'One Psychic sees the hidden target wedge and gives a single clue while everyone locks their personal pointer!',
+    rules_ar: [
+      'لاعب واحد يكون العرّاف وهو الوحيد الذي يرى موقع الهدف الملوّن عالعجلة.',
+      'ينظر العرّاف لبطاقة المقياس (مثلاً: بارد — ساخن) ويكتب تلميحاً ذكياً بدون أرقام.',
+      'كل لاعب يحرّك مؤشره الشخصي للمكان الذي يتوقعه ويثبت تخمينه.',
+      'نفتح الغطاء! الإصابة بالمنتصف تعطي 4 نقاط، وبجانبها 3 أو 2 نقطة!',
+    ],
+    rules_en: [
+      'One player is the Psychic and peeks at the hidden target wedge on the wheel.',
+      'Look at the spectrum card (e.g. Cold — Hot) and give one conceptual clue.',
+      'Every player drags their personal needle and locks in their angle.',
+      'Open the screen! Center blue scores 4 pts, orange 3 pts, yellow 2 pts!',
+    ],
   },
   {
     id: 'chameleon',
