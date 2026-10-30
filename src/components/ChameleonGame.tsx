@@ -629,7 +629,7 @@ export const ChameleonGame: React.FC<ChameleonGameProps> = ({
                       className="px-3 py-2 rounded-xl bg-[#161426]/40 border border-white/20 text-xs space-y-0.5"
                     >
                       <div className="font-extrabold text-[#ffca3a]">
-                        {askP?.name} ⬅️ {respP?.name}:{' '}
+                        {askP?.name} ← {respP?.name}:{' '}
                         <span className="text-white">&ldquo;{item.question}&rdquo;</span>
                       </div>
                       {item.answer && (

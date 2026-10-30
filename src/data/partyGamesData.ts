@@ -1,10 +1,25 @@
-export type PartyGameId = 'wavelength' | 'chameleon' | 'ito' | 'fibbage' | 'wordbomb';
+export type PartyGameId =
+  | 'wavelength'
+  | 'chameleon'
+  | 'ito'
+  | 'wordbomb'
+  | 'taboo'
+  | 'dixit'
+  | 'witness'
+  | 'fakeartist'
+  | 'medium'
+  | 'soclover'
+  | 'wits'
+  | 'insider'
+  | 'decrypto'
+  | 'cockroach';
+
+export type PartyGameCategory = 'all' | 'telepathy' | 'bluff' | 'drawing' | 'speed';
 
 export interface ChameleonTopic {
   id: string;
   title_ar: string;
   title_en: string;
-  emoji: string;
   words_ar: string[];
   words_en: string[];
 }
@@ -17,16 +32,6 @@ export interface ItoThemeCard {
   max_ar: string;
   min_en: string;
   max_en: string;
-}
-
-export interface FibbageQuestion {
-  id: number;
-  question_ar: string;
-  question_en: string;
-  truth_ar: string;
-  truth_en: string;
-  category_ar: string;
-  category_en: string;
 }
 
 export interface WordBombChallenge {
@@ -42,7 +47,6 @@ export const CHAMELEON_TOPICS: ChameleonTopic[] = [
     id: 'food',
     title_ar: 'أكلات ومأكولات',
     title_en: 'Foods & Dishes',
-    emoji: '🍔',
     words_ar: [
       'شاورما', 'منسف', 'بيتزا', 'سوشي',
       'فلافل', 'برغر', 'كبسة', 'كنافة',
@@ -60,7 +64,6 @@ export const CHAMELEON_TOPICS: ChameleonTopic[] = [
     id: 'animals',
     title_ar: 'عالم الحيوانات',
     title_en: 'Animals Kingdom',
-    emoji: '🦁',
     words_ar: [
       'أسد', 'بطريق', 'دولفين', 'زرافة',
       'كنغر', 'باندا', 'تمساح', 'ببغاء',
@@ -78,7 +81,6 @@ export const CHAMELEON_TOPICS: ChameleonTopic[] = [
     id: 'countries',
     title_ar: 'دول حول العالم',
     title_en: 'Countries',
-    emoji: '🌍',
     words_ar: [
       'اليابان', 'مصر', 'إيطاليا', 'البرازيل',
       'تركيا', 'فرنسا', 'المغرب', 'أستراليا',
@@ -96,7 +98,6 @@ export const CHAMELEON_TOPICS: ChameleonTopic[] = [
     id: 'movies',
     title_ar: 'أفلام ومسلسلات',
     title_en: 'Movies & Shows',
-    emoji: '🎬',
     words_ar: [
       'هاري بوتر', 'باب الحارة', 'سبايدرمان', 'تيتانيك',
       'الأسد الملك', 'باتمان', 'لا كاسا دي بابيل', 'شريك',
@@ -114,7 +115,6 @@ export const CHAMELEON_TOPICS: ChameleonTopic[] = [
     id: 'sports',
     title_ar: 'رياضات وألعاب',
     title_en: 'Sports & Games',
-    emoji: '⚽',
     words_ar: [
       'كرة قدم', 'سباحة', 'ملاكمة', 'تنس',
       'كرة سلة', 'شطرنج', 'بولينغ', 'تزلج',
@@ -132,7 +132,6 @@ export const CHAMELEON_TOPICS: ChameleonTopic[] = [
     id: 'places',
     title_ar: 'أماكن بنروحها',
     title_en: 'Everyday Places',
-    emoji: '🏖️',
     words_ar: [
       'المطار', 'المستشفى', 'السينما', 'النادي الرياضي',
       'البحر', 'المكتبة', 'الحلاق', 'الملاهي',
@@ -223,81 +222,6 @@ export const ITO_THEMES: ItoThemeCard[] = [
   },
 ];
 
-export const FIBBAGE_QUESTIONS: FibbageQuestion[] = [
-  {
-    id: 1,
-    category_ar: 'غرائب العالم',
-    category_en: 'Weird World',
-    question_ar: 'في سويسرا، يمنع القانون امتلاك حيوان واحد فقط من ______ لأنها بتشعر بالوحدة والاكتئاب لحالها!',
-    question_en: 'In Switzerland, it is illegal to own just one ______ because they get lonely!',
-    truth_ar: 'خنازير غينيا (الهامستر الغيني)',
-    truth_en: 'Guinea Pig',
-  },
-  {
-    id: 2,
-    category_ar: 'اختراعات عجيبة',
-    category_en: 'Bizarre Inventions',
-    question_ar: 'أول منبّه ميكانيكي اخترعه ليفي هاتشينز عام 1787 كان مستحيل يرن غير على الساعة ______ فقط!',
-    question_en: 'The first mechanical alarm clock invented in 1787 could only ring at ______!',
-    truth_ar: 'الرابعة فجراً (4:00 صباحاً)',
-    truth_en: '4:00 AM',
-  },
-  {
-    id: 3,
-    category_ar: 'عالم الحيوان',
-    category_en: 'Animal Facts',
-    question_ar: 'الأخطبوط عنده 9 أدمغة و 3 قلوب، ولون دمه الحقيقي هو ______!',
-    question_en: 'An octopus has 9 brains, 3 hearts, and its blood is actually ______!',
-    truth_ar: 'أزرق',
-    truth_en: 'Blue',
-  },
-  {
-    id: 4,
-    category_ar: 'تاريخ وطرائف',
-    category_en: 'Funny History',
-    question_ar: 'في عام 1932، خاض الجيش الأسترالي حرباً حقيقية وخسرها ضد قطيع من ______!',
-    question_en: 'In 1932, the Australian military fought and lost a war against ______!',
-    truth_ar: 'طيور الإيمو (النعام الأسترالي)',
-    truth_en: 'Emus',
-  },
-  {
-    id: 5,
-    category_ar: 'طعام وغرائب',
-    category_en: 'Food & History',
-    question_ar: 'في القرن التاسع عشر بأمريكا، كان يتم بيع ______ في الصيدليات كدواء رسمي لعلاج المغص والصداع!',
-    question_en: 'In the 1830s, ______ was sold in pharmacies as an official medicine!',
-    truth_ar: 'الكاتشب',
-    truth_en: 'Ketchup',
-  },
-  {
-    id: 6,
-    category_ar: 'فضاء وعلوم',
-    category_en: 'Space & Science',
-    question_ar: 'اليوم الواحد على كوكب الزهرة (دورانه حول نفسه) أطول من ______ على نفس الكوكب!',
-    question_en: 'A single day on Venus is actually longer than ______ on Venus!',
-    truth_ar: 'السنة الكاملة',
-    truth_en: 'A Full Year',
-  },
-  {
-    id: 7,
-    category_ar: 'قوانين غريبة',
-    category_en: 'Strange Laws',
-    question_ar: 'في مدينة ميلانو الإيطالية، يفرض القانون القديم على المواطنين ______ في الأماكن العامة ما عدا المستشفيات والجنازات!',
-    question_en: 'An old law in Milan, Italy requires citizens to ______ in public at all times except funerals or hospitals!',
-    truth_ar: 'الابتسام دائماً',
-    truth_en: 'Smile at all times',
-  },
-  {
-    id: 8,
-    category_ar: 'غرائب الطبيعة',
-    category_en: 'Nature Facts',
-    question_ar: 'الفاكهة الوحيدة اللي بذورها موجودة على قشرتها من الخارج بدل الداخل هي ______!',
-    question_en: 'The only fruit that wears its seeds on the outside is the ______!',
-    truth_ar: 'الفراولة (الفريز)',
-    truth_en: 'Strawberry',
-  },
-];
-
 export const WORD_BOMB_CHALLENGES: WordBombChallenge[] = [
   { id: 1, letters_ar: 'م ا', letters_en: 'WA', hint_ar: 'كلمة تحتوي حرفي (م) و (ا) مثل: ماء، سماء، مال', hint_en: 'Word containing WA (e.g. WATER, WATCH)' },
   { id: 2, letters_ar: 'ب ر', letters_en: 'BR', hint_ar: 'كلمة تحتوي حرفي (ب) و (ر) مثل: بحر، برتقال، برد', hint_en: 'Word containing BR (e.g. BREAD, BRAVE)' },
@@ -307,4 +231,8 @@ export const WORD_BOMB_CHALLENGES: WordBombChallenge[] = [
   { id: 6, letters_ar: 'ف ر', letters_en: 'FR', hint_ar: 'كلمة تحتوي حرفي (ف) و (ر) مثل: فراشة، فرح، سفر', hint_en: 'Word containing FR (e.g. FRIEND, FRUIT)' },
   { id: 7, letters_ar: 'ن و', letters_en: 'NO', hint_ar: 'كلمة تحتوي حرفي (ن) و (و) مثل: نور، نوم، ليمون', hint_en: 'Word containing NO (e.g. NIGHT, NOTE)' },
   { id: 8, letters_ar: 'ك ت', letters_en: 'ST', hint_ar: 'كلمة تحتوي حرفي (ك) و (ت) مثل: كتاب، مكتب، نكتة', hint_en: 'Word containing ST (e.g. STAR, STONE)' },
+  { id: 9, letters_ar: 'ح ب', letters_en: 'PL', hint_ar: 'كلمة تحتوي حرفي (ح) و (ب) مثل: بحر، حبل، سحاب', hint_en: 'Word containing PL (e.g. PLANET, PLAY)' },
+  { id: 10, letters_ar: 'ع ر', letters_en: 'TR', hint_ar: 'كلمة تحتوي حرفي (ع) و (ر) مثل: شارع، رعد، عرس', hint_en: 'Word containing TR (e.g. TRAIN, TREE)' },
+  { id: 11, letters_ar: 'ج م', letters_en: 'GR', hint_ar: 'كلمة تحتوي حرفي (ج) و (م) مثل: جمل، نجم، جمعة', hint_en: 'Word containing GR (e.g. GREEN, GREAT)' },
+  { id: 12, letters_ar: 'د ر', letters_en: 'DR', hint_ar: 'كلمة تحتوي حرفي (د) و (ر) مثل: مدرسة، بدر، درج', hint_en: 'Word containing DR (e.g. DREAM, DROP)' },
 ];

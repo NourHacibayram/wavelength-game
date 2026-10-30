@@ -1,0 +1,894 @@
+import { PartyGameId, PartyGameCategory } from './partyGamesData';
+
+export interface PartyGameCatalogItem {
+  id: PartyGameId;
+  category: Exclude<PartyGameCategory, 'all'>;
+  accent: string;
+  bgTint: string;
+  players_ar: string;
+  players_en: string;
+  tag_ar: string;
+  tag_en: string;
+  name_ar: string;
+  name_en: string;
+  desc_ar: string;
+  desc_en: string;
+  longDesc_ar: string;
+  longDesc_en: string;
+  rules_ar: string[];
+  rules_en: string[];
+  isNew?: boolean;
+}
+
+export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
+  {
+    id: 'wavelength',
+    category: 'telepathy',
+    accent: '#ff595e',
+    bgTint: '#ffe8e8',
+    players_ar: '2–12 لاعب',
+    players_en: '2–12 Players',
+    tag_ar: 'تخاطر ومقاييس',
+    tag_en: 'Telepathy Dial',
+    name_ar: 'عَ نفس الموجة',
+    name_en: 'Wavelength',
+    desc_ar: 'تخاطر المؤشر السري بين طرفين متضادين!',
+    desc_en: 'Read your friend’s mind on a hidden spectrum!',
+    longDesc_ar:
+      'العرّاف يشوف مكان الهدف السري عالعجلة ويعطي كلمة تلميح، وكل لاعب يحرّك مؤشره الشخصي للمكان الصح!',
+    longDesc_en:
+      'One Psychic sees the hidden target wedge and gives a single clue while everyone locks their personal pointer!',
+    rules_ar: [
+      'لاعب واحد يكون العرّاف وهو الوحيد الذي يرى موقع الهدف الملوّن عالعجلة.',
+      'ينظر العرّاف لبطاقة المقياس (مثلاً: بارد — ساخن) ويكتب تلميحاً ذكياً بدون أرقام.',
+      'كل لاعب يحرّك مؤشره الشخصي للمكان الذي يتوقعه ويثبت تخمينه.',
+      'نفتح الغطاء! الإصابة بالمنتصف تعطي 4 نقاط، وبجانبها 3 أو 2 نقطة!',
+    ],
+    rules_en: [
+      'One player is the Psychic and peeks at the hidden target wedge on the wheel.',
+      'Look at the spectrum card (e.g. Cold — Hot) and give one conceptual clue.',
+      'Every player drags their personal needle and locks in their angle.',
+      'Open the screen! Center blue scores 4 pts, orange 3 pts, yellow 2 pts!',
+    ],
+  },
+  {
+    id: 'chameleon',
+    category: 'bluff',
+    accent: '#5c73b8',
+    bgTint: '#e6ecff',
+    players_ar: '3–10 لاعبين',
+    players_en: '3–10 Players',
+    tag_ar: 'تحقيق وجاسوس',
+    tag_en: 'Social Deduction',
+    name_ar: 'برّا السالفة',
+    name_en: 'Out of the Loop',
+    desc_ar: 'اسألوا بذكاء واكشفوا مين الجاسوس اللي برّا السالفة!',
+    desc_en: 'Question each other & catch the hidden impostor!',
+    longDesc_ar:
+      'الكل يعرف الكلمة السرية إلا واحد "برّا السالفة"! اسألوا بعض بالترتيب بدون ما تفضحوا الكلمة وصوّتوا عالجاسوس.',
+    longDesc_en:
+      'Everyone knows the secret word except one Chameleon! Ask clever questions without giving away the word, then vote!',
+    rules_ar: [
+      'تظهر الكلمة السرية لكل اللاعبين ما عدا لاعب واحد فقط يظهر له أنه "برّا السالفة".',
+      'يسأل اللاعبون بعضهم سؤالاً وجواباً واحداً بالترتيب حول الكلمة بحذر.',
+      'يصوّت الجميع على الشخص المشتبه بأنه برّا السالفة.',
+      'إذا انكشف الجاسوس، يحصل على فرصة أخيرة لتخمين الكلمة السرية من الجدول وسرقة النقاط!',
+    ],
+    rules_en: [
+      'Everyone sees the secret word except one player who is Out of the Loop.',
+      'Take turns asking and answering subtle questions about the word.',
+      'Vote together on who you suspect is faking it.',
+      'If caught, the impostor gets one final shot to guess the secret word from the grid!',
+    ],
+  },
+  {
+    id: 'dixit',
+    category: 'telepathy',
+    accent: '#9b5de5',
+    bgTint: '#f3e8ff',
+    players_ar: '3–10 لاعبين',
+    players_en: '3–10 Players',
+    tag_ar: 'خيال ولوحات',
+    tag_en: 'Surreal Art',
+    name_ar: 'خيال الشلّة',
+    name_en: 'Dixit Dreams',
+    desc_ar: 'لوحات خيالية ساحرة وتلميح غامض لا سهل ولا مستحيل!',
+    desc_en: 'Dreamlike art cards & Goldilocks poetic clues!',
+    longDesc_ar:
+      'الراوي يختار لوحة خيالية من يده ويعطي جملة أو تلميحاً، والبقية يرمون لوحات مشابهة لخداع الشلّة والتصويت!',
+    longDesc_en:
+      'The Storyteller plays a surreal card with a mysterious clue, friends play decoys, and everyone votes for the real one!',
+    rules_ar: [
+      'الراوي يختار لوحة سرية من أوراقه ويكتب تلميحاً خيالياً (جملة، أغنية، أو كلمة).',
+      'باقي اللاعبين يختارون من أوراقهم أكثر لوحة تشبه تلميح الراوي لتمويه الآخرين.',
+      'تُخلط اللوحات وتُعرض مكشوفة، ويصوّت الجميع على لوحة الراوي الحقيقية.',
+      'إذا عرفها البعض فقط: الراوي ومن أصاب يأخذون +3! أما إذا عرفها الكل أو لم يعرفها أحد فالراوي يأخذ 0 والبقية +2!',
+    ],
+    rules_en: [
+      'The Storyteller picks 1 surreal card from hand and gives a poetic/clever clue.',
+      'Other players pick 1 card from their hand that best matches that clue as a decoy.',
+      'All chosen cards are shuffled face-up and everyone votes for the Storyteller’s card.',
+      'If SOME (not all, not zero) find it: Storyteller & finders get +3! Plus +1 per player fooled by your decoy!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'taboo',
+    category: 'speed',
+    accent: '#ff595e',
+    bgTint: '#ffe4e6',
+    players_ar: '2–12 لاعب',
+    players_en: '2–12 Players',
+    tag_ar: 'تحدي شرح',
+    tag_en: 'Forbidden Words',
+    name_ar: 'الكلمات الممنوعة',
+    name_en: 'Taboo Rush',
+    desc_ar: 'اشرح الكلمة للشلّة بدون ما تزلّ لسانك بالـ 5 كلمات الممنوعة!',
+    desc_en: 'Describe the target word without saying the 5 taboo words!',
+    longDesc_ar:
+      'عداد الثواني يركض! اشرح أكبر عدد من البطاقات لأصحابك بينما المراقب ينتظر أي زلّة لسان ليضغط جرس الإنذار!',
+    longDesc_en:
+      'Race the clock to describe words while the Watcher hovers over the Buzzer waiting for you to slip up!',
+    rules_ar: [
+      'الشارح يرى الكلمة المطلوبة وتحتها 5 كلمات ممنوعة تماماً.',
+      'خلال 60 ثانية، اشرح الكلمة للشلّة بالصوت أو التلميح بدون نطق أي كلمة ممنوعة أو مشتقاتها.',
+      'لاعب المراقبة يرى البطاقة أيضاً ومعه زر الجرس الأحمر لخصم البطاقة إذا غلطت!',
+      'كل كلمة صحيحة تعطي نقاطاً للشارح وللفريق قبل انتهاء الوقت!',
+    ],
+    rules_en: [
+      'The Describer sees the target word and 5 strictly forbidden Taboo words.',
+      'Beat the 60-second timer by explaining as many cards as possible.',
+      'Watchers see the forbidden list too and can hit the Red Buzzer if you slip!',
+      'Score points for every clean guess before the timer runs out!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'witness',
+    category: 'drawing',
+    accent: '#00bbf9',
+    bgTint: '#e0f7ff',
+    players_ar: '2–10 لاعبين',
+    players_en: '2–10 Players',
+    tag_ar: 'ذاكرة ورسم',
+    tag_en: 'Memory Sketch',
+    name_ar: 'الشاهد الوحيد',
+    name_en: 'Sole Witness',
+    desc_ar: 'شاهد الكائن العجيب 10 ثوانٍ فقط واوصفه ليرسموه عالعمياني!',
+    desc_en: 'Memorize a bizarre monster in 10s & describe it for artists!',
+    longDesc_ar:
+      'الشاهد يرى وحشاً كرتونياً عجيباً لمدة 10 ثوانٍ ثم يختفي! يصفه من ذاكرته بينما البقية يرسمونه ثم نصوّت لأدق رسمة!',
+    longDesc_en:
+      'One Witness glimpses a weird monster for 10 seconds before it vanishes! Describe it from memory while friends draw it!',
+    rules_ar: [
+      'الشاهد الوحيد يضغط "ابدأ المشاهدة" ويرى الكائن العجيب لمدة 10 ثوانٍ فقط ثم يختفي!',
+      'يصف الشاهد تفاصيل الكائن (عدد العيون، القرون، شكل الجسم، الأذرع) من ذاكرته.',
+      'يرسم باقي اللاعبين الكائن على لوحة الرسم المباشرة ويرسلون لوحاتهم.',
+      'نكشف الكائن الحقيقي بجانب إبداعات اللاعبين ونصوّت لأقرب وأظرف رسمة!',
+    ],
+    rules_en: [
+      'The Witness views a weird cartoon creature for just 10 seconds before it disappears.',
+      'From memory alone, the Witness describes its shape, eyes, horns, and limbs.',
+      'Everyone else sketches what they hear on their canvas and submits.',
+      'Reveal the real creature next to all drawings and vote for the best match!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'fakeartist',
+    category: 'drawing',
+    accent: '#ff924c',
+    bgTint: '#fff0e5',
+    players_ar: '3–10 لاعبين',
+    players_en: '3–10 Players',
+    tag_ar: 'رسم وجاسوس',
+    tag_en: 'Shared Canvas',
+    name_ar: 'الفنان المزيّف',
+    name_en: 'Fake Artist',
+    desc_ar: 'لوحة مشتركة! كل لاعب يرسم خطاً واحداً... ومين اللي عم يخبّص؟',
+    desc_en: 'One shared canvas, 1 stroke per turn — spot the Fake Artist!',
+    longDesc_ar:
+      'الكل يعرف شو عم نرسم إلا الفنان المزيّف يعرف التصنيف فقط! كل لاعب يرسم خطاً واحداً بلونه ليكمل اللوحة بدون ما يفضحها.',
+    longDesc_en:
+      'Everyone knows the secret object except one Fake Artist! Each player adds ONE stroke in their own color across 2 rounds.',
+    rules_ar: [
+      'يظهر عنوان التصنيف للجميع، وتظهر الكلمة السرية للرسامين الحقيقيين فقط (الفنان المزيف لا يراها!).',
+      'يتناوب اللاعبون على لوحة واحدة: كل لاعب يرسم خطاً واحداً متصلاً بلونه الخاص في دوره (دورتان فقط).',
+      'ارسم خطاً يثبت للبقية أنك تعرف الكلمة، لكن ليس واضحاً جداً كي لا يفهمها الفنان المزيف!',
+      'بعد اكتمال الخطوط نصوّت لكشف الفنان المزيف، وإذا انكشف يحاول تخمين الرسمة!',
+    ],
+    rules_en: [
+      'Everyone sees the Category, and real artists see the Secret Word (Fake Artist doesn’t!).',
+      'Take turns drawing ONE single continuous stroke in your color on the shared canvas (2 strokes each).',
+      'Be subtle enough to hide the word from the Fake Artist, yet clear enough to look innocent!',
+      'Vote for the Fake Artist — if caught, they get one last guess at what the drawing is!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'cockroach',
+    category: 'bluff',
+    accent: '#8ac926',
+    bgTint: '#eefbe0',
+    players_ar: '2–10 لاعبين',
+    players_en: '2–10 Players',
+    tag_ar: 'خداع وتحدي',
+    tag_en: 'Bluff Poker',
+    name_ar: 'بوكر الخداع',
+    name_en: 'Critter Bluff',
+    desc_ar: 'مرّر الكرت مقلوباً وادّعِ إنه عقرب... صادق ولا كذّاب؟',
+    desc_en: 'Slide a critter card face-down & bluff — Truth or Lie?',
+    longDesc_ar:
+      'شوف كرت الحشرة السري ومرّره لصاحبك مع ادعاء (مثلاً: هذا خفاش!). صاحبك إما يكشفك (صادق/كذاب) أو يطلّ عليه ويمرره لغيره!',
+    longDesc_en:
+      'Peek at a creepy-cute critter card, slide it to a friend with a claim, and force them to call your bluff or pass it on!',
+    rules_ar: [
+      'اللاعب صاحب الدور يرى الكرت الحقيقي بالسر، يختار لاعباً ويدّعي اسماً للكرت (صدقاً أو كذباً!).',
+      'اللاعب المستهدف لديه خياران: إما أن يتحدى فوراً (صادق / كذّاب)، أو يختلس النظر ويمرره للاعب لم يره بعد!',
+      'إذا تحدّى وكان محقاً: يأخذ صاحب الادعاء الكرت كعقوبة، أما إذا أخطأ فيأخذه هو!',
+      'أول لاعب يتجمع أمامه 3 كروت عقوبة يخسر الجولة والبقية يكسبون النقاط!',
+    ],
+    rules_en: [
+      'Active player peeks at the hidden critter card, picks a target friend, and claims what critter it is.',
+      'Target player can either call "Truth!" / "Lie!" right away, OR peek secretly and pass it to a new player!',
+      'Whoever loses the bluff challenge takes the critter card face-up in front of them.',
+      'Avoid collecting 3 penalty cards — sharp bluffers earn bonus points!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'wits',
+    category: 'speed',
+    accent: '#ffca3a',
+    bgTint: '#fff9db',
+    players_ar: '2–12 لاعب',
+    players_en: '2–12 Players',
+    tag_ar: 'توقعات ورهان',
+    tag_en: 'Trivia Betting',
+    name_ar: 'مزايدة التخمين',
+    name_en: 'Wits & Wagers',
+    desc_ar: 'أسئلة أرقام مستحيلة! مو شرط تعرف الجواب... راهن ع صاحبك الصح!',
+    desc_en: 'Wild number trivia — bet your chips on the closest guess!',
+    longDesc_ar:
+      'الكل يخمّن رقماً سرياً لسؤال عجيب، ثم تُفرش التخمينات على طاولة الرهان ليضع كل لاعب فيشاته على أقرب جواب!',
+    longDesc_en:
+      'Everyone submits a secret number guess, guesses are sorted on the betting mat, and everyone bets chips on the closest answer!',
+    rules_ar: [
+      'يظهر سؤال رقمي غريب وممتع، ويكتب كل لاعب تخمينه الرقمي بالسر.',
+      'تُرتّب كل التخمينات تصاعدياً على طاولة المزايدة مع نسب مضاعفة النقاط.',
+      'يملك كل لاعب فيشتي رهان (فيشة ذهبية وفيشة فضية) يضعهما على التخمين الذي يظنه الأقرب للجواب الحقيقي.',
+      'يُكشف الرقم الحقيقي! صاحب أقرب تخمين يكسب مكافأة، وكل من راهن عليه يربح أضعاف فيشاته!',
+    ],
+    rules_en: [
+      'Read a wild numerical question and submit your best secret number guess.',
+      'All guesses are revealed and sorted ascending on the Cartoon Betting Mat.',
+      'Place your 2 betting chips on whichever guess you think is closest to the real answer!',
+      'Reveal the truth! Closest guesser + winning bettors cash in big points!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'insider',
+    category: 'bluff',
+    accent: '#f15bb5',
+    bgTint: '#ffe5f4',
+    players_ar: '3–10 لاعبين',
+    players_en: '3–10 Players',
+    tag_ar: 'عميل خفي',
+    tag_en: 'Reverse Spy',
+    name_ar: 'العميل الداخلي',
+    name_en: 'The Insider',
+    desc_ar: 'حزروا الكلمة بأسئلة نعم/لا، ثم اكشفوا مين اللي كان يغشّشكم بالسر!',
+    desc_en: 'Guess the word via Yes/No, then unmask who secretly steered you!',
+    longDesc_ar:
+      'الحَكم يعرف الكلمة، وواحد بينكم هو "العميل الداخلي" يعرفها كمان! العميل لازم يلمّحلكم لتفوزوا قبل الوقت بدون ما ينفضح!',
+    longDesc_en:
+      'The Judge knows the word, and 1 hidden Insider knows it too! Beat the 2-min clock with Yes/No questions, then catch the Insider!',
+    rules_ar: [
+      'يُعيّن حَكم يعرف الكلمة السرية، ولاعب واحد سري بينكم هو "العميل الداخلي" يعرف الكلمة أيضاً!',
+      'المرحلة 1 (سباق الوقت): اسألوا أسئلة (نعم / لا) والحكم يجيب حتى يحزر أحدكم الكلمة قبل انتهاء الدقيقتين.',
+      'إذا انتهى الوقت دون معرفة الكلمة يخسر الجميع بما فيهم العميل!',
+      'المرحلة 2 (المحاكمة): بعد إيجاد الكلمة، ناقشوا وصوّتوا: مين سأل أسئلة مريبة وقادكم للحل؟',
+    ],
+    rules_en: [
+      'One Judge knows the Secret Word — and one secret Insider among you knows it too!',
+      'Phase 1: Ask Yes/No questions and guess the Secret Word before the 2-minute timer runs out.',
+      'If time runs out, EVERYONE loses (including the Insider)!',
+      'Phase 2: Once solved, debate and vote on who subtly steered the group to the answer!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'medium',
+    category: 'telepathy',
+    accent: '#00f5d4',
+    bgTint: '#e0fff9',
+    players_ar: '2–10 لاعبين',
+    players_en: '2–10 Players',
+    tag_ar: 'تلاقي الأفكار',
+    tag_en: 'Mind Meld',
+    name_ar: 'التقاء العقول',
+    name_en: 'Mind Meld',
+    desc_ar: 'كلمتان مختلفتان... اكتبوا الكلمة اللي بتربطهم بنفس اللحظة!',
+    desc_en: 'Two words — simultaneously type the exact link between them!',
+    longDesc_ar:
+      'لاعبان يواجهان كلمتين مثل (شمس + ثلج) ويكتبان الكلمة الرابطة بنفس اللحظة! إذا اختلفا، تصبح كلمتاهما هما الجسر الجديد حتى تتطابق عقولهما!',
+    longDesc_en:
+      'Two players see two words and simultaneously submit the connecting word! If different, their two new words form the next bridge until they match!',
+    rules_ar: [
+      'يختار النظام ثنائياً من اللاعبين ويعرض لهما كلمتين مختلفتين (مثلاً: قهوة — ليل).',
+      'يكتب كل طرف بالسر الكلمة الواحدة التي تربط بينهما في ذهنه.',
+      'إذا كتب الاثنان نفس الكلمة من أول محاولة: انفجار تخاطر أسطوري (+4 نقاط لكل منهما)!',
+      'إذا اختلفت الكلمتان، تصبح الكلمتان الجديدتان هما طرفا الجسر للمحاولة 2 ثم 3 لتقترب الأفكار حتى تتطابق!',
+    ],
+    rules_en: [
+      'An active pair of players gets two unrelated starting words.',
+      'Both secretly submit ONE single word that connects those two concepts.',
+      'If they match on Attempt 1: Mind Meld Jackpot (+4 pts each)!',
+      'If not, their two newly submitted words become the new pair for Attempt 2 & 3 until they converge!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'soclover',
+    category: 'telepathy',
+    accent: '#38b000',
+    bgTint: '#e6f9e0',
+    players_ar: '2–10 لاعبين',
+    players_en: '2–10 Players',
+    tag_ar: 'روابط ذكية',
+    tag_en: 'Word Clover',
+    name_ar: 'شفرة الأربع كلمات',
+    name_en: 'Clover Code',
+    desc_ar: 'اربط كل كلمتين متجاورتين بشفرة واحدة، وخلي الشلّة يركّبوا البورد!',
+    desc_en: 'Link 4 word pairs on a clover & let friends reconstruct them!',
+    longDesc_ar:
+      'صاحب الشفرة يرى 4 كلمات موزعة حول زهرة البرسيم ويكتب كلمة رابطة لكل ضلع، ثم تُخلط الكلمات مع كلمة دخيلة ليحلّها الأصحاب!',
+    longDesc_en:
+      'Write 1 connecting clue for each of the 4 sides of your word clover, then shuffle them with a decoy for your team to solve!',
+    rules_ar: [
+      'تتوزع 4 كلمات سرية على زوايا زهرة البرسيم (أعلى، يمين، أسفل، يسار) لصاحب الدور.',
+      'يكتب صاحب الدور كلمة تلميح واحدة تربط كل كلمتين متجاورتين (4 تلميحات على الأضلاع).',
+      'تُسحب الكلمات الأربع وتُخلط مع كلمة خامسة دخيلة لتمويه الفريق!',
+      'يتعاون باقي اللاعبين لوضع كل كلمة في زاويتها الصحيحة لتطابق عقل صاحب الشفرة!',
+    ],
+    rules_en: [
+      '4 secret words sit on the corners of the Clue-Giver’s 2x2 Clover board.',
+      'Write a 1-word clue on each of the 4 outer edges linking its two adjacent corner words.',
+      'The 4 words are removed and shuffled with 1 sneaky decoy word!',
+      'Friends work together to place the right 4 words back into their exact corner slots!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'decrypto',
+    category: 'bluff',
+    accent: '#4361ee',
+    bgTint: '#e5eaff',
+    players_ar: '2–10 لاعبين',
+    players_en: '2–10 Players',
+    tag_ar: 'تشفير واستخبارات',
+    tag_en: 'Code Breakers',
+    name_ar: 'كسر الشيفرة',
+    name_en: 'Decrypto',
+    desc_ar: 'وصّل شيفرة الأرقام الـ 3 لفريقك بدون ما يفهمها الخصوم!',
+    desc_en: 'Transmit a 3-digit secret code without getting intercepted!',
+    longDesc_ar:
+      'لديكم 4 كلمات مرقمة (1–4) وكود سري مثل (3 - 1 - 4)! أعطِ 3 تلميحات ذكية ليفكّ الشلّة الترتيب بدون كشف الكلمات الأصلية!',
+    longDesc_en:
+      'You have 4 numbered keywords (#1–#4) and a secret 3-digit code like 3-1-4. Give 3 clues so friends crack the order!',
+    rules_ar: [
+      'تظهر على الشاشة 4 كلمات مرقمة من #1 إلى #4.',
+      'المشفِّر وحده يرى كود الجولة المكون من 3 أرقام مختلفة (مثلاً: 2 - 4 - 1).',
+      'يكتب المشفِّر 3 تلميحات بالترتيب تدل على تلك الكلمات بذكاء.',
+      'يحاول اللاعبون استنتاج الكود الثلاثي الصحيح بالترتيب لكسب نقاط فكّ التشفير!',
+    ],
+    rules_en: [
+      '4 keywords sit in slots #1, #2, #3, and #4.',
+      'Only the Encryptor sees the secret 3-digit sequence (e.g. 2 - 4 - 1).',
+      'The Encryptor writes 3 clues corresponding to those three numbered words in order.',
+      'Everyone else deduces which 3-digit sequence matches the clues to crack the code!',
+    ],
+    isNew: true,
+  },
+  {
+    id: 'ito',
+    category: 'telepathy',
+    accent: '#1982c4',
+    bgTint: '#e0f2fe',
+    players_ar: '2–10 لاعبين',
+    players_en: '2–10 Players',
+    tag_ar: 'ترتيب تشاركي',
+    tag_en: '1–100 Scale',
+    name_ar: 'تخاطر الأرقام',
+    name_en: 'Ito (1–100)',
+    desc_ar: 'أوصف رقمك السري (1–100) بمثال ورتّبوا بطاقاتكم تصاعدياً!',
+    desc_en: 'Describe your secret 1–100 number & sort everyone in order!',
+    longDesc_ar:
+      'كل لاعب يحمل رقماً سرياً من 1 إلى 100 وممنوع يذكره! يكتب مثالاً يناسب قوة رقمه حسب الموضوع ثم ترتبون البطاقات من الأصغر للأكبر.',
+    longDesc_en:
+      'Everyone gets a secret 1–100 card! Express its intensity using the round’s theme and arrange all players from smallest to largest.',
+    rules_ar: [
+      'يُختار موضوع للمقياس (مثلاً: أشياء مرعبة من 1 لطيف إلى 100 رعب حقيقي).',
+      'يكشف كل لاعب رقمه السري بالسر ويكتب مثالاً يعبر عن حجم رقمه بدون ذكر أي أرقام.',
+      'تتناقش الشلّة وترتب بطاقات اللاعبين من الأصغر فوق إلى الأكبر تحت.',
+      'نكشف الأرقام السرية ونحسب كم بطاقة إجت بمكانها التصاعدي الصحيح!',
+    ],
+    rules_en: [
+      'Read the round’s 1-to-100 scale theme (e.g. Scary Things).',
+      'Peek at your secret number and write a matching example without saying numbers.',
+      'Reorder everyone’s cards from lowest (top) to highest (bottom).',
+      'Reveal all numbers and score big for every card in exact ascending order!',
+    ],
+  },
+  {
+    id: 'wordbomb',
+    category: 'speed',
+    accent: '#e63946',
+    bgTint: '#ffe3e3',
+    players_ar: '2–12 لاعب',
+    players_en: '2–12 Players',
+    tag_ar: 'سرعة وتوتر',
+    tag_en: 'Hot Potato',
+    name_ar: 'قنبلة الحروف',
+    name_en: 'Word Bomb',
+    desc_ar: 'فتيل القنبلة شغّال وما حدا بيعرف إيمتى تنفجر! هات كلمة وارميها!',
+    desc_en: 'Unpredictable burning fuse — type a matching word & pass it fast!',
+    longDesc_ar:
+      'قنبلة موقوتة بفتيل عشوائي مشتعل! اكتب كلمة تحتوي الحرفين المطلوبين بسرعة البرق وارميها للي بعدك قبل الانفجار!',
+    longDesc_en:
+      'A ticking cartoon bomb with an unpredictable hidden fuse! Type a word with the required letters and pass it before BOOM!',
+    rules_ar: [
+      'القنبلة تظهر بيد أحد اللاعبين وعليها حرفان مطلوبان (مثلاً: ب ر).',
+      'الفتيل يشتعل بوقت عشوائي مخفي — ممكن تنفجر بأي ثانية بدون عدّاد مكشوف!',
+      'اكتب أي كلمة صحيحة (فصحى أو عامية مقبولة للشلّة) تحتوي الحرفين لترمي القنبلة للي بعدك.',
+      'إذا كتب أحدهم كلمة تخبيص، يمكن للشلّة الضغط على زر الاعتراض لإرجاع القنبلة ليده!',
+    ],
+    rules_en: [
+      'The bomb lands in one player’s hands showing 2 required letters.',
+      'The fuse burns with a hidden unpredictable timer — it can blow any second!',
+      'Type a valid unused word containing those letters to pass the bomb to the next player.',
+      'Friends can hit the Crowd Referee button to reject gibberish and toss the bomb back!',
+    ],
+  },
+];
+
+/* ============================================================================
+ * 1. TABOO CARDS (الكلمات الممنوعة)
+ * ========================================================================== */
+export interface TabooCardItem {
+  id: number;
+  category_ar: string;
+  category_en: string;
+  word_ar: string;
+  word_en: string;
+  forbidden_ar: [string, string, string, string, string];
+  forbidden_en: [string, string, string, string, string];
+}
+
+export const TABOO_CARDS: TabooCardItem[] = [
+  { id: 1, category_ar: 'أكل', category_en: 'Food', word_ar: 'شاورما', word_en: 'Shawarma', forbidden_ar: ['دجاج', 'ثوم', 'سيخ', 'خبز', 'مخلل'], forbidden_en: ['Chicken', 'Garlic', 'Wrap', 'Meat', 'Spit'] },
+  { id: 2, category_ar: 'حياة يومية', category_en: 'Daily Life', word_ar: 'شاحن جوال', word_en: 'Phone Charger', forbidden_ar: ['بطارية', 'سلك', 'كهرباء', 'موبايل', 'يفصل'], forbidden_en: ['Battery', 'Cable', 'Plug', 'Power', 'Phone'] },
+  { id: 3, category_ar: 'أماكن', category_en: 'Places', word_ar: 'المطار', word_en: 'Airport', forbidden_ar: ['طيارة', 'سفر', 'جواز', 'شنطة', 'طيران'], forbidden_en: ['Plane', 'Travel', 'Passport', 'Luggage', 'Flight'] },
+  { id: 4, category_ar: 'مناسبات', category_en: 'Events', word_ar: 'عرس', word_en: 'Wedding', forbidden_ar: ['عريس', 'عروس', 'فستان', 'زواج', 'حفلة'], forbidden_en: ['Bride', 'Groom', 'Ring', 'Dress', 'Marriage'] },
+  { id: 5, category_ar: 'مشروبات', category_en: 'Drinks', word_ar: 'قهوة', word_en: 'Coffee', forbidden_ar: ['فنجان', 'كافيين', 'سهر', 'بن', 'الصبح'], forbidden_en: ['Morning', 'Cup', 'Caffeine', 'Beans', 'Awake'] },
+  { id: 6, category_ar: 'تقنية', category_en: 'Tech', word_ar: 'نتفليكس', word_en: 'Netflix', forbidden_ar: ['أفلام', 'مسلسلات', 'اشتراك', 'شاشة', 'مشاهدة'], forbidden_en: ['Movies', 'Series', 'Stream', 'Watch', 'TV'] },
+  { id: 7, category_ar: 'دراسة', category_en: 'School', word_ar: 'امتحان', word_en: 'Exam', forbidden_ar: ['دراسة', 'علامة', 'نجاح', 'ورقة', 'سؤال'], forbidden_en: ['Test', 'Study', 'Grade', 'School', 'Paper'] },
+  { id: 8, category_ar: 'مهن', category_en: 'Jobs', word_ar: 'طبيب أسنان', word_en: 'Dentist', forbidden_ar: ['ضرس', 'وجع', 'فرشاة', 'عيادة', 'سوسة'], forbidden_en: ['Teeth', 'Drill', 'Mouth', 'Pain', 'Brush'] },
+  { id: 9, category_ar: 'أكل', category_en: 'Food', word_ar: 'كنافة', word_en: 'Kunafa', forbidden_ar: ['جبنة', 'قطر', 'حلويات', 'نابلسية', 'سخن'], forbidden_en: ['Cheese', 'Sweet', 'Syrup', 'Dessert', 'Pastry'] },
+  { id: 10, category_ar: 'أشياء', category_en: 'Objects', word_ar: 'مصعد', word_en: 'Elevator', forbidden_ar: ['طابق', 'درج', 'زر', 'عمارة', 'فوق'], forbidden_en: ['Floor', 'Stairs', 'Button', 'Building', 'Lift'] },
+  { id: 11, category_ar: 'تقنية', category_en: 'Tech', word_ar: 'سيلفي', word_en: 'Selfie', forbidden_ar: ['صورة', 'كاميرا', 'أمامية', 'وجه', 'تلفون'], forbidden_en: ['Photo', 'Camera', 'Front', 'Face', 'Instagram'] },
+  { id: 12, category_ar: 'طبيعة', category_en: 'Nature', word_ar: 'كابوس', word_en: 'Nightmare', forbidden_ar: ['حلم', 'نوم', 'خوف', 'ليل', 'مرعب'], forbidden_en: ['Dream', 'Sleep', 'Scary', 'Night', 'Wake'] },
+  { id: 13, category_ar: 'شارع', category_en: 'Street', word_ar: 'إشارة مرور', word_en: 'Traffic Light', forbidden_ar: ['أحمر', 'أخضر', 'سيارة', 'شارع', 'توقف'], forbidden_en: ['Red', 'Green', 'Stop', 'Car', 'Road'] },
+  { id: 14, category_ar: 'سفر', category_en: 'Travel', word_ar: 'جواز سفر', word_en: 'Passport', forbidden_ar: ['فيزا', 'مطار', 'ختم', 'حدود', 'دولة'], forbidden_en: ['Visa', 'Airport', 'Stamp', 'Border', 'Country'] },
+  { id: 15, category_ar: 'أكل', category_en: 'Food', word_ar: 'بيتزا', word_en: 'Pizza', forbidden_ar: ['إيطاليا', 'جبنة', 'عجينة', 'فرن', 'مثلث'], forbidden_en: ['Italy', 'Cheese', 'Slice', 'Dough', 'Oven'] },
+  { id: 16, category_ar: 'حيوانات', category_en: 'Animals', word_ar: 'أخطبوط', word_en: 'Octopus', forbidden_ar: ['بحر', 'ثمانية', 'أذرع', 'حبر', 'محيط'], forbidden_en: ['Eight', 'Tentacles', 'Sea', 'Ink', 'Ocean'] },
+  { id: 17, category_ar: 'منزل', category_en: 'Home', word_ar: 'غسالة', word_en: 'Washing Machine', forbidden_ar: ['ملابس', 'ماء', 'صابون', 'تنظيف', 'نشر'], forbidden_en: ['Clothes', 'Water', 'Soap', 'Spin', 'Laundry'] },
+  { id: 18, category_ar: 'أشياء', category_en: 'Objects', word_ar: 'نظارة شمسية', word_en: 'Sunglasses', forbidden_ar: ['عيون', 'شمس', 'صيف', 'عدسات', 'أسود'], forbidden_en: ['Eyes', 'Sun', 'Bright', 'Summer', 'Shades'] },
+  { id: 19, category_ar: 'ترفيه', category_en: 'Fun', word_ar: 'بوشار (فشار)', word_en: 'Popcorn', forbidden_ar: ['سينما', 'ذرة', 'فيلم', 'ملح', 'يفرقع'], forbidden_en: ['Cinema', 'Movie', 'Corn', 'Butter', 'Salt'] },
+  { id: 20, category_ar: 'رياضة', category_en: 'Sports', word_ar: 'حكم مباراة', word_en: 'Referee', forbidden_ar: ['صفارة', 'كرت أحمر', 'تسلل', 'كرة قدم', 'ملعب'], forbidden_en: ['Whistle', 'Red Card', 'Foul', 'Football', 'Rules'] },
+  { id: 21, category_ar: 'حياة يومية', category_en: 'Daily Life', word_ar: 'منبّه الصبح', word_en: 'Alarm Clock', forbidden_ar: ['نوم', 'يرن', 'ساعة', 'فيق', 'غفوة'], forbidden_en: ['Wake', 'Ring', 'Snooze', 'Morning', 'Sleep'] },
+  { id: 22, category_ar: 'حيوانات', category_en: 'Animals', word_ar: 'بطريق', word_en: 'Penguin', forbidden_ar: ['ثلج', 'قطب', 'طائر', 'يطير', 'سمك'], forbidden_en: ['Ice', 'Bird', 'Fly', 'Antarctica', 'Tuxedo'] },
+  { id: 23, category_ar: 'تقنية', category_en: 'Tech', word_ar: 'كلمة سر (باسورد)', word_en: 'Password', forbidden_ar: ['حساب', 'دخول', 'نسيت', 'رموز', 'قفل'], forbidden_en: ['Login', 'Secret', 'Account', 'Forgot', 'Lock'] },
+  { id: 24, category_ar: 'أشياء', category_en: 'Objects', word_ar: 'مرآة (مراية)', word_en: 'Mirror', forbidden_ar: ['انعكاس', 'وجه', 'زجاج', 'تشوف', 'حمام'], forbidden_en: ['Reflection', 'Glass', 'Look', 'Face', 'See'] },
+];
+
+/* ============================================================================
+ * 2. DIXIT SURREAL CARDS (خيال الشلّة — 24 Custom Illustrated SVG Scenes!)
+ * ========================================================================== */
+export interface DixitCardDef {
+  id: number;
+  label_ar: string;
+  label_en: string;
+}
+
+export const DIXIT_CARDS: DixitCardDef[] = Array.from({ length: 24 }, (_, idx) => ({
+  id: idx + 1,
+  label_ar: `لوحة الخيال #${idx + 1}`,
+  label_en: `Dream Card #${idx + 1}`,
+}));
+
+/* ============================================================================
+ * 3. MONSDRAWSITY / SOLE WITNESS MONSTERS (الشاهد الوحيد — 16 Unique Monsters!)
+ * ========================================================================== */
+export interface WitnessMonsterDef {
+  id: number;
+  name_ar: string;
+  name_en: string;
+  bg: string;
+  bodyColor: string;
+  accentColor: string;
+  shape: 'blob' | 'triangle' | 'pear' | 'box' | 'bean' | 'star';
+  eyes: 1 | 2 | 3 | 4;
+  horns: 'devil' | 'antennas' | 'crown' | 'cactus' | 'ears' | 'none';
+  mouth: 'fangs' | 'tongue' | 'zigzag' | 'bucktooth';
+  arms: 'tentacles' | 'claws' | 'wings' | 'noodle';
+  pattern: 'spots' | 'stripes' | 'belly' | 'stitches';
+}
+
+export const WITNESS_MONSTERS: WitnessMonsterDef[] = [
+  { id: 1, name_ar: 'زعتر ذو العين الواحدة', name_en: 'King Bloop', bg: '#e0f2fe', bodyColor: '#ff595e', accentColor: '#ffca3a', shape: 'pear', eyes: 1, horns: 'crown', mouth: 'fangs', arms: 'tentacles', pattern: 'spots' },
+  { id: 2, name_ar: 'فرفور المثلث الفضائي', name_en: 'Tri-Zapper', bg: '#fef3c7', bodyColor: '#8ac926', accentColor: '#00bbf9', shape: 'triangle', eyes: 3, horns: 'antennas', mouth: 'zigzag', arms: 'claws', pattern: 'stripes' },
+  { id: 3, name_ar: 'صندوق الكوابيس اللطيف', name_en: 'Boxy Chomper', bg: '#f3e8ff', bodyColor: '#9b5de5', accentColor: '#ff924c', shape: 'box', eyes: 2, horns: 'devil', mouth: 'bucktooth', arms: 'wings', pattern: 'stitches' },
+  { id: 4, name_ar: 'صبّار الغيوم الطائر', name_en: 'Cloud Cactus', bg: '#ffe4e6', bodyColor: '#00bbf9', accentColor: '#ff595e', shape: 'bean', eyes: 4, horns: 'cactus', mouth: 'tongue', arms: 'noodle', pattern: 'belly' },
+  { id: 5, name_ar: 'نجمة المجرة الجائعة', name_en: 'Star Muncher', bg: '#dcfce7', bodyColor: '#ffca3a', accentColor: '#f15bb5', shape: 'star', eyes: 1, horns: 'antennas', mouth: 'fangs', arms: 'noodle', pattern: 'spots' },
+  { id: 6, name_ar: 'بطاطا الكهف ذو الأجنحة', name_en: 'Bat-Tater', bg: '#e0e7ff', bodyColor: '#ff924c', accentColor: '#8ac926', shape: 'blob', eyes: 3, horns: 'ears', mouth: 'tongue', arms: 'wings', pattern: 'belly' },
+  { id: 7, name_ar: 'سلطعون المريخ المرقّط', name_en: 'Snip-Snap', bg: '#ffedd5', bodyColor: '#f15bb5', accentColor: '#ffca3a', shape: 'box', eyes: 4, horns: 'antennas', mouth: 'zigzag', arms: 'claws', pattern: 'spots' },
+  { id: 8, name_ar: 'هرم العيون الأربعة', name_en: 'Quadra-Cone', bg: '#ecfccb', bodyColor: '#1982c4', accentColor: '#ff595e', shape: 'triangle', eyes: 4, horns: 'crown', mouth: 'bucktooth', arms: 'tentacles', pattern: 'stripes' },
+  { id: 9, name_ar: 'حبّة الفاصوليا المرقطة', name_en: 'Jellyfang', bg: '#fae8ff', bodyColor: '#38b000', accentColor: '#ffca3a', shape: 'bean', eyes: 2, horns: 'devil', mouth: 'fangs', arms: 'claws', pattern: 'stitches' },
+  { id: 10, name_ar: 'كابتن إجاصة الأخطبوط', name_en: 'Pear-Pus', bg: '#cffafe', bodyColor: '#ff595e', accentColor: '#00f5d4', shape: 'pear', eyes: 3, horns: 'cactus', mouth: 'zigzag', arms: 'tentacles', pattern: 'belly' },
+  { id: 11, name_ar: 'مستر مكعب بلسان طويل', name_en: 'Licky Cube', bg: '#fef9c3', bodyColor: '#4361ee', accentColor: '#ff924c', shape: 'box', eyes: 1, horns: 'ears', mouth: 'tongue', arms: 'noodle', pattern: 'spots' },
+  { id: 12, name_ar: 'كعكة الفضاء ذات القرون', name_en: 'Horned Blob', bg: '#ffe4e6', bodyColor: '#9b5de5', accentColor: '#8ac926', shape: 'blob', eyes: 2, horns: 'crown', mouth: 'bucktooth', arms: 'tentacles', pattern: 'stripes' },
+  { id: 13, name_ar: 'شهاب المخالب السريع', name_en: 'Claw Star', bg: '#e0f2fe', bodyColor: '#ff924c', accentColor: '#1982c4', shape: 'star', eyes: 2, horns: 'devil', mouth: 'zigzag', arms: 'claws', pattern: 'belly' },
+  { id: 14, name_ar: 'أرنب المختبر العجيب', name_en: 'Stitch-Ear', bg: '#f1f5f9', bodyColor: '#00bbf9', accentColor: '#ffca3a', shape: 'pear', eyes: 4, horns: 'ears', mouth: 'fangs', arms: 'wings', pattern: 'stitches' },
+  { id: 15, name_ar: 'كبسولة الصبار الضاحكة', name_en: 'Prickle Bean', bg: '#fef2f2', bodyColor: '#ffca3a', accentColor: '#38b000', shape: 'bean', eyes: 1, horns: 'cactus', mouth: 'bucktooth', arms: 'wings', pattern: 'spots' },
+  { id: 16, name_ar: 'إمبراطور الهلام الثلاثي', name_en: 'Slime Rex', bg: '#ede9fe', bodyColor: '#e63946', accentColor: '#ffca3a', shape: 'triangle', eyes: 3, horns: 'devil', mouth: 'tongue', arms: 'noodle', pattern: 'belly' },
+];
+
+/* ============================================================================
+ * 4. FAKE ARTIST PROMPTS (الفنان المزيّف)
+ * ========================================================================== */
+export interface FakeArtistPrompt {
+  id: number;
+  category_ar: string;
+  category_en: string;
+  word_ar: string;
+  word_en: string;
+}
+
+export const FAKE_ARTIST_PROMPTS: FakeArtistPrompt[] = [
+  { id: 1, category_ar: 'حيوانات', category_en: 'Animals', word_ar: 'زرافة', word_en: 'Giraffe' },
+  { id: 2, category_ar: 'حيوانات', category_en: 'Animals', word_ar: 'أخطبوط', word_en: 'Octopus' },
+  { id: 3, category_ar: 'حيوانات', category_en: 'Animals', word_ar: 'فيل', word_en: 'Elephant' },
+  { id: 4, category_ar: 'حيوانات', category_en: 'Animals', word_ar: 'سلحفاة', word_en: 'Turtle' },
+  { id: 5, category_ar: 'حيوانات', category_en: 'Animals', word_ar: 'فراشة', word_en: 'Butterfly' },
+  { id: 6, category_ar: 'أطعمة', category_en: 'Food', word_ar: 'أناناس', word_en: 'Pineapple' },
+  { id: 7, category_ar: 'أطعمة', category_en: 'Food', word_ar: 'آيس كريم', word_en: 'Ice Cream' },
+  { id: 8, category_ar: 'أطعمة', category_en: 'Food', word_ar: 'بيتزا', word_en: 'Pizza' },
+  { id: 9, category_ar: 'أطعمة', category_en: 'Food', word_ar: 'برغر', word_en: 'Burger' },
+  { id: 10, category_ar: 'مركبات', category_en: 'Vehicles', word_ar: 'صاروخ فضاء', word_en: 'Rocket' },
+  { id: 11, category_ar: 'مركبات', category_en: 'Vehicles', word_ar: 'منطاد هوائي', word_en: 'Hot Air Balloon' },
+  { id: 12, category_ar: 'مركبات', category_en: 'Vehicles', word_ar: 'غواصة', word_en: 'Submarine' },
+  { id: 13, category_ar: 'مركبات', category_en: 'Vehicles', word_ar: 'هليكوبتر', word_en: 'Helicopter' },
+  { id: 14, category_ar: 'أشياء', category_en: 'Objects', word_ar: 'جيتار', word_en: 'Guitar' },
+  { id: 15, category_ar: 'أشياء', category_en: 'Objects', word_ar: 'مظلة مطر', word_en: 'Umbrella' },
+  { id: 16, category_ar: 'أشياء', category_en: 'Objects', word_ar: 'تاج ملكي', word_en: 'Crown' },
+  { id: 17, category_ar: 'أشياء', category_en: 'Objects', word_ar: 'ساعة رملية', word_en: 'Hourglass' },
+  { id: 18, category_ar: 'أشياء', category_en: 'Objects', word_ar: 'مفتاح قديم', word_en: 'Key' },
+  { id: 19, category_ar: 'طبيعة', category_en: 'Nature', word_ar: 'بركان يثور', word_en: 'Volcano' },
+  { id: 20, category_ar: 'طبيعة', category_en: 'Nature', word_ar: 'نخلة على جزيرة', word_en: 'Palm Island' },
+  { id: 21, category_ar: 'طبيعة', category_en: 'Nature', word_ar: 'رجل ثلج', word_en: 'Snowman' },
+  { id: 22, category_ar: 'شخصيات', category_en: 'Characters', word_ar: 'قرصان', word_en: 'Pirate' },
+  { id: 23, category_ar: 'شخصيات', category_en: 'Characters', word_ar: 'رائد فضاء', word_en: 'Astronaut' },
+  { id: 24, category_ar: 'أبنية', category_en: 'Landmarks', word_ar: 'الأهرامات', word_en: 'Pyramids' },
+];
+
+/* ============================================================================
+ * 5. MEDIUM / MIND MELD PAIRS (التقاء العقول)
+ * ========================================================================== */
+export interface MediumPairItem {
+  id: number;
+  w1_ar: string;
+  w2_ar: string;
+  w1_en: string;
+  w2_en: string;
+}
+
+export const MEDIUM_WORD_PAIRS: MediumPairItem[] = [
+  { id: 1, w1_ar: 'شمس', w2_ar: 'ثلج', w1_en: 'Sun', w2_en: 'Snow' },
+  { id: 2, w1_ar: 'قهوة', w2_ar: 'ليل', w1_en: 'Coffee', w2_en: 'Night' },
+  { id: 3, w1_ar: 'مدرسة', w2_ar: 'جرس', w1_en: 'School', w2_en: 'Bell' },
+  { id: 4, w1_ar: 'طائرة', w2_ar: 'عصفور', w1_en: 'Airplane', w2_en: 'Bird' },
+  { id: 5, w1_ar: 'بحر', w2_ar: 'دموع', w1_en: 'Sea', w2_en: 'Tears' },
+  { id: 6, w1_ar: 'ذهب', w2_ar: 'وقت', w1_en: 'Gold', w2_en: 'Time' },
+  { id: 7, w1_ar: 'قطة', w2_ar: 'أسد', w1_en: 'Cat', w2_en: 'Lion' },
+  { id: 8, w1_ar: 'سينما', w2_ar: 'ظلام', w1_en: 'Cinema', w2_en: 'Darkness' },
+  { id: 9, w1_ar: 'خبز', w2_ar: 'فرن', w1_en: 'Bread', w2_en: 'Fire' },
+  { id: 10, w1_ar: 'مفتاح', w2_ar: 'سر', w1_en: 'Key', w2_en: 'Secret' },
+  { id: 11, w1_ar: 'شتاء', w2_ar: 'بطانية', w1_en: 'Winter', w2_en: 'Soup' },
+  { id: 12, w1_ar: 'هاتف', w2_ar: 'شاحن', w1_en: 'Phone', w2_en: 'Electricity' },
+  { id: 13, w1_ar: 'قمر', w2_ar: 'ذئب', w1_en: 'Moon', w2_en: 'Wolf' },
+  { id: 14, w1_ar: 'سفر', w2_ar: 'حقيبة', w1_en: 'Travel', w2_en: 'Cloud' },
+  { id: 15, w1_ar: 'ملك', w2_ar: 'شطرنج', w1_en: 'King', w2_en: 'Board' },
+  { id: 16, w1_ar: 'ساعة', w2_ar: 'ركض', w1_en: 'Clock', w2_en: 'Race' },
+  { id: 17, w1_ar: 'مرآة', w2_ar: 'ماء', w1_en: 'Mirror', w2_en: 'Water' },
+  { id: 18, w1_ar: 'نار', w2_ar: 'فحم', w1_en: 'Fire', w2_en: 'Meat' },
+  { id: 19, w1_ar: 'كتاب', w2_ar: 'شجرة', w1_en: 'Book', w2_en: 'Tree' },
+  { id: 20, w1_ar: 'عرس', w2_ar: 'كيك', w1_en: 'Wedding', w2_en: 'Ring' },
+];
+
+/* ============================================================================
+ * 6. SO CLOVER! WORD BANK (شفرة الأربع كلمات)
+ * ========================================================================== */
+export interface CloverWord {
+  id: number;
+  ar: string;
+  en: string;
+}
+
+export const SO_CLOVER_WORDS: CloverWord[] = [
+  { id: 1, ar: 'قمر', en: 'Moon' },
+  { id: 2, ar: 'جبنة', en: 'Cheese' },
+  { id: 3, ar: 'سفينة', en: 'Ship' },
+  { id: 4, ar: 'صحراء', en: 'Desert' },
+  { id: 5, ar: 'تاج', en: 'Crown' },
+  { id: 6, ar: 'ثعلب', en: 'Fox' },
+  { id: 7, ar: 'بيانو', en: 'Piano' },
+  { id: 8, ar: 'قهوة', en: 'Coffee' },
+  { id: 9, ar: 'ساعة', en: 'Clock' },
+  { id: 10, ar: 'قطار', en: 'Train' },
+  { id: 11, ar: 'قلعة', en: 'Castle' },
+  { id: 12, ar: 'مرآة', en: 'Mirror' },
+  { id: 13, ar: 'بركان', en: 'Volcano' },
+  { id: 14, ar: 'عسل', en: 'Honey' },
+  { id: 15, ar: 'مفتاح', en: 'Key' },
+  { id: 16, ar: 'شبح', en: 'Ghost' },
+  { id: 17, ar: 'مظلة', en: 'Umbrella' },
+  { id: 18, ar: 'ألماس', en: 'Diamond' },
+  { id: 19, ar: 'روبوت', en: 'Robot' },
+  { id: 20, ar: 'تفاحة', en: 'Apple' },
+  { id: 21, ar: 'نار', en: 'Fire' },
+  { id: 22, ar: 'جليد', en: 'Ice' },
+  { id: 23, ar: 'سينما', en: 'Cinema' },
+  { id: 24, ar: 'فراشة', en: 'Butterfly' },
+  { id: 25, ar: 'مطار', en: 'Airport' },
+  { id: 26, ar: 'حقيبة', en: 'Suitcase' },
+  { id: 27, ar: 'بطريق', en: 'Penguin' },
+  { id: 28, ar: 'ليمون', en: 'Lemon' },
+  { id: 29, ar: 'سيف', en: 'Sword' },
+  { id: 30, ar: 'غيوم', en: 'Clouds' },
+  { id: 31, ar: 'شمع', en: 'Candle' },
+  { id: 32, ar: 'بوصلة', en: 'Compass' },
+  { id: 33, ar: 'تنين', en: 'Dragon' },
+  { id: 34, ar: 'مكتبة', en: 'Library' },
+  { id: 35, ar: 'جسر', en: 'Bridge' },
+  { id: 36, ar: 'خاتم', en: 'Ring' },
+];
+
+/* ============================================================================
+ * 7. WITS & WAGERS QUESTIONS (مزايدة التخمين)
+ * ========================================================================== */
+export interface WitsQuestionItem {
+  id: number;
+  question_ar: string;
+  question_en: string;
+  answer: number;
+  unit_ar: string;
+  unit_en: string;
+  fact_ar: string;
+  fact_en: string;
+}
+
+export const WITS_QUESTIONS: WitsQuestionItem[] = [
+  {
+    id: 1,
+    question_ar: 'كم عدد العظام الموجودة في جسم سمكة القرش البالغة؟',
+    question_en: 'How many bones are in an adult shark’s entire body?',
+    answer: 0,
+    unit_ar: 'عظمة',
+    unit_en: 'bones',
+    fact_ar: 'صفر! هيكل سمكة القرش مكوّن بالكامل من الغضاريف وليس العظام!',
+    fact_en: 'Zero! A shark’s skeleton is made 100% of cartilage!',
+  },
+  {
+    id: 2,
+    question_ar: 'كم دقيقة استمرت أقصر حرب مسجّلة في التاريخ (بين بريطانيا وزنجبار عام 1896)؟',
+    question_en: 'How many minutes did the shortest war in history last (1896)?',
+    answer: 38,
+    unit_ar: 'دقيقة',
+    unit_en: 'minutes',
+    fact_ar: 'انتهت الحرب خلال 38 دقيقة فقط!',
+    fact_en: 'The Anglo-Zanzibar War lasted just 38 minutes!',
+  },
+  {
+    id: 3,
+    question_ar: 'كم متراً يبلغ الارتفاع الدقيق لبرج خليفة في دبي؟',
+    question_en: 'How many meters tall is the Burj Khalifa in Dubai?',
+    answer: 828,
+    unit_ar: 'متر',
+    unit_en: 'meters',
+    fact_ar: 'يبلغ طول برج خليفة 828 متراً (أكثر من 160 طابقاً)!',
+    fact_en: 'Burj Khalifa stands at 828 meters tall!',
+  },
+  {
+    id: 4,
+    question_ar: 'كم عضلة توجد في خرطوم الفيل الواحد؟',
+    question_en: 'Approximately how many muscles are in an elephant’s trunk?',
+    answer: 40000,
+    unit_ar: 'عضلة',
+    unit_en: 'muscles',
+    fact_ar: 'خرطوم الفيل يحتوي حوالي 40,000 عضلة مقارنة بـ 600 عضلة في جسم الإنسان كله!',
+    fact_en: 'An elephant’s trunk packs around 40,000 muscles!',
+  },
+  {
+    id: 5,
+    question_ar: 'كم مرة يرفرف طائر الطنّان (Hummingbird) بجناحيه في الثانية الواحدة؟',
+    question_en: 'How many times per second does a hummingbird flap its wings?',
+    answer: 80,
+    unit_ar: 'رفرفة/ثانية',
+    unit_en: 'flaps/sec',
+    fact_ar: 'يرفرف حوالي 80 مرة في الثانية الواحدة ليبقى معلقاً بالهواء!',
+    fact_en: 'Around 80 wingbeats every single second!',
+  },
+  {
+    id: 6,
+    question_ar: 'في أي عام أُطلقت أول نسخة من هاتف آيفون (iPhone) الأول في العالم؟',
+    question_en: 'In what year was the very first iPhone released?',
+    answer: 2007,
+    unit_ar: 'ميلادي',
+    unit_en: 'year',
+    fact_ar: 'أعلن ستيف جوبز عن أول آيفون في عام 2007!',
+    fact_en: 'Steve Jobs unveiled the original iPhone in 2007!',
+  },
+  {
+    id: 7,
+    question_ar: 'كم عدد مفاتيح البيانو الكلاسيكي الكامل (الأبيض + الأسود معاً)؟',
+    question_en: 'How many total keys (black + white) are on a standard grand piano?',
+    answer: 88,
+    unit_ar: 'مفتاح',
+    unit_en: 'keys',
+    fact_ar: '52 مفتاحاً أبيض و 36 مفتاحاً أسود = 88 مفتاحاً!',
+    fact_en: '52 white keys + 36 black keys = 88 total keys!',
+  },
+  {
+    id: 8,
+    question_ar: 'كم يوماً من السنة يقضيها حيوان الكوالا نائماً لو جمعنا ساعات نومه؟',
+    question_en: 'Out of 365 days in a year, how many full days’ worth of time does a koala spend sleeping?',
+    answer: 300,
+    unit_ar: 'يوم',
+    unit_en: 'days',
+    fact_ar: 'ينام الكوالا قرابة 20 ساعة يومياً، أي نحو 300 يوم في السنة!',
+    fact_en: 'Sleeping ~20 hours a day equals roughly 300 days per year!',
+  },
+  {
+    id: 9,
+    question_ar: 'كم عدد الغُرز الحمراء الموجودة على كرة البيسبول الرسمية؟',
+    question_en: 'How many red double-stitches are on an official MLB baseball?',
+    answer: 108,
+    unit_ar: 'غرزة',
+    unit_en: 'stitches',
+    fact_ar: 'كل كرة رسمية تُخاط يدوياً بـ 108 غرزات بالضبط!',
+    fact_en: 'Every official baseball has exactly 108 hand-sewn double stitches!',
+  },
+  {
+    id: 10,
+    question_ar: 'كم دقيقة يستغرق ضوء الشمس ليصل إلى كوكب الأرض (بالتقريب لأقرب دقيقة)؟',
+    question_en: 'How many minutes does sunlight take to reach Earth?',
+    answer: 8,
+    unit_ar: 'دقائق',
+    unit_en: 'minutes',
+    fact_ar: 'يصل ضوء الشمس إلى الأرض خلال 8 دقائق و20 ثانية!',
+    fact_en: 'Sunlight travels 150 million km in just ~8 minutes!',
+  },
+  {
+    id: 11,
+    question_ar: 'كم لتراً من الدم يضخّه قلب الإنسان البالغ في اليوم الواحد تقريباً؟',
+    question_en: 'Roughly how many liters of blood does a human heart pump per day?',
+    answer: 7500,
+    unit_ar: 'لتر',
+    unit_en: 'liters',
+    fact_ar: 'يضخ القلب حوالي 7,500 لتر يومياً في أكثر من 100 ألف نبضة!',
+    fact_en: 'About 7,500 liters every single day!',
+  },
+  {
+    id: 12,
+    question_ar: 'كم عدد فقرات رقبة الزرافة الطويلة؟',
+    question_en: 'How many neck vertebrae bones does a giraffe have?',
+    answer: 7,
+    unit_ar: 'فقرات',
+    unit_en: 'vertebrae',
+    fact_ar: 'مفاجأة! 7 فقرات فقط — نفس عدد فقرات رقبة الإنسان تماماً لكن كل فقرة عملاقة!',
+    fact_en: 'Just 7! Exactly the same count as humans, only much longer!',
+  },
+];
+
+/* ============================================================================
+ * 8. INSIDER SECRET WORDS (العميل الداخلي)
+ * ========================================================================== */
+export interface InsiderWordItem {
+  id: number;
+  category_ar: string;
+  category_en: string;
+  word_ar: string;
+  word_en: string;
+}
+
+export const INSIDER_WORDS: InsiderWordItem[] = [
+  { id: 1, category_ar: 'أجهزة وأدوات', category_en: 'Gadgets', word_ar: 'مايكروويف', word_en: 'Microwave' },
+  { id: 2, category_ar: 'أجهزة وأدوات', category_en: 'Gadgets', word_ar: 'مكنسة كهربائية', word_en: 'Vacuum Cleaner' },
+  { id: 3, category_ar: 'أشياء يومية', category_en: 'Everyday Objects', word_ar: 'فرشاة أسنان', word_en: 'Toothbrush' },
+  { id: 4, category_ar: 'أشياء يومية', category_en: 'Everyday Objects', word_ar: 'مظلة هبوط (باراشوت)', word_en: 'Parachute' },
+  { id: 5, category_ar: 'أطعمة', category_en: 'Food', word_ar: 'بطيخ أحمر', word_en: 'Watermelon' },
+  { id: 6, category_ar: 'أطعمة', category_en: 'Food', word_ar: 'سوشي', word_en: 'Sushi' },
+  { id: 7, category_ar: 'أماكن ومعالم', category_en: 'Places', word_ar: 'الأهرامات', word_en: 'The Pyramids' },
+  { id: 8, category_ar: 'أماكن ومعالم', category_en: 'Places', word_ar: 'منارة البحر', word_en: 'Lighthouse' },
+  { id: 9, category_ar: 'كائنات', category_en: 'Creatures', word_ar: 'حرباء', word_en: 'Chameleon' },
+  { id: 10, category_ar: 'كائنات', category_en: 'Creatures', word_ar: 'خفاش', word_en: 'Bat' },
+  { id: 11, category_ar: 'أشياء يومية', category_en: 'Everyday Objects', word_ar: 'بوصلة', word_en: 'Compass' },
+  { id: 12, category_ar: 'أشياء يومية', category_en: 'Everyday Objects', word_ar: 'قفل ومفتاح', word_en: 'Padlock' },
+  { id: 13, category_ar: 'مركبات', category_en: 'Vehicles', word_ar: 'غواصة بحرية', word_en: 'Submarine' },
+  { id: 14, category_ar: 'طبيعة', category_en: 'Nature', word_ar: 'جبل جليدي', word_en: 'Iceberg' },
+  { id: 15, category_ar: 'ترفيه', category_en: 'Entertainment', word_ar: 'أفعوانية الملاهي', word_en: 'Rollercoaster' },
+  { id: 16, category_ar: 'أشياء يومية', category_en: 'Everyday Objects', word_ar: 'شمعة', word_en: 'Candle' },
+];
+
+/* ============================================================================
+ * 9. DECRYPTO KEYWORDS (كسر الشيفرة)
+ * ========================================================================== */
+export const DECRYPTO_WORDS: { ar: string; en: string }[] = [
+  { ar: 'محيط', en: 'Ocean' },
+  { ar: 'مستشفى', en: 'Hospital' },
+  { ar: 'قمر', en: 'Moon' },
+  { ar: 'شطرنج', en: 'Chess' },
+  { ar: 'بركان', en: 'Volcano' },
+  { ar: 'مكتبة', en: 'Library' },
+  { ar: 'سيرك', en: 'Circus' },
+  { ar: 'جيتار', en: 'Guitar' },
+  { ar: 'قطار', en: 'Train' },
+  { ar: 'ألماس', en: 'Diamond' },
+  { ar: 'غابة', en: 'Jungle' },
+  { ar: 'تلسكوب', en: 'Telescope' },
+  { ar: 'عسل', en: 'Honey' },
+  { ar: 'قرصان', en: 'Pirate' },
+  { ar: 'مطار', en: 'Airport' },
+  { ar: 'كاميرا', en: 'Camera' },
+  { ar: 'ثعلب', en: 'Fox' },
+  { ar: 'قصر', en: 'Palace' },
+  { ar: 'فشار', en: 'Popcorn' },
+  { ar: 'سيف', en: 'Sword' },
+  { ar: 'عاصفة', en: 'Storm' },
+  { ar: 'متحف', en: 'Museum' },
+  { ar: 'روبوت', en: 'Robot' },
+  { ar: 'قهوة', en: 'Coffee' },
+];
+
+/* ============================================================================
+ * 10. COCKROACH POKER CRITTERS (بوكر الخداع)
+ * ========================================================================== */
+export type CritterType =
+  | 'scorpion'
+  | 'bat'
+  | 'frog'
+  | 'spider'
+  | 'roach'
+  | 'snake'
+  | 'rat'
+  | 'chameleon';
+
+export interface CritterDef {
+  id: CritterType;
+  name_ar: string;
+  name_en: string;
+  color: string;
+}
+
+export const COCKROACH_CRITTERS: CritterDef[] = [
+  { id: 'scorpion', name_ar: 'عقرب', name_en: 'Scorpion', color: '#ff924c' },
+  { id: 'bat', name_ar: 'خفاش', name_en: 'Bat', color: '#9b5de5' },
+  { id: 'frog', name_ar: 'ضفدع', name_en: 'Frog', color: '#8ac926' },
+  { id: 'spider', name_ar: 'عنكبوت', name_en: 'Spider', color: '#ff595e' },
+  { id: 'roach', name_ar: 'صرصور', name_en: 'Cockroach', color: '#d97706' },
+  { id: 'snake', name_ar: 'ثعبان', name_en: 'Snake', color: '#38b000' },
+  { id: 'rat', name_ar: 'جرذ', name_en: 'Rat', color: '#64748b' },
+  { id: 'chameleon', name_ar: 'حرباء', name_en: 'Chameleon', color: '#00bbf9' },
+];

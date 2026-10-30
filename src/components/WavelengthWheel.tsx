@@ -442,11 +442,11 @@ export const WavelengthWheel: React.FC<WavelengthWheelProps> = ({
               >
                 {otherTeamGuess === 'left'
                   ? lang === 'ar'
-                    ? '⬅️ تخمين الخصم'
-                    : '⬅️ Team B Guess'
+                    ? '← تخمين الخصم'
+                    : '← Team B Guess'
                   : lang === 'ar'
-                  ? 'تخمين الخصم ➡️'
-                  : 'Team B Guess ➡️'}
+                  ? 'تخمين الخصم →'
+                  : 'Team B Guess →'}
               </text>
             </g>
           )}

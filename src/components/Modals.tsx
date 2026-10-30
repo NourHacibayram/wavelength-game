@@ -1,95 +1,121 @@
-import React, { useState } from 'react';
-import { X, Sparkle, Target, UsersThree, Trophy, PlusCircle } from '@phosphor-icons/react';
+import React, { useState, useEffect } from 'react';
+import {
+  X,
+  PlusCircle,
+  Check,
+  MagnifyingGlass,
+  Users,
+  GameController,
+  Sparkle,
+} from '@phosphor-icons/react';
 import { TRANSLATIONS, Lang } from '../data/translations';
+import { PartyGameId, PartyGameCategory } from '../data/partyGamesData';
+import { PARTY_GAMES_CATALOG } from '../data/extraGamesData';
+import { PartyGameSvgIcon } from './CartoonIcons';
 
+/* ============================================================================
+ * 1. DYNAMIC HOW-TO-PLAY MODAL (Supports All 14 Party Games!)
+ * ========================================================================== */
 interface HowToPlayModalProps {
   isOpen: boolean;
   onClose: () => void;
   lang: Lang;
+  activeGameId?: PartyGameId;
 }
 
-export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose, lang }) => {
+export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({
+  isOpen,
+  onClose,
+  lang,
+  activeGameId = 'wavelength',
+}) => {
+  const [selectedId, setSelectedId] = useState<PartyGameId>(activeGameId);
+
+  useEffect(() => {
+    if (isOpen && activeGameId) {
+      setSelectedId(activeGameId);
+    }
+  }, [isOpen, activeGameId]);
+
   if (!isOpen) return null;
 
-  const steps =
-    lang === 'ar'
-      ? [
-          {
-            icon: <Sparkle weight="fill" className="w-7 h-7 text-[#ff924c]" />,
-            title: '1. دور العرّاف (Psychic)',
-            desc: 'لاعب واحد بيكون العرّاف، وهو الوحيد اللي بيشوف وين الهدف الملوّن (2 - 3 - 4 - 3 - 2) مخفي عالعجلة.',
-          },
-          {
-            icon: <Target weight="fill" className="w-7 h-7 text-[#1982c4]" />,
-            title: '2. إعطاء التلميح',
-            desc: 'العرّاف بيشوف البطاقة (مثلاً: بارد ↔ ساخن) وبيكتب تلميح بكلمة أو فكرة تدل ع مكان الهدف بدون ما يذكر أرقام!',
-          },
-          {
-            icon: <UsersThree weight="fill" className="w-7 h-7 text-[#8ac926]" />,
-            title: '3. تحريك المؤشر الأحمر',
-            desc: 'باقي اللاعبين بيتناقشوا وبيسحبوا المؤشر الأحمر للمكان اللي بيتوقعوا إنه التلميح بيقصده.',
-          },
-          {
-            icon: <Trophy weight="fill" className="w-7 h-7 text-[#ffca3a]" />,
-            title: '4. كشف الغطاء والنقاط!',
-            desc: 'بينفتح الغطاء! إذا إجا المؤشر بالمنطقة الزرقاء بالنص بتاخدوا 4 نقاط، البرتقالية 3 نقاط، والصفراء نقطتين!',
-          },
-        ]
-      : [
-          {
-            icon: <Sparkle weight="fill" className="w-7 h-7 text-[#ff924c]" />,
-            title: '1. The Psychic Peeks',
-            desc: 'One player is the Psychic and is the ONLY one who sees where the colored target (2-3-4-3-2) is hidden.',
-          },
-          {
-            icon: <Target weight="fill" className="w-7 h-7 text-[#1982c4]" />,
-            title: '2. Give a Conceptual Clue',
-            desc: 'Look at the spectrum card (e.g. Cold ↔ Hot) and give a single clue that sits at that exact spot on the scale!',
-          },
-          {
-            icon: <UsersThree weight="fill" className="w-7 h-7 text-[#8ac926]" />,
-            title: '3. Turn the Red Dial',
-            desc: 'Everyone else debates and drags the red pointer to where they think the Psychic’s clue points.',
-          },
-          {
-            icon: <Trophy weight="fill" className="w-7 h-7 text-[#ffca3a]" />,
-            title: '4. Reveal & Score!',
-            desc: 'Open the screen! Hitting the center blue wedge scores 4 points, orange scores 3, and yellow scores 2!',
-          },
-        ];
+  const gameMeta =
+    PARTY_GAMES_CATALOG.find((g) => g.id === selectedId) || PARTY_GAMES_CATALOG[0];
+  const rules = lang === 'ar' ? gameMeta.rules_ar : gameMeta.rules_en;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-      <div className="cartoon-card w-full max-w-lg p-6 relative animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs">
+      <div className="cartoon-card w-full max-w-2xl p-6 relative animate-in fade-in zoom-in-95 duration-150 max-h-[90dvh] flex flex-col">
         <button
+          type="button"
           onClick={onClose}
           className="cartoon-btn bg-[#ff595e] text-white w-10 h-10 flex items-center justify-center absolute top-4 end-4"
         >
           <X weight="bold" className="w-5 h-5" />
         </button>
 
-        <h2 className="text-2xl md:text-3xl font-extrabold text-[#161426] mb-4 pe-12">
-          {lang === 'ar' ? 'كيف بنلعب عَ نفس الموجة؟' : 'How to Play Wavelength'}
-        </h2>
+        <div className="flex items-center gap-3 pe-12 mb-3">
+          <div
+            style={{ backgroundColor: gameMeta.bgTint }}
+            className="w-12 h-12 rounded-2xl border-3 border-[#161426] flex items-center justify-center shrink-0"
+          >
+            <PartyGameSvgIcon gameId={gameMeta.id} className="w-8 h-8" />
+          </div>
+          <div>
+            <span className="text-xs font-extrabold text-[#3f3b5c] block">
+              {lang === 'ar' ? 'شرح قوانين اللعبة:' : 'Game Rules & Guide:'}
+            </span>
+            <h2 className="text-2xl font-extrabold text-[#161426] leading-tight">
+              {lang === 'ar' ? gameMeta.name_ar : gameMeta.name_en}
+            </h2>
+          </div>
+        </div>
 
-        <div className="space-y-3">
-          {steps.map((s, i) => (
+        {/* Quick Game Switcher Chips */}
+        <div className="flex gap-1.5 overflow-x-auto pb-2.5 mb-3 border-b-3 border-[#161426]/10">
+          {PARTY_GAMES_CATALOG.map((g) => {
+            const active = g.id === selectedId;
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setSelectedId(g.id)}
+                className={`cartoon-badge px-3 py-1 text-xs flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                  active ? 'bg-[#ffca3a] text-[#161426]' : 'bg-white text-[#161426]'
+                }`}
+              >
+                <PartyGameSvgIcon gameId={g.id} className="w-4 h-4" />
+                <span>{lang === 'ar' ? g.name_ar : g.name_en}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 4 Step-by-Step Rules */}
+        <div className="space-y-2.5 overflow-y-auto pr-1 flex-1">
+          <p className="text-sm font-bold text-[#3f3b5c] bg-[#fff1c2] p-3 rounded-2xl border-2 border-[#161426]">
+            {lang === 'ar' ? gameMeta.longDesc_ar : gameMeta.longDesc_en}
+          </p>
+
+          {rules.map((stepText, idx) => (
             <div
-              key={i}
-              className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white border-3 border-[#161426] shadow-[0_4px_0_#161426]"
+              key={idx}
+              className="flex items-start gap-3 p-3.5 rounded-2xl bg-white border-3 border-[#161426] shadow-[0_3px_0_#161426]"
             >
-              <div className="p-2 rounded-xl bg-[#161426] shrink-0">{s.icon}</div>
-              <div>
-                <h3 className="font-extrabold text-lg text-[#161426]">{s.title}</h3>
-                <p className="text-sm font-semibold text-[#3f3b5c] leading-relaxed">{s.desc}</p>
-              </div>
+              <span className="w-8 h-8 rounded-xl bg-[#161426] text-[#ffca3a] font-extrabold text-sm flex items-center justify-center shrink-0">
+                {idx + 1}
+              </span>
+              <p className="text-sm font-bold text-[#161426] leading-relaxed pt-0.5">
+                {stepText}
+              </p>
             </div>
           ))}
         </div>
 
         <button
+          type="button"
           onClick={onClose}
-          className="cartoon-btn bg-[#8ac926] text-[#161426] w-full py-3 mt-5 text-lg"
+          className="cartoon-btn bg-[#8ac926] text-[#161426] w-full py-3 mt-4 text-lg shrink-0"
         >
           {lang === 'ar' ? 'فهمت اللعب، يلا نبلش!' : 'Got It, Let’s Play!'}
         </button>
@@ -98,6 +124,179 @@ export const HowToPlayModal: React.FC<HowToPlayModalProps> = ({ isOpen, onClose,
   );
 };
 
+/* ============================================================================
+ * 2. CATEGORIZED 14-GAME LIBRARY SWITCHER MODAL (For Lobby & In-Room!)
+ * ========================================================================== */
+interface GamePickerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  activeGameId: PartyGameId;
+  onSelectGame: (gameId: PartyGameId) => void;
+  lang: Lang;
+}
+
+export const GamePickerModal: React.FC<GamePickerModalProps> = ({
+  isOpen,
+  onClose,
+  activeGameId,
+  onSelectGame,
+  lang,
+}) => {
+  const [cat, setCat] = useState<PartyGameCategory>('all');
+  const [search, setSearch] = useState<string>('');
+
+  if (!isOpen) return null;
+
+  const categories: { id: PartyGameCategory; ar: string; en: string }[] = [
+    { id: 'all', ar: 'الكل (14)', en: 'All (14)' },
+    { id: 'telepathy', ar: 'تخاطر وخيال', en: 'Mind & Imagination' },
+    { id: 'bluff', ar: 'خداع وجواسيس', en: 'Bluff & Spies' },
+    { id: 'drawing', ar: 'رسم وإبداع', en: 'Drawing' },
+    { id: 'speed', ar: 'سرعة وتحدي', en: 'Speed & Wagers' },
+  ];
+
+  const filtered = PARTY_GAMES_CATALOG.filter((g) => {
+    const matchCat = cat === 'all' || g.category === cat;
+    const q = search.trim().toLowerCase();
+    const matchQ =
+      !q ||
+      g.name_ar.toLowerCase().includes(q) ||
+      g.name_en.toLowerCase().includes(q) ||
+      g.desc_ar.toLowerCase().includes(q) ||
+      g.desc_en.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs">
+      <div className="cartoon-card w-full max-w-4xl p-5 sm:p-6 relative animate-in fade-in zoom-in-95 duration-150 max-h-[90dvh] flex flex-col space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-11 h-11 rounded-2xl bg-[#ffca3a] border-3 border-[#161426] flex items-center justify-center shrink-0">
+              <GameController weight="fill" className="w-6 h-6 text-[#161426]" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-[#161426] leading-tight">
+                {lang === 'ar'
+                  ? 'مكتبة ألعاب الشلّة (14 لعبة جماعية)'
+                  : 'Party Games Library (14 Games)'}
+              </h2>
+              <p className="text-xs font-bold text-[#3f3b5c]">
+                {lang === 'ar'
+                  ? 'بدّل اللعبة فوراً مع نفس الأصحاب وبنفس مجموع النقاط!'
+                  : 'Switch games anytime with the same room & shared Leaderboard!'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="cartoon-btn bg-[#ff595e] text-white w-10 h-10 flex items-center justify-center shrink-0"
+          >
+            <X weight="bold" className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Category Filter Pills + Search */}
+        <div className="flex flex-col sm:flex-row gap-2.5 justify-between">
+          <div className="flex flex-wrap gap-1.5">
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCat(c.id)}
+                className={`cartoon-badge px-3 py-1 text-xs cursor-pointer transition-colors ${
+                  cat === c.id
+                    ? 'bg-[#161426] text-[#ffca3a]'
+                    : 'bg-white text-[#161426] hover:bg-[#fff1c2]'
+                }`}
+              >
+                {lang === 'ar' ? c.ar : c.en}
+              </button>
+            ))}
+          </div>
+
+          <div className="relative sm:w-56">
+            <MagnifyingGlass
+              weight="bold"
+              className="w-4 h-4 text-[#3f3b5c] absolute top-1/2 -translate-y-1/2 start-3 pointer-events-none"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={lang === 'ar' ? 'ابحث عن لعبة...' : 'Search games...'}
+              className="cartoon-input w-full ps-9 pe-3 py-1.5 bg-white text-[#161426] text-xs"
+            />
+          </div>
+        </div>
+
+        {/* Games Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto pr-1 flex-1">
+          {filtered.map((g) => {
+            const isCurrent = g.id === activeGameId;
+            return (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => {
+                  onSelectGame(g.id);
+                  onClose();
+                }}
+                className={`p-3.5 rounded-2xl border-4 border-[#161426] text-start transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${
+                  isCurrent
+                    ? 'bg-[#ffca3a] shadow-[0_5px_0_#161426] -translate-y-0.5'
+                    : 'bg-white hover:bg-[#fffdf5] shadow-[0_4px_0_#161426] hover:-translate-y-0.5'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div
+                      style={{ backgroundColor: g.bgTint }}
+                      className="w-12 h-12 rounded-2xl border-3 border-[#161426] flex items-center justify-center shrink-0"
+                    >
+                      <PartyGameSvgIcon gameId={g.id} className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <div className="font-extrabold text-base text-[#161426] leading-tight flex items-center gap-1.5">
+                        <span>{lang === 'ar' ? g.name_ar : g.name_en}</span>
+                      </div>
+                      <span className="text-[11px] font-extrabold text-[#3f3b5c] flex items-center gap-1 mt-0.5">
+                        <Users weight="fill" className="w-3.5 h-3.5" />
+                        <span>{lang === 'ar' ? g.players_ar : g.players_en}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {isCurrent ? (
+                    <span className="cartoon-badge bg-[#8ac926] text-[#161426] p-1">
+                      <Check weight="bold" className="w-4 h-4" />
+                    </span>
+                  ) : g.isNew ? (
+                    <span className="cartoon-badge bg-[#ff595e] text-white px-2 py-0.5 text-[10px] flex items-center gap-0.5">
+                      <Sparkle weight="fill" className="w-3 h-3 text-[#ffca3a]" />
+                      <span>{lang === 'ar' ? 'جديد' : 'NEW'}</span>
+                    </span>
+                  ) : null}
+                </div>
+
+                <p className="text-xs font-bold text-[#3f3b5c] leading-snug">
+                  {lang === 'ar' ? g.desc_ar : g.desc_en}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+ * 3. CUSTOM SPECTRUM CARD MODAL (For Wavelength)
+ * ========================================================================== */
 interface CustomCardModalProps {
   isOpen: boolean;
   onClose: () => void;

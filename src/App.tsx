@@ -20,21 +20,68 @@ import {
 import { TRANSLATIONS, Lang } from './data/translations';
 import {
   PartyGameId,
+  PartyGameCategory,
   CHAMELEON_TOPICS,
   ITO_THEMES,
   WORD_BOMB_CHALLENGES,
 } from './data/partyGamesData';
+import {
+  PARTY_GAMES_CATALOG,
+  TABOO_CARDS,
+  WITNESS_MONSTERS,
+  FAKE_ARTIST_PROMPTS,
+  MEDIUM_WORD_PAIRS,
+  WITS_QUESTIONS,
+  INSIDER_WORDS,
+} from './data/extraGamesData';
 import { WavelengthWheel } from './components/WavelengthWheel';
 import { SpectrumCard } from './components/SpectrumCard';
-import { HowToPlayModal, CustomCardModal } from './components/Modals';
+import {
+  HowToPlayModal,
+  CustomCardModal,
+  GamePickerModal,
+} from './components/Modals';
 import { ChameleonGame, ChameleonGameState } from './components/ChameleonGame';
 import { ItoGame, ItoGameState } from './components/ItoGame';
 import { WordBombGame, WordBombGameState } from './components/WordBombGame';
+import { TabooGame, TabooGameState } from './components/TabooGame';
+import {
+  DixitGame,
+  DixitGameState,
+  buildDixitHands,
+} from './components/DixitGame';
+import { WitnessGame, WitnessGameState } from './components/WitnessGame';
+import { FakeArtistGame, FakeArtistGameState } from './components/FakeArtistGame';
+import { MediumGame, MediumGameState } from './components/MediumGame';
+import {
+  SoCloverGame,
+  SoCloverGameState,
+  buildInitialSoCloverState,
+} from './components/SoCloverGame';
+import { WitsGame, WitsGameState } from './components/WitsGame';
+import { InsiderGame, InsiderGameState } from './components/InsiderGame';
+import {
+  DecryptoGame,
+  DecryptoGameState,
+  buildInitialDecryptoState,
+} from './components/DecryptoGame';
+import {
+  CockroachGame,
+  CockroachGameState,
+  randomCritter,
+} from './components/CockroachGame';
 import {
   PartyGameSvgIcon,
   AnimatedBombSvg,
   CartoonAvatarSvg,
+  ReactionSvgIcon,
+  ReactionType,
 } from './components/CartoonIcons';
+import {
+  DixitArtCardSvg,
+  MonsterWitnessSvg,
+  CritterCardSvg,
+} from './components/ExtraGameArt';
 import {
   Globe,
   Question,
@@ -55,13 +102,13 @@ import {
   Eye,
   EyeSlash,
   UserMinus,
-  Fire,
-  Lightning,
-  ForkKnife,
-  Detective,
-  ArrowLeft,
-  ArrowRight,
+  MagnifyingGlass,
+  Shuffle,
+  SquaresFour,
   Medal,
+  Sword,
+  CheckCircle,
+  Hourglass,
 } from '@phosphor-icons/react';
 
 interface RoomState {
@@ -107,10 +154,19 @@ interface PlayerItem {
 
 interface FloatingReaction {
   id: string;
-  emoji: string;
+  reactionType: ReactionType;
   sender: string;
   x: number;
 }
+
+const REACTION_TYPES: ReactionType[] = [
+  'bullseye',
+  'fire',
+  'laugh',
+  'wow',
+  'clap',
+  'think',
+];
 
 export function App() {
   const [lang, setLang] = useState<Lang>('ar');
@@ -135,9 +191,14 @@ export function App() {
   // Modals
   const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
   const [showCustomCardModal, setShowCustomCardModal] = useState<boolean>(false);
+  const [showGamePickerModal, setShowGamePickerModal] = useState<boolean>(false);
+
+  // Home Page Catalog Filters
+  const [homeSelectedGame, setHomeSelectedGame] = useState<PartyGameId>('wavelength');
+  const [homeCategory, setHomeCategory] = useState<PartyGameCategory>('all');
+  const [homeSearch, setHomeSearch] = useState<string>('');
 
   // Gameplay local inputs
-  const [homeSelectedGame, setHomeSelectedGame] = useState<PartyGameId>('wavelength');
   const [clueInput, setClueInput] = useState<string>('');
   const [localNewPlayerName, setLocalNewPlayerName] = useState<string>('');
   const [liveDialAngle, setLiveDialAngle] = useState<number>(0);
@@ -193,10 +254,10 @@ export function App() {
     }
   }, [room?.status, room?.round_number]);
 
-  const spawnReaction = useCallback((emoji: string, sender: string) => {
+  const spawnReaction = useCallback((reactionType: ReactionType, sender: string) => {
     const id = Math.random().toString(36).slice(2, 9);
     const x = 15 + Math.random() * 70;
-    setReactions((prev) => [...prev.slice(-10), { id, emoji, sender, x }]);
+    setReactions((prev) => [...prev.slice(-10), { id, reactionType, sender, x }]);
     setTimeout(() => {
       setReactions((prev) => prev.filter((r) => r.id !== id));
     }, 2600);
@@ -268,7 +329,6 @@ export function App() {
         }
       })
       .on('broadcast', { event: 'dial_move' }, ({ payload }) => {
-        // Only sync live dial in Teams mode; in Co-op/Individual mode each player controls their own needle!
         if (
           room.mode === 'teams' &&
           payload &&
@@ -279,8 +339,8 @@ export function App() {
         }
       })
       .on('broadcast', { event: 'reaction' }, ({ payload }) => {
-        if (payload?.emoji) {
-          spawnReaction(payload.emoji, payload.senderName || '');
+        if (payload?.reactionType) {
+          spawnReaction(payload.reactionType as ReactionType, payload.senderName || '');
         }
       })
       .subscribe();
@@ -291,9 +351,8 @@ export function App() {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [room?.id, isPassAndPlay, playerId, spawnReaction]);
+  }, [room?.id, isPassAndPlay, playerId, spawnReaction, lang, room?.mode]);
 
-  // Save name & color helper
   const ensurePlayerIdentity = (): string | null => {
     const trimmed = playerName.trim();
     if (!trimmed) {
@@ -304,6 +363,204 @@ export function App() {
     setLocalPlayerColor(playerColor);
     setErrorMsg(null);
     return trimmed;
+  };
+
+  // Build initial game_data for ANY of the 14 Party Games!
+  const buildInitialGameData = (gameId: PartyGameId, playerList: PlayerItem[]) => {
+    const validPlayers =
+      playerList.length > 0
+        ? playerList
+        : [
+            {
+              id: playerId,
+              room_id: room?.id || 'local',
+              name: playerName || 'Player 1',
+              avatar_color: playerColor,
+              team: 'A' as const,
+              score: 0,
+              is_host: true,
+            },
+          ];
+    const pIds = validPlayers.map((p) => p.id);
+
+    switch (gameId) {
+      case 'chameleon': {
+        const topic = CHAMELEON_TOPICS[Math.floor(Math.random() * CHAMELEON_TOPICS.length)];
+        const secretWordIndex = Math.floor(Math.random() * 16);
+        const randomCham = validPlayers[Math.floor(Math.random() * validPlayers.length)];
+        const state: ChameleonGameState = {
+          phase: 'qa',
+          topicId: topic.id,
+          secretWordIndex,
+          chameleonId: randomCham.id,
+          turnIndex: 0,
+          qaHistory: [],
+          votes: {},
+          chameleonChosenWordIndex: null,
+        };
+        return state;
+      }
+
+      case 'ito': {
+        const theme = ITO_THEMES[Math.floor(Math.random() * ITO_THEMES.length)];
+        const usedNums = new Set<number>();
+        const numbers: Record<string, number> = {};
+        validPlayers.forEach((p) => {
+          let n = Math.floor(Math.random() * 100) + 1;
+          while (usedNums.has(n)) {
+            n = Math.floor(Math.random() * 100) + 1;
+          }
+          usedNums.add(n);
+          numbers[p.id] = n;
+        });
+        const state: ItoGameState = {
+          phase: 'ordering',
+          themeId: theme.id,
+          numbers,
+          clues: {},
+          orderedPlayerIds: pIds,
+        };
+        return state;
+      }
+
+      case 'wordbomb': {
+        const ch = WORD_BOMB_CHALLENGES[Math.floor(Math.random() * WORD_BOMB_CHALLENGES.length)];
+        const firstHolder = validPlayers[Math.floor(Math.random() * validPlayers.length)];
+        const state: WordBombGameState = {
+          phase: 'ticking',
+          challengeId: ch.id,
+          holderPlayerId: firstHolder.id,
+          usedWords: [],
+          turnStartedAt: Date.now(),
+        };
+        return state;
+      }
+
+      case 'taboo': {
+        const firstCard = TABOO_CARDS[Math.floor(Math.random() * TABOO_CARDS.length)];
+        const describer = validPlayers[0];
+        const watcher = validPlayers[1] || describer;
+        const state: TabooGameState = {
+          phase: 'ready',
+          describerId: describer.id,
+          watcherId: watcher.id,
+          currentCardId: firstCard.id,
+          usedCardIds: [firstCard.id],
+          roundStartedAt: Date.now(),
+          durationSec: 60,
+          correctWords: [],
+          buzzedWords: [],
+          skippedCount: 0,
+        };
+        return state;
+      }
+
+      case 'dixit': {
+        return buildDixitHands(pIds);
+      }
+
+      case 'witness': {
+        const m = WITNESS_MONSTERS[Math.floor(Math.random() * WITNESS_MONSTERS.length)];
+        const state: WitnessGameState = {
+          phase: 'witness_ready',
+          witnessId: validPlayers[0].id,
+          monsterId: m.id,
+          hints: [],
+          drawings: {},
+          votes: {},
+        };
+        return state;
+      }
+
+      case 'fakeartist': {
+        const pr = FAKE_ARTIST_PROMPTS[Math.floor(Math.random() * FAKE_ARTIST_PROMPTS.length)];
+        const fake = validPlayers[Math.floor(Math.random() * validPlayers.length)];
+        const state: FakeArtistGameState = {
+          phase: 'strokes',
+          promptId: pr.id,
+          fakeArtistId: fake.id,
+          turnIndex: 0,
+          strokes: [],
+          votes: {},
+        };
+        return state;
+      }
+
+      case 'medium': {
+        const pair = MEDIUM_WORD_PAIRS[Math.floor(Math.random() * MEDIUM_WORD_PAIRS.length)];
+        const p1 = validPlayers[0];
+        const p2 = validPlayers[1] || p1;
+        const state: MediumGameState = {
+          phase: 'submitting',
+          player1Id: p1.id,
+          player2Id: p2.id,
+          word1: lang === 'ar' ? pair.w1_ar : pair.w1_en,
+          word2: lang === 'ar' ? pair.w2_ar : pair.w2_en,
+          attempt: 1,
+          submissions: {},
+          history: [],
+        };
+        return state;
+      }
+
+      case 'soclover': {
+        return buildInitialSoCloverState(pIds);
+      }
+
+      case 'wits': {
+        const wq = WITS_QUESTIONS[Math.floor(Math.random() * WITS_QUESTIONS.length)];
+        const state: WitsGameState = {
+          phase: 'guessing',
+          questionId: wq.id,
+          guesses: {},
+          bets: {},
+        };
+        return state;
+      }
+
+      case 'insider': {
+        const iw = INSIDER_WORDS[Math.floor(Math.random() * INSIDER_WORDS.length)];
+        const judge = validPlayers[0];
+        const nonJudges = validPlayers.length > 1 ? validPlayers.slice(1) : validPlayers;
+        const ins = nonJudges[Math.floor(Math.random() * nonJudges.length)];
+        const state: InsiderGameState = {
+          phase: 'role_peek',
+          wordId: iw.id,
+          judgeId: judge.id,
+          insiderId: ins.id,
+          startedAt: Date.now(),
+          durationSec: 120,
+          questions: [],
+          votes: {},
+        };
+        return state;
+      }
+
+      case 'decrypto': {
+        return buildInitialDecryptoState(pIds);
+      }
+
+      case 'cockroach': {
+        const sPlayer = validPlayers[0];
+        const tPlayer = validPlayers[1] || sPlayer;
+        const state: CockroachGameState = {
+          phase: 'choose_claim',
+          senderId: sPlayer.id,
+          targetId: tPlayer.id,
+          trueCritter: randomCritter(),
+          seenByIds: [sPlayer.id],
+          penalties: {},
+        };
+        return state;
+      }
+
+      case 'wavelength':
+      default:
+        return {
+          wavelength_guesses: {},
+          wavelength_points: {},
+        };
+    }
   };
 
   // Create Online Room
@@ -408,7 +665,6 @@ export function App() {
         return;
       }
 
-      // Check existing players to balance teams
       const { data: existingPlayers } = await supabase
         .from('wavelength_players')
         .select('*')
@@ -453,6 +709,7 @@ export function App() {
     const initialTarget = generateRandomTargetAngle();
     const p1Name = playerName.trim() || (lang === 'ar' ? 'اللاعب 1' : 'Player 1');
     const p2Name = lang === 'ar' ? 'اللاعب 2' : 'Player 2';
+    const p3Name = lang === 'ar' ? 'اللاعب 3' : 'Player 3';
     const initialLocalPlayers: PlayerItem[] = [
       {
         id: playerId,
@@ -469,6 +726,15 @@ export function App() {
         name: p2Name,
         avatar_color: '#00bbf9',
         team: 'B',
+        score: 0,
+        is_host: false,
+      },
+      {
+        id: 'local_p3',
+        room_id: 'local_room',
+        name: p3Name,
+        avatar_color: '#8ac926',
+        team: 'A',
         score: 0,
         is_host: false,
       },
@@ -531,7 +797,6 @@ export function App() {
     setLocalNewPlayerName('');
   };
 
-  // Leave Room
   const handleLeaveRoom = async () => {
     if (room && !isPassAndPlay) {
       await supabase
@@ -546,7 +811,8 @@ export function App() {
     window.history.replaceState({}, '', window.location.pathname);
   };
 
-  // Host Kick Player
+  const isHost = room ? room.host_id === playerId || isPassAndPlay : false;
+
   const handleKickPlayer = async (targetPlayerId: string) => {
     if (!room || !isHost || targetPlayerId === room.host_id) return;
     const remaining = players.filter((p) => p.id !== targetPlayerId);
@@ -567,13 +833,11 @@ export function App() {
         .eq('id', targetPlayerId);
     }
 
-    // If kicked player was the active Wavelength psychic, rotate to another player
     if (room.psychic_id === targetPlayerId && remaining.length > 0) {
       await updateRoomState({ psychic_id: remaining[0].id });
     }
   };
 
-  // Update Room helper (works for both Online & Pass-and-Play)
   const updateRoomState = async (patch: Partial<RoomState>) => {
     if (!room) return;
     if (isPassAndPlay) {
@@ -587,7 +851,6 @@ export function App() {
       .eq('id', room.id);
   };
 
-  // Switch player team in Lobby
   const handleSwitchTeam = async (newTeam: 'A' | 'B') => {
     if (!room || isPassAndPlay) return;
     setPlayers((prev) =>
@@ -600,7 +863,6 @@ export function App() {
       .eq('id', playerId);
   };
 
-  // Start Game from Lobby
   const handleStartOnlineGame = async () => {
     if (!room) return;
     const activeGame = room.selected_game || 'wavelength';
@@ -609,7 +871,6 @@ export function App() {
     const firstPsychic = players[0]?.id || playerId;
     const initGameData = buildInitialGameData(activeGame, players);
     setClueInput('');
-    // Reset player scores for new game
     setPlayers((prev) => prev.map((p) => ({ ...p, score: 0 })));
     if (!isPassAndPlay) {
       await supabase
@@ -642,7 +903,6 @@ export function App() {
     });
   };
 
-  // Swap Spectrum Card (Psychic can swap before giving clue)
   const handleSwapCard = async () => {
     if (!room) return;
     const nextCard = pickNextCard(room.used_card_indices, room.custom_cards);
@@ -658,7 +918,6 @@ export function App() {
     });
   };
 
-  // Add Custom Card
   const handleAddCustomCard = async (leftText: string, rightText: string) => {
     if (!room) return;
     const newCard: SpectrumCardItem = {
@@ -683,7 +942,6 @@ export function App() {
     }
   };
 
-  // Psychic Submits Clue
   const handleSubmitClue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!room || !clueInput.trim()) return;
@@ -701,7 +959,6 @@ export function App() {
     setClueInput('');
   };
 
-  // Dial Change Handler (Personal in Individual/Coop mode, synced in Teams mode)
   const handleDialChange = async (newAngle: number, isFinal = false) => {
     setLiveDialAngle(newAngle);
     if (!room) return;
@@ -723,7 +980,6 @@ export function App() {
     }
   };
 
-  // Lock Personal Guess (or Team Guess in Teams mode)
   const handleLockGuess = async () => {
     if (!room) return;
     if (room.mode === 'teams' && !isPassAndPlay) {
@@ -734,7 +990,6 @@ export function App() {
       return;
     }
 
-    // Individual Personal Guessing!
     const expectedGuessers =
       players.length > 1
         ? players.filter((p) => p.id !== room.psychic_id)
@@ -745,7 +1000,6 @@ export function App() {
     };
 
     if (isPassAndPlay) {
-      // Find the first expected guesser who hasn't guessed yet
       const nextLocalGuesser =
         expectedGuessers.find((p) => currentGuesses[p.id] === undefined) ||
         expectedGuessers[0];
@@ -773,7 +1027,6 @@ export function App() {
     }
   };
 
-  // Reveal all players' personal guesses & award each player their exact personal points!
   const performMultiPlayerReveal = async (allGuesses: Record<string, number>) => {
     if (!room) return;
     const perPlayerPoints: Record<string, number> = {};
@@ -787,7 +1040,6 @@ export function App() {
       if (pts > bestPoints) bestPoints = pts;
     });
 
-    // Psychic earns the best score achieved by any guesser from their clue!
     if (room.psychic_id && players.length > 1) {
       perPlayerPoints[room.psychic_id] = bestPoints;
     }
@@ -825,13 +1077,11 @@ export function App() {
     });
   };
 
-  // Opposing team guesses Left or Right (in Teams Mode)
   const handleOtherTeamGuess = async (direction: 'left' | 'right') => {
     if (!room) return;
     await performReveal(liveDialAngle, direction);
   };
 
-  // Reveal Target & Calculate Score
   const performReveal = async (finalDialAngle: number, sideGuess: 'left' | 'right' | null) => {
     if (!room) return;
     const pts = calculateScoreFromAngles(Number(room.target_angle), finalDialAngle);
@@ -849,7 +1099,6 @@ export function App() {
     const nextTeamBScore =
       room.team_b_score + (room.active_team === 'B' ? pts : bonus);
 
-    // Update individual player scores on Leaderboard
     if (pts > 0) {
       const winnerIds = new Set<string>();
       if (room.psychic_id) winnerIds.add(room.psychic_id);
@@ -886,7 +1135,6 @@ export function App() {
     });
   };
 
-  // Advance to Next Round or Finish Game
   const handleNextRound = async () => {
     if (!room) return;
     if (room.round_number >= room.max_rounds) {
@@ -899,7 +1147,6 @@ export function App() {
     const nextTarget = generateRandomTargetAngle();
     const nextTeam: 'A' | 'B' = room.active_team === 'A' ? 'B' : 'A';
 
-    // Rotate Psychic to next player in list (works for both Online & Pass-and-Play!)
     let nextPsychicId = playerId;
     if (players.length > 0) {
       const candidatePool =
@@ -937,68 +1184,6 @@ export function App() {
     });
   };
 
-  // Build initial game_data for any of the 5 Party Games
-  const buildInitialGameData = (gameId: PartyGameId, playerList: PlayerItem[]) => {
-    const validPlayers =
-      playerList.length > 0
-        ? playerList
-        : [{ id: playerId, room_id: room?.id || 'local', name: playerName || 'Player 1', avatar_color: playerColor, team: 'A' as const, score: 0, is_host: true }];
-
-    if (gameId === 'chameleon') {
-      const topic = CHAMELEON_TOPICS[Math.floor(Math.random() * CHAMELEON_TOPICS.length)];
-      const secretWordIndex = Math.floor(Math.random() * 16);
-      const randomCham = validPlayers[Math.floor(Math.random() * validPlayers.length)];
-      const state: ChameleonGameState = {
-        phase: 'qa',
-        topicId: topic.id,
-        secretWordIndex,
-        chameleonId: randomCham.id,
-        turnIndex: 0,
-        qaHistory: [],
-        votes: {},
-        chameleonChosenWordIndex: null,
-      };
-      return state;
-    }
-
-    if (gameId === 'ito') {
-      const theme = ITO_THEMES[Math.floor(Math.random() * ITO_THEMES.length)];
-      const usedNums = new Set<number>();
-      const numbers: Record<string, number> = {};
-      validPlayers.forEach((p) => {
-        let n = Math.floor(Math.random() * 100) + 1;
-        while (usedNums.has(n)) {
-          n = Math.floor(Math.random() * 100) + 1;
-        }
-        usedNums.add(n);
-        numbers[p.id] = n;
-      });
-      const state: ItoGameState = {
-        phase: 'ordering',
-        themeId: theme.id,
-        numbers,
-        clues: {},
-        orderedPlayerIds: validPlayers.map((p) => p.id),
-      };
-      return state;
-    }
-
-    if (gameId === 'wordbomb') {
-      const ch = WORD_BOMB_CHALLENGES[Math.floor(Math.random() * WORD_BOMB_CHALLENGES.length)];
-      const firstHolder = validPlayers[Math.floor(Math.random() * validPlayers.length)];
-      const state: WordBombGameState = {
-        phase: 'ticking',
-        challengeId: ch.id,
-        holderPlayerId: firstHolder.id,
-        usedWords: [],
-        turnStartedAt: Date.now(),
-      };
-      return state;
-    }
-
-    return {};
-  };
-
   // Switch active Party Game inside the same Room!
   const handleSelectPartyGame = async (gameId: PartyGameId) => {
     if (!room) return;
@@ -1016,6 +1201,7 @@ export function App() {
         card_right_ar: card.right_ar,
         card_left_en: card.left_en,
         card_right_en: card.right_en,
+        game_data: initialData,
       });
     } else {
       await updateRoomState({
@@ -1026,7 +1212,6 @@ export function App() {
     }
   };
 
-  // Update mini-game state + award Leaderboard points to players
   const handleUpdateMiniGameData = async (
     nextData: any,
     scoreAwards?: Record<string, number>
@@ -1065,14 +1250,14 @@ export function App() {
     });
   };
 
-  const sendEmojiReaction = (emoji: string) => {
+  const sendCartoonReaction = (reactionType: ReactionType) => {
     const sender = playerName || 'Player';
-    spawnReaction(emoji, sender);
+    spawnReaction(reactionType, sender);
     if (channelRef.current && !isPassAndPlay) {
       channelRef.current.send({
         type: 'broadcast',
         event: 'reaction',
-        payload: { emoji, senderName: sender },
+        payload: { reactionType, senderName: sender },
       });
     }
   };
@@ -1085,13 +1270,17 @@ export function App() {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  // Role permissions for the current round
-  const isHost = room ? room.host_id === playerId || isPassAndPlay : false;
+  const pickRandomHomeGame = () => {
+    const others = PARTY_GAMES_CATALOG.filter((g) => g.id !== homeSelectedGame);
+    const pick = others[Math.floor(Math.random() * others.length)] || PARTY_GAMES_CATALOG[0];
+    setHomeSelectedGame(pick.id);
+    setHomeCategory('all');
+  };
+
   const isPsychic = room ? (isPassAndPlay ? true : room.psychic_id === playerId) : false;
   const psychicPlayer = players.find((p) => p.id === room?.psychic_id);
   const myPlayer = players.find((p) => p.id === playerId);
 
-  // Determine whether target wedges are visible on this screen
   const shouldShowTarget = (() => {
     if (!room) return false;
     if (room.status === 'reveal' || room.status === 'finished') return true;
@@ -1101,12 +1290,11 @@ export function App() {
     return false;
   })();
 
-  // Determine whether this player can drag the red pointer right now
   const canDragDial = (() => {
     if (!room) return false;
     if (room.status !== 'guessing') return false;
     if (isPassAndPlay) return true;
-    if (isPsychic && players.length > 1) return false; // Psychic watches friends move the dial!
+    if (isPsychic && players.length > 1) return false;
     if (room.mode === 'teams' && myPlayer && myPlayer.team !== room.active_team) {
       return false;
     }
@@ -1125,6 +1313,11 @@ export function App() {
     : '';
 
   const activeGameId: PartyGameId = room?.selected_game || 'wavelength';
+  const activeGameMeta =
+    PARTY_GAMES_CATALOG.find((g) => g.id === activeGameId) || PARTY_GAMES_CATALOG[0];
+  const homeSelectedMeta =
+    PARTY_GAMES_CATALOG.find((g) => g.id === homeSelectedGame) || PARTY_GAMES_CATALOG[0];
+
   const wavelengthGuesses: Record<string, number> =
     room?.game_data?.wavelength_guesses || {};
   const wavelengthPoints: Record<string, number> =
@@ -1140,51 +1333,42 @@ export function App() {
         (p) => typeof wavelengthGuesses[p.id] !== 'number'
       ) || expectedWavelengthGuessers[0]
     : null;
-  const wheelPlayerPins = Object.entries(wavelengthGuesses).map(
-    ([pid, angle]) => {
-      const p = players.find((item) => item.id === pid);
-      return {
-        id: pid,
-        name: p?.name || '?',
-        color: p?.avatar_color || '#ffca3a',
-        angle: Number(angle),
-      };
-    }
-  );
-  const partyGamesCatalog: { id: PartyGameId; name_ar: string; name_en: string; desc_ar: string; desc_en: string }[] = [
-    {
-      id: 'wavelength',
-      name_ar: 'عَ نفس الموجة',
-      name_en: 'Wavelength',
-      desc_ar: 'تخاطر المؤشر والمقاييس',
-      desc_en: 'Telepathic dial & spectrums',
-    },
-    {
-      id: 'chameleon',
-      name_ar: 'برّا السالفة',
-      name_en: 'Chameleon',
-      desc_ar: 'اكشف الجاسوس بينكم!',
-      desc_en: 'Spot the hidden impostor!',
-    },
-    {
-      id: 'ito',
-      name_ar: 'تخاطر الأرقام',
-      name_en: 'Ito (1-100)',
-      desc_ar: 'رتبوا أرقامكم السرية 1-100',
-      desc_en: 'Sort secret numbers 1-100',
-    },
-    {
-      id: 'wordbomb',
-      name_ar: 'قنبلة الحروف',
-      name_en: 'Word Bomb',
-      desc_ar: 'هات كلمة بسرعة قبل الانفجار!',
-      desc_en: 'Type a word before it explodes!',
-    },
+  const wheelPlayerPins = Object.entries(wavelengthGuesses).map(([pid, angle]) => {
+    const p = players.find((item) => item.id === pid);
+    return {
+      id: pid,
+      name: p?.name || '?',
+      color: p?.avatar_color || '#ffca3a',
+      angle: Number(angle),
+    };
+  });
+
+  // Filtered Home Catalog
+  const homeCategories: { id: PartyGameCategory; ar: string; en: string }[] = [
+    { id: 'all', ar: 'الكل (14)', en: 'All (14)' },
+    { id: 'telepathy', ar: 'تخاطر وخيال (5)', en: 'Mind & Art (5)' },
+    { id: 'bluff', ar: 'خداع وجواسيس (4)', en: 'Bluff & Spies (4)' },
+    { id: 'drawing', ar: 'رسم وإبداع (2)', en: 'Drawing (2)' },
+    { id: 'speed', ar: 'سرعة وتحدي (3)', en: 'Speed & Wagers (3)' },
   ];
+
+  const filteredHomeGames = PARTY_GAMES_CATALOG.filter((g) => {
+    const matchCat = homeCategory === 'all' || g.category === homeCategory;
+    const q = homeSearch.trim().toLowerCase();
+    const matchSearch =
+      !q ||
+      g.name_ar.toLowerCase().includes(q) ||
+      g.name_en.toLowerCase().includes(q) ||
+      g.desc_ar.toLowerCase().includes(q) ||
+      g.desc_en.toLowerCase().includes(q) ||
+      g.tag_ar.toLowerCase().includes(q) ||
+      g.tag_en.toLowerCase().includes(q);
+    return matchCat && matchSearch;
+  });
 
   return (
     <div className="min-h-[100dvh] flex flex-col justify-between pb-8 relative">
-      {/* Floating Live Emoji Reactions */}
+      {/* Floating Live Vector Reactions */}
       <div className="fixed inset-0 pointer-events-none z-40 overflow-hidden">
         {reactions.map((r) => (
           <div
@@ -1192,9 +1376,11 @@ export function App() {
             style={{ left: `${r.x}%` }}
             className="absolute bottom-16 animate-bounce flex flex-col items-center"
           >
-            <span className="text-4xl drop-shadow-[0_4px_0_#161426]">{r.emoji}</span>
+            <div className="drop-shadow-[0_4px_0_#161426]">
+              <ReactionSvgIcon type={r.reactionType} className="w-11 h-11" />
+            </div>
             {r.sender && (
-              <span className="text-xs font-extrabold bg-[#161426] text-[#ffca3a] px-2 py-0.5 rounded-full border-2 border-white">
+              <span className="text-xs font-extrabold bg-[#161426] text-[#ffca3a] px-2.5 py-0.5 rounded-full border-2 border-white mt-0.5">
                 {r.sender}
               </span>
             )}
@@ -1203,22 +1389,23 @@ export function App() {
       </div>
 
       {/* Top Cartoon Header Bar */}
-      <header className="w-full max-w-6xl mx-auto px-4 pt-4 pb-2 flex items-center justify-between gap-2">
+      <header className="w-full max-w-7xl mx-auto px-4 pt-4 pb-2 flex items-center justify-between gap-2">
         <div
           onClick={() => {
             if (room) handleLeaveRoom();
           }}
-          className="flex items-center gap-2.5 cursor-pointer group"
+          className="flex items-center gap-3 cursor-pointer group"
         >
-          {/* Mini Cartoon Wheel Emblem */}
           <div className="w-12 h-12 rounded-2xl bg-[#ff595e] border-4 border-[#161426] shadow-[0_5px_0_#161426] flex items-center justify-center group-hover:scale-105 transition-transform">
-            <Target weight="fill" className="w-7 h-7 text-[#ffca3a]" />
+            <GameController weight="fill" className="w-7 h-7 text-[#ffca3a]" />
           </div>
           <div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#fff9ec] drop-shadow-[0_3px_0_#161426] leading-none">
               {t.appTitle}
             </h1>
-            <span className="text-xs font-bold text-[#ffca3a] block">Wavelength Online</span>
+            <span className="text-xs font-bold text-[#ffca3a] block mt-0.5">
+              {t.appSubtitle}
+            </span>
           </div>
         </div>
 
@@ -1256,217 +1443,43 @@ export function App() {
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="w-full max-w-6xl mx-auto px-4 flex-1 flex flex-col justify-center my-2">
+      <main className="w-full max-w-7xl mx-auto px-4 flex-1 flex flex-col justify-center my-3">
         {!room ? (
-          /* ================= HOME SCREEN / LANDING ================= */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-center my-auto py-3">
-            {/* Left / Interactive Party Games Showcase Column */}
-            <div className="lg:col-span-7 flex flex-col items-center text-center space-y-4">
-              {/* Sleek Pill Dock to Switch Between the 4 Party Games */}
-              <div className="w-full max-w-2xl bg-[#231f42]/95 p-2 rounded-3xl border-4 border-[#120f29] shadow-[0_6px_0_#120f29]">
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {partyGamesCatalog.map((g) => {
-                    const isPicked = homeSelectedGame === g.id;
-                    return (
-                      <button
-                        key={g.id}
-                        type="button"
-                        onClick={() => setHomeSelectedGame(g.id)}
-                        className={`px-3 py-2.5 rounded-2xl font-extrabold text-xs sm:text-sm flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                          isPicked
-                            ? 'bg-[#ffca3a] text-[#161426] border-3 border-[#161426] shadow-[0_4px_0_#161426] -translate-y-0.5'
-                            : 'text-[#fff9ec]/85 hover:bg-[#2f2959] hover:text-white border-3 border-transparent'
-                        }`}
-                      >
-                        <PartyGameSvgIcon gameId={g.id} className="w-8 h-8" />
-                        <span className="leading-tight truncate max-w-full">
-                          {lang === 'ar' ? g.name_ar : g.name_en}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Dynamic Interactive Hero Preview for Each Game */}
-              <div className="w-full max-w-[490px] min-h-[300px] flex flex-col items-center justify-center">
-                {homeSelectedGame === 'wavelength' && (
-                  <div className="w-full animate-in fade-in zoom-in-95 duration-200">
-                    <WavelengthWheel
-                      targetAngle={18}
-                      dialAngle={demoDialAngle}
-                      showTarget={true}
-                      canMoveDial={true}
-                      onDialChange={(a) => setDemoDialAngle(a)}
-                      lang={lang}
-                    />
-                  </div>
-                )}
-
-                {homeSelectedGame === 'chameleon' && (
-                  <div className="w-full rounded-3xl bg-[#5c73b8] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-3">
-                    <div className="flex items-center justify-between text-xs font-extrabold">
-                      <span className="px-3 py-1 rounded-full bg-white/20 border border-white/30 flex items-center gap-1.5">
-                        <ForkKnife weight="fill" className="w-4 h-4 text-[#ffca3a]" />
-                        <span>{lang === 'ar' ? 'أكل ومطاعم' : 'Food & Dining'}</span>
+          /* ================= REDESIGNED 14-GAME ARCADE HUB HOME PAGE ================= */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start py-2">
+            {/* STICKY PLAYER & ROOM LAUNCHPAD CARD (4 Cols on Desktop) */}
+            <div className="lg:col-span-4 lg:sticky lg:top-4 order-1 lg:order-2">
+              <div className="cartoon-card p-5 sm:p-6 space-y-4">
+                {/* Active Selected Game Ticket */}
+                <div
+                  style={{ backgroundColor: homeSelectedMeta.bgTint }}
+                  className="border-3 border-[#161426] shadow-[0_4px_0_#161426] rounded-2xl p-3.5 flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-12 h-12 rounded-2xl bg-white border-3 border-[#161426] flex items-center justify-center shrink-0">
+                      <PartyGameSvgIcon gameId={homeSelectedGame} className="w-8 h-8" />
+                    </div>
+                    <div className="min-w-0 leading-tight">
+                      <span className="text-[11px] font-extrabold text-[#3f3b5c] block">
+                        {lang === 'ar' ? 'اللعبة المختارة للبدء:' : 'Starting Game:'}
                       </span>
-                      <span className="px-3 py-1 rounded-full bg-[#ff595e] border-2 border-[#161426] shadow-[0_2px_0_#161426] flex items-center gap-1">
-                        <Detective weight="fill" className="w-4 h-4 text-[#ffca3a]" />
-                        <span>{lang === 'ar' ? 'واحد بينكم برّا السالفة!' : '1 Impostor Among You!'}</span>
+                      <span className="text-base font-extrabold text-[#161426] truncate block">
+                        {lang === 'ar' ? homeSelectedMeta.name_ar : homeSelectedMeta.name_en}
                       </span>
-                    </div>
-
-                    <div className="flex items-center justify-center gap-4 py-2">
-                      <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 rounded-full bg-[#dce3f2] border-4 border-[#ffca3a] shadow-[0_4px_0_#161426] p-1.5 flex items-center justify-center">
-                          <CartoonAvatarSvg index={0} color="#ffca3a" />
-                        </div>
-                        <span className="-mt-2.5 px-3.5 py-0.5 rounded-full bg-[#ffca3a] text-[#161426] border-2 border-[#161426] font-extrabold text-xs">
-                          {lang === 'ar' ? 'زيد' : 'Zaid'}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col items-center">
-                        <span className="text-xs font-extrabold uppercase bg-[#161426]/40 px-2.5 py-1 rounded-full">
-                          {lang === 'ar' ? 'يسأل' : 'asks'}
-                        </span>
-                        {lang === 'ar' ? (
-                          <ArrowLeft weight="bold" className="w-7 h-7 text-[#ffca3a] mt-1" />
-                        ) : (
-                          <ArrowRight weight="bold" className="w-7 h-7 text-[#ffca3a] mt-1" />
-                        )}
-                      </div>
-
-                      <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 rounded-full bg-[#eef1f8] border-4 border-[#ff595e] shadow-[0_4px_0_#161426] p-1.5 flex items-center justify-center">
-                          <CartoonAvatarSvg index={1} color="#00bbf9" />
-                        </div>
-                        <span className="-mt-2.5 px-3.5 py-0.5 rounded-full bg-[#ff595e] text-white border-2 border-[#161426] font-extrabold text-xs">
-                          {lang === 'ar' ? 'نور' : 'Noor'}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-2xl bg-[#161426]/35 text-xs md:text-sm font-bold text-white/95">
-                      {lang === 'ar'
-                        ? 'اسألوا بعض بالترتيب بدون ما تفضحوا الكلمة السرية، وصوّتوا عالجاسوس قبل ما يحزر السالفة!'
-                        : 'Question each other carefully without spoiling the secret word, then vote out the impostor!'}
-                    </div>
-                  </div>
-                )}
-
-                {homeSelectedGame === 'ito' && (
-                  <div className="w-full rounded-3xl bg-[#25204d] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-4">
-                    <div className="inline-block cartoon-badge bg-[#00bbf9] text-[#161426] px-4 py-1 text-xs">
-                      {lang === 'ar' ? 'المقياس: أشياء بتعصّب من 1 لـ 100' : 'Scale: Annoying Things (1 to 100)'}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2.5 pt-1">
-                      {[
-                        { num: '14', clueAr: 'نت بطيء شوي', clueEn: 'Slow Wi-Fi', bg: '#8ac926' },
-                        { num: '58', clueAr: 'زحمة طريق الصبح', clueEn: 'Morning Traffic', bg: '#ffca3a' },
-                        { num: '96', clueAr: 'يطفي جوالك 1%', clueEn: 'Phone dies at 1%', bg: '#ff595e' },
-                      ].map((card, i) => (
-                        <div
-                          key={i}
-                          style={{ backgroundColor: card.bg }}
-                          className="p-3 rounded-2xl border-3 border-[#161426] shadow-[0_4px_0_#161426] text-[#161426] flex flex-col items-center justify-between"
-                        >
-                          <span className="text-2xl md:text-3xl font-extrabold">#{card.num}</span>
-                          <span className="text-[11px] md:text-xs font-extrabold bg-white/90 px-2 py-1 rounded-xl border-2 border-[#161426] mt-2 w-full">
-                            &ldquo;{lang === 'ar' ? card.clueAr : card.clueEn}&rdquo;
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <p className="text-xs md:text-sm font-bold text-[#d9d4f7]">
-                      {lang === 'ar'
-                        ? 'كل لاعب بيطلعله رقم سري من 1 لـ 100! أوصف رقمك بتلميح ذكي ورتبوا بطاقاتكم تصاعدياً!'
-                        : 'Everyone gets a secret number 1–100! Give a clever clue and sort everyone in order!'}
-                    </p>
-                  </div>
-                )}
-
-                {homeSelectedGame === 'wordbomb' && (
-                  <div className="w-full rounded-3xl bg-[#25204d] border-4 border-[#161426] shadow-[0_8px_0_#161426] p-5 text-white animate-in fade-in zoom-in-95 duration-200 space-y-3">
-                    <div className="flex items-center justify-center gap-4">
-                      <AnimatedBombSvg
-                        secondsLeft={8}
-                        maxSeconds={12}
-                        letters={lang === 'ar' ? 'ب ر' : 'B R'}
-                        className="w-28 h-28"
-                      />
-                      <div className="text-start space-y-1">
-                        <span className="cartoon-badge bg-[#ff595e] text-white px-3 py-0.5 text-xs inline-flex items-center gap-1">
-                          <Fire weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />
-                          <span>{lang === 'ar' ? 'فتيل عشوائي مشتعل!' : 'Unpredictable Fuse!'}</span>
-                        </span>
-                        <div className="text-lg md:text-xl font-extrabold">
-                          {lang === 'ar'
-                            ? 'اكتب كلمة بسرعة وارمي القنبلة للي بعدك!'
-                            : 'Type a word fast and pass the bomb!'}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap justify-center gap-2 pt-1">
-                      {(lang === 'ar'
-                        ? ['برتقال', 'بركان', 'قبرص', 'مبرد']
-                        : ['BRIDGE', 'COBRA', 'BRAIN']
-                      ).map((w, i) => (
-                        <span
-                          key={i}
-                          className="cartoon-badge bg-[#8ac926] text-[#161426] px-3 py-1 text-xs inline-flex items-center gap-1"
-                        >
-                          <Lightning weight="fill" className="w-3.5 h-3.5" />
-                          <span>{w}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Headline & Feature Pills */}
-              <div className="max-w-lg space-y-2">
-                <h2 className="text-2xl md:text-4xl font-extrabold text-[#ffca3a] drop-shadow-[0_4px_0_#161426] flex items-center justify-center gap-2.5">
-                  <PartyGameSvgIcon gameId={homeSelectedGame} className="w-9 h-9" />
-                  <span>
-                    {lang === 'ar'
-                      ? partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_ar
-                      : partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_en}
-                  </span>
-                </h2>
-                <p className="text-sm md:text-base text-[#d9d4f7] font-semibold">
-                  {lang === 'ar'
-                    ? 'افتح غرفة مجانية بثانية، ابعت الرابط لأصحابك، وبدّلوا بين 4 ألعاب جماعية بنفس الغرفة ونفس الـ Leaderboard!'
-                    : 'Create a free room in one click, invite friends, and switch between 4 party games with one shared Leaderboard!'}
-                </p>
-              </div>
-            </div>
-
-            {/* Right / Cartoon Action Card */}
-            <div className="lg:col-span-5">
-              <div className="cartoon-card p-6 md:p-7 space-y-5 relative">
-                {/* Selected Game Indicator Pill at Top of Form */}
-                <div className="flex items-center justify-between bg-[#fff1c2] border-3 border-[#161426] rounded-2xl px-3.5 py-2">
-                  <div className="flex items-center gap-2.5">
-                    <PartyGameSvgIcon gameId={homeSelectedGame} className="w-8 h-8 shrink-0" />
-                    <div className="leading-tight">
-                      <span className="text-[11px] font-bold text-[#3f3b5c] block">
-                        {lang === 'ar' ? 'اللعبة المختارة للبدء:' : 'Selected Starting Game:'}
-                      </span>
-                      <span className="text-sm font-extrabold text-[#161426]">
-                        {lang === 'ar'
-                          ? partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_ar
-                          : partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_en}
+                      <span className="text-[11px] font-bold text-[#3f3b5c]">
+                        {lang === 'ar' ? homeSelectedMeta.players_ar : homeSelectedMeta.players_en}
                       </span>
                     </div>
                   </div>
-                  <span className="cartoon-badge bg-[#8ac926] text-[#161426] px-2.5 py-0.5 text-[11px]">
-                    {lang === 'ar' ? '4 ألعاب بالغرفة' : '4-in-1 Room'}
-                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowHowToPlay(true)}
+                    title={t.howToPlay}
+                    className="cartoon-btn bg-[#ffca3a] text-[#161426] p-2 shrink-0"
+                  >
+                    <Question weight="fill" className="w-5 h-5" />
+                  </button>
                 </div>
 
                 {errorMsg && (
@@ -1475,27 +1488,29 @@ export function App() {
                   </div>
                 )}
 
-                {/* Player Name Input */}
-                <div>
-                  <label className="block text-base font-extrabold text-[#161426] mb-1.5">
+                {/* Player Avatar + Name */}
+                <div className="space-y-2.5">
+                  <label className="block text-sm font-extrabold text-[#161426]">
                     {t.yourName}
                   </label>
-                  <input
-                    type="text"
-                    maxLength={18}
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.target.value)}
-                    placeholder={t.namePlaceholder}
-                    className="cartoon-input w-full px-4 py-3 bg-white text-[#161426] text-lg focus:outline-none focus:ring-4 focus:ring-[#ffca3a]"
-                  />
-                </div>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-12 h-12 rounded-2xl bg-white border-3 border-[#161426] p-1 shrink-0">
+                      <CartoonAvatarSvg
+                        index={CARTOON_AVATAR_COLORS.indexOf(playerColor)}
+                        color={playerColor}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={18}
+                      value={playerName}
+                      onChange={(e) => setPlayerName(e.target.value)}
+                      placeholder={t.namePlaceholder}
+                      className="cartoon-input min-w-0 flex-1 px-4 py-2.5 bg-white text-[#161426] text-base focus:outline-none focus:ring-4 focus:ring-[#ffca3a]"
+                    />
+                  </div>
 
-                {/* Cartoon Avatar Color Picker */}
-                <div>
-                  <label className="block text-sm font-extrabold text-[#161426] mb-2.5">
-                    {t.chooseColor}
-                  </label>
-                  <div className="grid grid-cols-8 gap-2 place-items-center">
+                  <div className="grid grid-cols-8 gap-1.5 place-items-center pt-1">
                     {CARTOON_AVATAR_COLORS.map((c) => (
                       <button
                         key={c}
@@ -1505,9 +1520,9 @@ export function App() {
                           setLocalPlayerColor(c);
                         }}
                         style={{ backgroundColor: c }}
-                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full border-3 border-[#161426] transition-transform cursor-pointer ${
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-3 border-[#161426] transition-transform cursor-pointer ${
                           playerColor === c
-                            ? 'scale-115 shadow-[0_3px_0_#161426] ring-3 ring-[#161426]'
+                            ? 'scale-115 shadow-[0_3px_0_#161426] ring-2 ring-[#161426]'
                             : 'opacity-80 hover:opacity-100'
                         }`}
                       />
@@ -1515,40 +1530,40 @@ export function App() {
                   </div>
                 </div>
 
-                {/* Create Online Room CTA */}
+                {/* Create Online Room */}
                 <button
                   type="button"
                   disabled={loading}
                   onClick={handleCreateRoom}
-                  className="cartoon-btn w-full py-3.5 px-5 bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] text-xl flex items-center justify-center gap-2.5"
+                  className="cartoon-btn w-full py-3.5 px-5 bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] text-lg flex items-center justify-center gap-2"
                 >
-                  <GameController weight="fill" className="w-7 h-7" />
+                  <GameController weight="fill" className="w-6 h-6" />
                   <span>{loading ? '...' : t.createRoom}</span>
                 </button>
 
                 {/* Divider */}
                 <div className="flex items-center gap-3">
-                  <div className="h-1 bg-[#161426]/20 flex-1 rounded-full" />
-                  <span className="font-extrabold text-xs text-[#161426]/60 uppercase">
-                    {lang === 'ar' ? 'أو عندك كود غرفة؟' : 'OR JOIN ROOM'}
+                  <div className="h-0.5 bg-[#161426]/20 flex-1 rounded-full" />
+                  <span className="font-extrabold text-[11px] text-[#161426]/65 uppercase">
+                    {lang === 'ar' ? 'أو فوت بكود الغرفة' : 'OR JOIN BY CODE'}
                   </span>
-                  <div className="h-1 bg-[#161426]/20 flex-1 rounded-full" />
+                  <div className="h-0.5 bg-[#161426]/20 flex-1 rounded-full" />
                 </div>
 
                 {/* Join Room Form */}
-                <form onSubmit={handleJoinRoom} className="flex items-stretch gap-2.5 w-full">
+                <form onSubmit={handleJoinRoom} className="flex items-stretch gap-2 w-full">
                   <input
                     type="text"
                     maxLength={6}
                     value={joinCodeInput}
                     onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
-                    placeholder={lang === 'ar' ? 'كود الغرفة (WAVE)' : 'Room Code (WAVE)'}
-                    className="cartoon-input min-w-0 flex-1 px-3 py-2.5 bg-white text-[#161426] text-center font-extrabold text-base sm:text-lg focus:outline-none focus:ring-4 focus:ring-[#ffca3a]"
+                    placeholder={lang === 'ar' ? 'كود (WAVE)' : 'Code (WAVE)'}
+                    className="cartoon-input min-w-0 flex-1 px-3 py-2.5 bg-white text-[#161426] text-center font-extrabold text-base focus:outline-none focus:ring-4 focus:ring-[#ffca3a]"
                   />
                   <button
                     type="submit"
                     disabled={loading}
-                    className="cartoon-btn bg-[#ffca3a] hover:bg-[#ffd55a] text-[#161426] px-4 sm:px-5 py-2.5 text-base sm:text-lg shrink-0 whitespace-nowrap"
+                    className="cartoon-btn bg-[#ffca3a] hover:bg-[#ffd55a] text-[#161426] px-4 py-2.5 text-sm sm:text-base shrink-0 whitespace-nowrap"
                   >
                     {t.joinBtn}
                   </button>
@@ -1558,17 +1573,234 @@ export function App() {
                 <button
                   type="button"
                   onClick={handleStartPassAndPlay}
-                  className="cartoon-btn w-full py-3 px-4 bg-[#00bbf9] hover:bg-[#33c9fa] text-[#161426] text-base flex items-center justify-center gap-2"
+                  className="cartoon-btn w-full py-3 px-4 bg-[#00bbf9] hover:bg-[#33c9fa] text-[#161426] text-sm sm:text-base flex items-center justify-center gap-2"
                 >
-                  <DeviceMobile weight="fill" className="w-6 h-6" />
+                  <DeviceMobile weight="fill" className="w-5 h-5" />
                   <span>{t.passAndPlay}</span>
                 </button>
+
+                <p className="text-[11px] font-bold text-[#3f3b5c] text-center leading-relaxed">
+                  {lang === 'ar'
+                    ? 'غرفة واحدة تجمع كل الـ 14 لعبة! فيكم تبدلوا اللعبة بأي وقت مع نفس الأصحاب ونفس لوحة النقاط.'
+                    : 'One room, 14 games! Switch games anytime with the same group & shared Leaderboard.'}
+                </p>
+              </div>
+            </div>
+
+            {/* CATEGORIZED 14-GAME ARCADE SHELF (8 Cols on Desktop) */}
+            <div className="lg:col-span-8 space-y-5 order-2 lg:order-1">
+              {/* Featured Selected Game Spotlight Banner */}
+              <div className="cartoon-panel-dark p-5 sm:p-6 relative overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                  {/* Spotlight Text */}
+                  <div className="md:col-span-7 space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        style={{ backgroundColor: homeSelectedMeta.accent }}
+                        className="cartoon-badge text-white px-3 py-0.5 text-xs"
+                      >
+                        {lang === 'ar' ? homeSelectedMeta.tag_ar : homeSelectedMeta.tag_en}
+                      </span>
+                      <span className="cartoon-badge bg-[#191636] text-[#ffca3a] px-3 py-0.5 text-xs flex items-center gap-1">
+                        <Users weight="fill" className="w-3.5 h-3.5" />
+                        <span>
+                          {lang === 'ar' ? homeSelectedMeta.players_ar : homeSelectedMeta.players_en}
+                        </span>
+                      </span>
+                    </div>
+
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-[#ffca3a] flex items-center gap-2.5">
+                      <PartyGameSvgIcon gameId={homeSelectedGame} className="w-9 h-9 shrink-0" />
+                      <span>
+                        {lang === 'ar' ? homeSelectedMeta.name_ar : homeSelectedMeta.name_en}
+                      </span>
+                    </h2>
+
+                    <p className="text-sm font-bold text-[#d9d4f7] leading-relaxed">
+                      {lang === 'ar' ? homeSelectedMeta.longDesc_ar : homeSelectedMeta.longDesc_en}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowHowToPlay(true)}
+                        className="cartoon-btn bg-[#fff9ec] text-[#161426] px-4 py-2 text-xs sm:text-sm flex items-center gap-1.5"
+                      >
+                        <Question weight="fill" className="w-4 h-4 text-[#1982c4]" />
+                        <span>{lang === 'ar' ? 'شرح طريقة اللعب' : 'How It Works'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={pickRandomHomeGame}
+                        className="cartoon-btn bg-[#9b5de5] text-white px-4 py-2 text-xs sm:text-sm flex items-center gap-1.5"
+                      >
+                        <Shuffle weight="bold" className="w-4 h-4" />
+                        <span>{lang === 'ar' ? 'اقترحلي لعبة عشوائية!' : 'Surprise Me!'}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Interactive / Illustrated Mini Stage */}
+                  <div className="md:col-span-5 flex items-center justify-center">
+                    {homeSelectedGame === 'wavelength' ? (
+                      <div className="w-full max-w-[260px]">
+                        <WavelengthWheel
+                          targetAngle={18}
+                          dialAngle={demoDialAngle}
+                          showTarget={true}
+                          canMoveDial={true}
+                          onDialChange={(a) => setDemoDialAngle(a)}
+                          lang={lang}
+                        />
+                      </div>
+                    ) : homeSelectedGame === 'dixit' ? (
+                      <div className="flex items-center justify-center -space-x-5 rtl:space-x-reverse py-2">
+                        {[1, 3, 11].map((cid, i) => (
+                          <div
+                            key={cid}
+                            style={{ transform: `rotate(${(i - 1) * 9}deg)` }}
+                            className="w-24 rounded-2xl overflow-hidden border-3 border-[#161426] shadow-[0_6px_0_#161426]"
+                          >
+                            <DixitArtCardSvg cardId={cid} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : homeSelectedGame === 'witness' ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <MonsterWitnessSvg monsterId={1} className="w-28 h-28" />
+                        <MonsterWitnessSvg monsterId={2} className="w-28 h-28" />
+                      </div>
+                    ) : homeSelectedGame === 'cockroach' ? (
+                      <div className="flex items-center justify-center -space-x-3 rtl:space-x-reverse">
+                        <CritterCardSvg critter="scorpion" lang={lang} className="w-20 h-28 -rotate-6" />
+                        <CritterCardSvg faceDown={true} className="w-20 h-28 z-10" />
+                        <CritterCardSvg critter="frog" lang={lang} className="w-20 h-28 rotate-6" />
+                      </div>
+                    ) : homeSelectedGame === 'wordbomb' ? (
+                      <AnimatedBombSvg
+                        secondsLeft={8}
+                        maxSeconds={12}
+                        letters={lang === 'ar' ? 'ب ر' : 'B R'}
+                        className="w-32 h-32"
+                      />
+                    ) : (
+                      <div
+                        style={{ backgroundColor: homeSelectedMeta.bgTint }}
+                        className="w-32 h-32 rounded-3xl border-4 border-[#161426] shadow-[0_7px_0_#161426] flex items-center justify-center animate-cartoon-float"
+                      >
+                        <PartyGameSvgIcon gameId={homeSelectedGame} className="w-20 h-20" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Category Filter Pills & Instant Search */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-2">
+                  {homeCategories.map((c) => {
+                    const active = homeCategory === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setHomeCategory(c.id)}
+                        className={`cartoon-badge px-3.5 py-1.5 text-xs sm:text-sm cursor-pointer transition-all ${
+                          active
+                            ? 'bg-[#ffca3a] text-[#161426] -translate-y-0.5'
+                            : 'bg-[#25204d] text-[#fff9ec] hover:bg-[#322b66]'
+                        }`}
+                      >
+                        {lang === 'ar' ? c.ar : c.en}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="relative sm:w-56">
+                  <MagnifyingGlass
+                    weight="bold"
+                    className="w-4 h-4 text-[#3f3b5c] absolute top-1/2 -translate-y-1/2 start-3.5 pointer-events-none"
+                  />
+                  <input
+                    type="text"
+                    value={homeSearch}
+                    onChange={(e) => setHomeSearch(e.target.value)}
+                    placeholder={lang === 'ar' ? 'ابحث في الـ 14 لعبة...' : 'Search 14 games...'}
+                    className="cartoon-input w-full ps-9 pe-3 py-2 bg-[#fff9ec] text-[#161426] text-xs sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* 14-GAME BENTO / ARCADE CARDS GRID */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+                {filteredHomeGames.map((g) => {
+                  const isPicked = homeSelectedGame === g.id;
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setHomeSelectedGame(g.id)}
+                      className={`p-4 rounded-3xl border-4 border-[#161426] text-start transition-all cursor-pointer flex flex-col justify-between gap-3 ${
+                        isPicked
+                          ? 'bg-[#ffca3a] text-[#161426] shadow-[0_7px_0_#161426] -translate-y-1'
+                          : 'bg-[#fff9ec] hover:bg-white text-[#161426] shadow-[0_5px_0_#161426] hover:-translate-y-1'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 w-full">
+                        <div
+                          style={{ backgroundColor: isPicked ? '#ffffff' : g.bgTint }}
+                          className="w-13 h-13 rounded-2xl border-3 border-[#161426] shadow-[0_3px_0_#161426] flex items-center justify-center shrink-0"
+                        >
+                          <PartyGameSvgIcon gameId={g.id} className="w-9 h-9" />
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {g.isNew && (
+                            <span className="cartoon-badge bg-[#ff595e] text-white px-2.5 py-0.5 text-[10px] flex items-center gap-1">
+                              <Sparkle weight="fill" className="w-3 h-3 text-[#ffca3a]" />
+                              <span>{lang === 'ar' ? 'جديد' : 'NEW'}</span>
+                            </span>
+                          )}
+                          {isPicked && (
+                            <span className="cartoon-badge bg-[#8ac926] text-[#161426] p-1">
+                              <Check weight="bold" className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 w-full">
+                        <h3 className="font-extrabold text-lg text-[#161426] leading-tight">
+                          {lang === 'ar' ? g.name_ar : g.name_en}
+                        </h3>
+                        <p className="text-xs font-bold text-[#3f3b5c] leading-snug line-clamp-2">
+                          {lang === 'ar' ? g.desc_ar : g.desc_en}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t-2 border-[#161426]/10 w-full text-[11px] font-extrabold">
+                        <span className="text-[#3f3b5c] flex items-center gap-1">
+                          <Users weight="fill" className="w-3.5 h-3.5" />
+                          <span>{lang === 'ar' ? g.players_ar : g.players_en}</span>
+                        </span>
+                        <span
+                          style={{ backgroundColor: g.accent }}
+                          className="px-2.5 py-0.5 rounded-full text-white border-2 border-[#161426]"
+                        >
+                          {lang === 'ar' ? g.tag_ar : g.tag_en}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
         ) : room.status === 'lobby' ? (
           /* ================= ONLINE ROOM LOBBY ================= */
-          <div className="max-w-3xl mx-auto w-full space-y-5 my-auto">
+          <div className="max-w-4xl mx-auto w-full space-y-5 my-auto">
             {/* Room Code Banner */}
             <div className="cartoon-card p-6 text-center relative overflow-hidden">
               <div className="inline-block cartoon-badge bg-[#ffca3a] text-[#161426] px-4 py-1 text-sm mb-2">
@@ -1599,14 +1831,16 @@ export function App() {
                   )}
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setShowCustomCardModal(true)}
-                  className="cartoon-btn bg-[#ff924c] text-[#161426] px-4 py-2.5 flex items-center gap-1.5 text-base"
-                >
-                  <Plus weight="bold" className="w-5 h-5" />
-                  <span>{t.addCustomCard}</span>
-                </button>
+                {activeGameId === 'wavelength' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomCardModal(true)}
+                    className="cartoon-btn bg-[#ff924c] text-[#161426] px-4 py-2.5 flex items-center gap-1.5 text-base"
+                  >
+                    <Plus weight="bold" className="w-5 h-5" />
+                    <span>{t.addCustomCard}</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1622,7 +1856,7 @@ export function App() {
                     </h3>
                   </div>
 
-                  {room.mode === 'teams' && (
+                  {activeGameId === 'wavelength' && room.mode === 'teams' && (
                     <div className="flex gap-1.5">
                       <button
                         type="button"
@@ -1670,7 +1904,7 @@ export function App() {
                               <Crown weight="fill" className="w-4 h-4 text-[#ffca3a] shrink-0" />
                             )}
                           </div>
-                          {room.mode === 'teams' && (
+                          {activeGameId === 'wavelength' && room.mode === 'teams' && (
                             <span
                               className={`text-xs font-bold ${
                                 p.team === 'A' ? 'text-[#ff924c]' : 'text-[#00bbf9]'
@@ -1701,102 +1935,111 @@ export function App() {
               {/* Host Settings Panel */}
               <div className="md:col-span-5 cartoon-card p-5 flex flex-col justify-between space-y-4">
                 <div className="space-y-4">
-                  {/* Choose Party Game */}
-                  <div>
-                    <label className="block font-extrabold text-sm text-[#161426] mb-2">
-                      {lang === 'ar' ? 'اختار اللعبة للشلّة:' : 'Pick Party Game:'}
+                  {/* Active Selected Game Ticket + Modal Picker Button */}
+                  <div className="space-y-2">
+                    <label className="block font-extrabold text-sm text-[#161426]">
+                      {lang === 'ar' ? 'لعبة الغرفة الحالية:' : 'Selected Room Game:'}
                     </label>
-                    <div className="grid grid-cols-1 gap-2">
-                      {partyGamesCatalog.map((g) => (
-                        <button
-                          key={g.id}
-                          type="button"
-                          disabled={!isHost}
-                          onClick={() => handleSelectPartyGame(g.id)}
-                          className={`cartoon-btn py-2 px-3 text-start flex items-center justify-between ${
-                            activeGameId === g.id
-                              ? 'bg-[#ffca3a] text-[#161426]'
-                              : 'bg-white text-[#161426]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <PartyGameSvgIcon gameId={g.id} className="w-7 h-7 shrink-0" />
-                            <div>
-                              <div className="font-extrabold text-sm leading-tight">
-                                {lang === 'ar' ? g.name_ar : g.name_en}
-                              </div>
-                              <div className="text-[11px] font-bold opacity-75">
-                                {lang === 'ar' ? g.desc_ar : g.desc_en}
-                              </div>
-                            </div>
-                          </div>
-                          {activeGameId === g.id && (
-                            <Check weight="bold" className="w-5 h-5 shrink-0" />
-                          )}
-                        </button>
-                      ))}
+                    <div
+                      style={{ backgroundColor: activeGameMeta.bgTint }}
+                      className="p-3.5 rounded-2xl border-3 border-[#161426] flex items-center gap-3"
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-white border-3 border-[#161426] flex items-center justify-center shrink-0">
+                        <PartyGameSvgIcon gameId={activeGameId} className="w-8 h-8" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-extrabold text-base text-[#161426]">
+                          {lang === 'ar' ? activeGameMeta.name_ar : activeGameMeta.name_en}
+                        </div>
+                        <div className="text-xs font-bold text-[#3f3b5c]">
+                          {lang === 'ar' ? activeGameMeta.desc_ar : activeGameMeta.desc_en}
+                        </div>
+                      </div>
                     </div>
+
+                    {isHost && (
+                      <button
+                        type="button"
+                        onClick={() => setShowGamePickerModal(true)}
+                        className="cartoon-btn bg-[#ffca3a] text-[#161426] w-full py-2.5 px-4 text-sm flex items-center justify-center gap-2"
+                      >
+                        <SquaresFour weight="fill" className="w-5 h-5" />
+                        <span>
+                          {lang === 'ar'
+                            ? 'تغيير اللعبة (مكتبة الـ 14 لعبة)'
+                            : 'Switch Game (Browse All 14)'}
+                        </span>
+                      </button>
+                    )}
                   </div>
 
                   {activeGameId === 'wavelength' && (
-                    <div>
-                      <label className="block font-extrabold text-sm text-[#161426] mb-2">
-                        {t.gameMode}
-                      </label>
-                      <div className="grid grid-cols-1 gap-2">
-                        <button
-                          type="button"
-                          disabled={!isHost}
-                          onClick={() => updateRoomState({ mode: 'coop' })}
-                          className={`cartoon-btn py-2 px-3 text-sm flex items-center justify-between ${
-                            room.mode === 'coop'
-                              ? 'bg-[#ffca3a] text-[#161426]'
-                              : 'bg-white text-[#161426]'
-                          }`}
-                        >
-                          <span>🎉 {t.coopMode}</span>
-                          {room.mode === 'coop' && <Check weight="bold" className="w-5 h-5" />}
-                        </button>
+                    <>
+                      <div>
+                        <label className="block font-extrabold text-sm text-[#161426] mb-2">
+                          {t.gameMode}
+                        </label>
+                        <div className="grid grid-cols-1 gap-2">
+                          <button
+                            type="button"
+                            disabled={!isHost}
+                            onClick={() => updateRoomState({ mode: 'coop' })}
+                            className={`cartoon-btn py-2 px-3 text-sm flex items-center justify-between ${
+                              room.mode === 'coop'
+                                ? 'bg-[#ffca3a] text-[#161426]'
+                                : 'bg-white text-[#161426]'
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Sparkle weight="fill" className="w-4 h-4" />
+                              <span>{t.coopMode}</span>
+                            </span>
+                            {room.mode === 'coop' && <Check weight="bold" className="w-5 h-5" />}
+                          </button>
 
-                        <button
-                          type="button"
-                          disabled={!isHost}
-                          onClick={() => updateRoomState({ mode: 'teams' })}
-                          className={`cartoon-btn py-2 px-3 text-sm flex items-center justify-between ${
-                            room.mode === 'teams'
-                              ? 'bg-[#ff924c] text-[#161426]'
-                              : 'bg-white text-[#161426]'
-                          }`}
-                        >
-                          <span>⚔️ {t.teamsMode}</span>
-                          {room.mode === 'teams' && <Check weight="bold" className="w-5 h-5" />}
-                        </button>
+                          <button
+                            type="button"
+                            disabled={!isHost}
+                            onClick={() => updateRoomState({ mode: 'teams' })}
+                            className={`cartoon-btn py-2 px-3 text-sm flex items-center justify-between ${
+                              room.mode === 'teams'
+                                ? 'bg-[#ff924c] text-[#161426]'
+                                : 'bg-white text-[#161426]'
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <Sword weight="fill" className="w-4 h-4" />
+                              <span>{t.teamsMode}</span>
+                            </span>
+                            {room.mode === 'teams' && <Check weight="bold" className="w-5 h-5" />}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  )}
 
-                  <div>
-                    <label className="block font-extrabold text-sm text-[#161426] mb-2">
-                      {t.roundsLabel}: {room.max_rounds}
-                    </label>
-                    <div className="flex gap-2">
-                      {[5, 7, 10].map((rCount) => (
-                        <button
-                          key={rCount}
-                          type="button"
-                          disabled={!isHost}
-                          onClick={() => updateRoomState({ max_rounds: rCount })}
-                          className={`cartoon-btn flex-1 py-2 text-base ${
-                            room.max_rounds === rCount
-                              ? 'bg-[#00bbf9] text-[#161426]'
-                              : 'bg-white text-[#161426]'
-                          }`}
-                        >
-                          {rCount}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                      <div>
+                        <label className="block font-extrabold text-sm text-[#161426] mb-2">
+                          {t.roundsLabel}: {room.max_rounds}
+                        </label>
+                        <div className="flex gap-2">
+                          {[5, 7, 10].map((rCount) => (
+                            <button
+                              key={rCount}
+                              type="button"
+                              disabled={!isHost}
+                              onClick={() => updateRoomState({ max_rounds: rCount })}
+                              className={`cartoon-btn flex-1 py-2 text-base ${
+                                room.max_rounds === rCount
+                                  ? 'bg-[#00bbf9] text-[#161426]'
+                                  : 'bg-white text-[#161426]'
+                              }`}
+                            >
+                              {rCount}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {isHost ? (
@@ -1828,19 +2071,7 @@ export function App() {
             {room.mode === 'coop' ? (
               <div className="p-5 rounded-3xl bg-[#191636] text-white border-4 border-[#161426]">
                 <div className="text-sm font-bold text-[#ffca3a]">{t.totalScore}</div>
-                <div className="text-5xl font-extrabold my-1">
-                  {room.coop_score}{' '}
-                  <span className="text-xl text-[#00bbf9]">/ {room.max_rounds * 4}</span>
-                </div>
-                <p className="text-sm font-bold text-[#d9d4f7] mt-2">
-                  {room.coop_score >= room.max_rounds * 3
-                    ? lang === 'ar'
-                      ? 'أساطير التخاطر! عقولكم متصلة 100%!'
-                      : 'Telepathic Legends! Your minds are 100% synced!'
-                    : lang === 'ar'
-                    ? 'جولة ممتعة! جربوا كمان مرة لتكسروا الرقم القياسي!'
-                    : 'Great game! Play again to beat your high score!'}
-                </p>
+                <div className="text-5xl font-extrabold my-1">{room.coop_score}</div>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-4">
@@ -1865,6 +2096,17 @@ export function App() {
                 <span>{t.playAgain}</span>
               </button>
 
+              {(isHost || isPassAndPlay) && (
+                <button
+                  type="button"
+                  onClick={() => setShowGamePickerModal(true)}
+                  className="cartoon-btn bg-[#00bbf9] text-[#161426] px-6 py-3 text-lg flex items-center gap-2"
+                >
+                  <SquaresFour weight="fill" className="w-6 h-6" />
+                  <span>{lang === 'ar' ? 'جربوا لعبة تانية!' : 'Switch Game!'}</span>
+                </button>
+              )}
+
               {!isPassAndPlay && (
                 <button
                   type="button"
@@ -1878,36 +2120,37 @@ export function App() {
           </div>
         ) : (
           /* ================= ACTIVE GAMEPLAY BOARD ================= */
-          <div className="w-full space-y-3">
-            {/* Instant Party Game Switcher Bar (Host or Pass & Play can switch games anytime with the same group!) */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1">
-              {partyGamesCatalog.map((g) => {
-                const isSelected = activeGameId === g.id;
-                return (
-                  <button
-                    key={g.id}
-                    type="button"
-                    disabled={!isHost && !isPassAndPlay}
-                    onClick={() => handleSelectPartyGame(g.id)}
-                    className={`cartoon-btn px-3.5 py-2 text-xs md:text-sm flex items-center gap-2 shrink-0 ${
-                      isSelected
-                        ? 'bg-[#ffca3a] text-[#161426]'
-                        : 'bg-[#25204d] text-[#fff9ec]'
-                    }`}
-                  >
-                    <PartyGameSvgIcon gameId={g.id} className="w-6 h-6" />
-                    <span>{lang === 'ar' ? g.name_ar : g.name_en}</span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="w-full space-y-3.5">
+            {/* Sleek Top Active Game & Room Control Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#25204d] border-4 border-[#120f29] shadow-[0_6px_0_#120f29] rounded-2xl px-4 py-2.5">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Active Game Badge */}
+                <div className="cartoon-badge bg-[#fff9ec] text-[#161426] px-3.5 py-1 text-sm flex items-center gap-2">
+                  <PartyGameSvgIcon gameId={activeGameId} className="w-5 h-5" />
+                  <span>
+                    {lang === 'ar' ? activeGameMeta.name_ar : activeGameMeta.name_en}
+                  </span>
+                </div>
 
-            {/* Score & Round Status Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 bg-[#25204d] border-4 border-[#120f29] shadow-[0_6px_0_#120f29] rounded-2xl px-4 py-2.5">
-              <div className="flex items-center gap-2.5">
-                <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3.5 py-1 text-sm">
-                  {t.round} {room.round_number} {t.of} {room.max_rounds}
-                </span>
+                {/* Switch Game Modal Button (For Host / Pass & Play) */}
+                {(isHost || isPassAndPlay) && (
+                  <button
+                    type="button"
+                    onClick={() => setShowGamePickerModal(true)}
+                    className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-1.5 text-xs sm:text-sm flex items-center gap-1.5"
+                  >
+                    <SquaresFour weight="fill" className="w-4 h-4" />
+                    <span>
+                      {lang === 'ar' ? 'تبديل اللعبة (14)' : 'Switch Game (14)'}
+                    </span>
+                  </button>
+                )}
+
+                {activeGameId === 'wavelength' && (
+                  <span className="cartoon-badge bg-[#191636] text-[#ffca3a] px-3 py-1 text-xs">
+                    {t.round} {room.round_number} {t.of} {room.max_rounds}
+                  </span>
+                )}
 
                 {!isPassAndPlay && (
                   <button
@@ -1921,37 +2164,28 @@ export function App() {
                 )}
               </div>
 
-              {/* Psychic Indicator */}
-              <div className="flex items-center gap-2 text-sm font-extrabold">
-                <Sparkle weight="fill" className="w-5 h-5 text-[#ff924c]" />
-                <span>{t.psychicRole}:</span>
-                <span className="text-[#ffca3a]">
-                  {isPassAndPlay
-                    ? lang === 'ar'
-                      ? 'اللاعب الحالي'
-                      : 'Current Psychic'
-                    : psychicPlayer?.name || '...'}
-                </span>
-              </div>
-
-              {/* Score Readout */}
-              {room.mode === 'coop' ? (
-                <div className="cartoon-badge bg-[#8ac926] text-[#161426] px-4 py-1 text-sm flex items-center gap-1.5">
-                  <Trophy weight="fill" className="w-4 h-4" />
-                  <span>
-                    {t.totalScore}: {room.coop_score}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="cartoon-badge bg-[#ff924c] text-[#161426] px-3 py-0.5 text-sm">
-                    {t.teamA}: {room.team_a_score}
-                  </span>
-                  <span className="cartoon-badge bg-[#00bbf9] text-[#161426] px-3 py-0.5 text-sm">
-                    {t.teamB}: {room.team_b_score}
+              {/* Psychic Indicator (Only for Wavelength!) */}
+              {activeGameId === 'wavelength' && (
+                <div className="flex items-center gap-2 text-sm font-extrabold">
+                  <Sparkle weight="fill" className="w-5 h-5 text-[#ff924c]" />
+                  <span>{t.psychicRole}:</span>
+                  <span className="text-[#ffca3a]">
+                    {isPassAndPlay
+                      ? lang === 'ar'
+                        ? 'اللاعب الحالي'
+                        : 'Current Psychic'
+                      : psychicPlayer?.name || '...'}
                   </span>
                 </div>
               )}
+
+              {/* Room Total Score */}
+              <div className="cartoon-badge bg-[#8ac926] text-[#161426] px-4 py-1 text-sm flex items-center gap-1.5">
+                <Trophy weight="fill" className="w-4 h-4" />
+                <span>
+                  {t.totalScore}: {room.coop_score}
+                </span>
+              </div>
             </div>
 
             {/* MAIN 2-COLUMN GAMEPLAY + LEADERBOARD GRID */}
@@ -2003,9 +2237,159 @@ export function App() {
                     onUpdateGameData={handleUpdateMiniGameData}
                     onStartNewRound={() => handleSelectPartyGame('wordbomb')}
                   />
+                ) : activeGameId === 'taboo' ? (
+                  <TabooGame
+                    gameData={
+                      room.game_data?.describerId
+                        ? room.game_data
+                        : (buildInitialGameData('taboo', players) as TabooGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('taboo')}
+                  />
+                ) : activeGameId === 'dixit' ? (
+                  <DixitGame
+                    gameData={
+                      room.game_data?.hands
+                        ? room.game_data
+                        : (buildInitialGameData('dixit', players) as DixitGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('dixit')}
+                  />
+                ) : activeGameId === 'witness' ? (
+                  <WitnessGame
+                    gameData={
+                      room.game_data?.monsterId
+                        ? room.game_data
+                        : (buildInitialGameData('witness', players) as WitnessGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('witness')}
+                  />
+                ) : activeGameId === 'fakeartist' ? (
+                  <FakeArtistGame
+                    gameData={
+                      room.game_data?.promptId
+                        ? room.game_data
+                        : (buildInitialGameData('fakeartist', players) as FakeArtistGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('fakeartist')}
+                  />
+                ) : activeGameId === 'medium' ? (
+                  <MediumGame
+                    gameData={
+                      room.game_data?.word1
+                        ? room.game_data
+                        : (buildInitialGameData('medium', players) as MediumGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('medium')}
+                  />
+                ) : activeGameId === 'soclover' ? (
+                  <SoCloverGame
+                    gameData={
+                      room.game_data?.targetWordIds
+                        ? room.game_data
+                        : (buildInitialGameData('soclover', players) as SoCloverGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('soclover')}
+                  />
+                ) : activeGameId === 'wits' ? (
+                  <WitsGame
+                    gameData={
+                      room.game_data?.questionId
+                        ? room.game_data
+                        : (buildInitialGameData('wits', players) as WitsGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('wits')}
+                  />
+                ) : activeGameId === 'insider' ? (
+                  <InsiderGame
+                    gameData={
+                      room.game_data?.wordId
+                        ? room.game_data
+                        : (buildInitialGameData('insider', players) as InsiderGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('insider')}
+                  />
+                ) : activeGameId === 'decrypto' ? (
+                  <DecryptoGame
+                    gameData={
+                      room.game_data?.secretCode
+                        ? room.game_data
+                        : (buildInitialGameData('decrypto', players) as DecryptoGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('decrypto')}
+                  />
+                ) : activeGameId === 'cockroach' ? (
+                  <CockroachGame
+                    gameData={
+                      room.game_data?.trueCritter
+                        ? room.game_data
+                        : (buildInitialGameData('cockroach', players) as CockroachGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('cockroach')}
+                  />
                 ) : (
+                  /* WAVELENGTH GAME BOARD */
                   <>
-                    {/* Clue Display Banner (when Clue has been given) */}
                     {room.clue && (
                       <div className="cartoon-card bg-[#ffca3a] px-5 py-3 text-center max-w-xl mx-auto">
                         <div className="text-xs font-extrabold uppercase text-[#161426]/75">
@@ -2017,7 +2401,6 @@ export function App() {
                       </div>
                     )}
 
-                    {/* Secret Target Toggle for Psychic */}
                     {isPsychic && room.status === 'psychic_clue' && !psychicCurtainOpen && (
                       <div className="flex justify-center">
                         <button
@@ -2040,7 +2423,6 @@ export function App() {
                       </div>
                     )}
 
-                    {/* THE WAVELENGTH WHEEL */}
                     <WavelengthWheel
                       targetAngle={Number(room.target_angle)}
                       dialAngle={liveDialAngle}
@@ -2052,7 +2434,6 @@ export function App() {
                       lang={lang}
                     />
 
-                    {/* THE SPECTRUM CARD */}
                     <SpectrumCard
                       leftText={leftCardText}
                       rightText={rightCardText}
@@ -2061,10 +2442,9 @@ export function App() {
                       onSwap={handleSwapCard}
                     />
 
-                    {/* PHASE ACTION PANEL */}
                     <div className="max-w-xl mx-auto w-full pt-2">
-                      {room.status === 'psychic_clue' && (
-                        isPsychic ? (
+                      {room.status === 'psychic_clue' &&
+                        (isPsychic ? (
                           <form
                             onSubmit={handleSubmitClue}
                             className="cartoon-card p-5 space-y-3 text-center"
@@ -2097,12 +2477,14 @@ export function App() {
                           </form>
                         ) : (
                           <div className="cartoon-panel-dark p-5 text-center space-y-2">
-                            <div className="text-xl font-extrabold text-[#ffca3a] animate-pulse">
-                              🔮 {psychicPlayer?.name || t.psychicRole} {t.waitingForPsychic}
+                            <div className="text-xl font-extrabold text-[#ffca3a] animate-pulse flex items-center justify-center gap-2">
+                              <Sparkle weight="fill" className="w-6 h-6" />
+                              <span>
+                                {psychicPlayer?.name || t.psychicRole} {t.waitingForPsychic}
+                              </span>
                             </div>
                           </div>
-                        )
-                      )}
+                        ))}
 
                       {room.status === 'guessing' && (
                         <div className="cartoon-card p-5 text-center space-y-3.5">
@@ -2111,12 +2493,12 @@ export function App() {
                               <p className="font-extrabold text-base text-[#161426]">
                                 {isPassAndPlay && nextPassAndPlayGuesser
                                   ? lang === 'ar'
-                                    ? `🎯 دور (${nextPassAndPlayGuesser.name}) ليحرك المؤشر ويثبت تخمينه الشخصي!`
-                                    : `🎯 ${nextPassAndPlayGuesser.name}'s turn to move the pointer and lock their guess!`
+                                    ? `دور (${nextPassAndPlayGuesser.name}) ليحرك المؤشر ويثبت تخمينه الشخصي!`
+                                    : `${nextPassAndPlayGuesser.name}'s turn to move the pointer and lock their guess!`
                                   : hasLockedMyGuess
                                   ? lang === 'ar'
-                                    ? `✅ ثبتت تخمينك على (${wavelengthGuesses[playerId]}°)! فيك تعدله قبل ما يخلصوا الباقين:`
-                                    : `✅ Locked your guess at (${wavelengthGuesses[playerId]}°)! You can still adjust it:`
+                                    ? `ثبتت تخمينك على (${wavelengthGuesses[playerId]}°)! فيك تعدله قبل ما يخلصوا الباقين:`
+                                    : `Locked your guess at (${wavelengthGuesses[playerId]}°)! You can still adjust it:`
                                   : t.moveDialInstruction}
                               </p>
                               <button
@@ -2138,21 +2520,21 @@ export function App() {
                                       : `Lock ${nextPassAndPlayGuesser.name}'s Guess!`
                                     : hasLockedMyGuess
                                     ? lang === 'ar'
-                                      ? 'تحديث تخميني الشخصي 🔄'
-                                      : 'Update My Personal Guess 🔄'
+                                      ? 'تحديث تخميني الشخصي'
+                                      : 'Update My Personal Guess'
                                     : lang === 'ar'
-                                    ? 'تثبيت تخميني الشخصي! 🎯'
-                                    : 'Lock My Personal Guess! 🎯'}
+                                    ? 'تثبيت تخميني الشخصي!'
+                                    : 'Lock My Personal Guess!'}
                                 </span>
                               </button>
                             </>
                           ) : (
-                            <p className="font-extrabold text-base text-[#161426]">
-                              👀 {t.psychicWatchingInstruction}
+                            <p className="font-extrabold text-base text-[#161426] flex items-center justify-center gap-2">
+                              <Eye weight="fill" className="w-5 h-5 text-[#1982c4]" />
+                              <span>{t.psychicWatchingInstruction}</span>
                             </p>
                           )}
 
-                          {/* Live Player Guessing Progress Badges */}
                           {room.mode === 'coop' && expectedWavelengthGuessers.length > 0 && (
                             <div className="pt-2 border-t-2 border-[#161426]/15 space-y-2">
                               <div className="text-xs font-extrabold text-[#3f3b5c]">
@@ -2162,8 +2544,7 @@ export function App() {
                               </div>
                               <div className="flex flex-wrap items-center justify-center gap-2">
                                 {expectedWavelengthGuessers.map((gp) => {
-                                  const locked =
-                                    typeof wavelengthGuesses[gp.id] === 'number';
+                                  const locked = typeof wavelengthGuesses[gp.id] === 'number';
                                   return (
                                     <span
                                       key={gp.id}
@@ -2174,25 +2555,26 @@ export function App() {
                                       }`}
                                     >
                                       <span>{gp.name}</span>
-                                      <span>{locked ? '✓ جاوب' : '⏳ عم يفكر'}</span>
+                                      {locked ? (
+                                        <CheckCircle weight="fill" className="w-3.5 h-3.5" />
+                                      ) : (
+                                        <Hourglass weight="bold" className="w-3.5 h-3.5" />
+                                      )}
                                     </span>
                                   );
                                 })}
                               </div>
 
-                              {/* Host / Psychic Force Reveal if at least 1 person answered */}
                               {(isHost || isPsychic) &&
                                 Object.keys(wavelengthGuesses).length > 0 && (
                                   <button
                                     type="button"
-                                    onClick={() =>
-                                      performMultiPlayerReveal(wavelengthGuesses)
-                                    }
+                                    onClick={() => performMultiPlayerReveal(wavelengthGuesses)}
                                     className="cartoon-btn bg-[#00bbf9] text-[#161426] px-4 py-2 text-sm mt-2"
                                   >
                                     {lang === 'ar'
-                                      ? 'اكشف النتيجة الآن (بمن جاوب) 🎉'
-                                      : 'Reveal Results Now 🎉'}
+                                      ? 'اكشف النتيجة الآن (بمن جاوب)'
+                                      : 'Reveal Results Now'}
                                   </button>
                                 )}
                             </div>
@@ -2228,62 +2610,58 @@ export function App() {
                         <div className="cartoon-card p-5 text-center space-y-3.5 animate-in zoom-in-95 duration-200">
                           <div className="text-3xl font-extrabold text-[#161426]">
                             {room.last_round_points === 4
-                              ? `🎯 ${t.bullseye}`
+                              ? t.bullseye
                               : room.last_round_points === 3
-                              ? `🔥 ${t.greatJob}`
+                              ? t.greatJob
                               : room.last_round_points === 2
-                              ? `👍 ${t.goodTry}`
-                              : `😅 ${t.missed}`}
+                              ? t.goodTry
+                              : t.missed}
                           </div>
 
-                          {/* Individual Player Results Breakdown */}
                           {Object.keys(wavelengthGuesses).length > 0 && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                              {Object.entries(wavelengthGuesses).map(
-                                ([pid, guessedAng]) => {
-                                  const p = players.find((item) => item.id === pid);
-                                  const pts =
-                                    wavelengthPoints[pid] ??
-                                    calculateScoreFromAngles(
-                                      Number(room.target_angle),
-                                      Number(guessedAng)
-                                    );
-                                  return (
-                                    <div
-                                      key={pid}
-                                      className="flex items-center justify-between p-2.5 rounded-2xl bg-white border-3 border-[#161426]"
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <span
-                                          style={{
-                                            backgroundColor:
-                                              p?.avatar_color || '#ffca3a',
-                                          }}
-                                          className="w-7 h-7 rounded-full border-2 border-[#161426] flex items-center justify-center font-extrabold text-xs text-[#161426]"
-                                        >
-                                          {p?.name?.slice(0, 1) || '?'}
-                                        </span>
-                                        <span className="font-extrabold text-sm text-[#161426]">
-                                          {p?.name || 'Player'}
-                                        </span>
-                                      </div>
+                              {Object.entries(wavelengthGuesses).map(([pid, guessedAng]) => {
+                                const p = players.find((item) => item.id === pid);
+                                const pts =
+                                  wavelengthPoints[pid] ??
+                                  calculateScoreFromAngles(
+                                    Number(room.target_angle),
+                                    Number(guessedAng)
+                                  );
+                                return (
+                                  <div
+                                    key={pid}
+                                    className="flex items-center justify-between p-2.5 rounded-2xl bg-white border-3 border-[#161426]"
+                                  >
+                                    <div className="flex items-center gap-2">
                                       <span
-                                        className={`cartoon-badge px-2.5 py-0.5 text-xs ${
-                                          pts === 4
-                                            ? 'bg-[#3898b8] text-white'
-                                            : pts === 3
-                                            ? 'bg-[#ff5722] text-white'
-                                            : pts === 2
-                                            ? 'bg-[#ffaa1d] text-[#161426]'
-                                            : 'bg-gray-200 text-gray-600'
-                                        }`}
+                                        style={{
+                                          backgroundColor: p?.avatar_color || '#ffca3a',
+                                        }}
+                                        className="w-7 h-7 rounded-full border-2 border-[#161426] flex items-center justify-center font-extrabold text-xs text-[#161426]"
                                       >
-                                        +{pts} {t.pointsUnit} ({guessedAng > 0 ? `+${guessedAng}°` : `${guessedAng}°`})
+                                        {p?.name?.slice(0, 1) || '?'}
+                                      </span>
+                                      <span className="font-extrabold text-sm text-[#161426]">
+                                        {p?.name || 'Player'}
                                       </span>
                                     </div>
-                                  );
-                                }
-                              )}
+                                    <span
+                                      className={`cartoon-badge px-2.5 py-0.5 text-xs ${
+                                        pts === 4
+                                          ? 'bg-[#3898b8] text-white'
+                                          : pts === 3
+                                          ? 'bg-[#ff5722] text-white'
+                                          : pts === 2
+                                          ? 'bg-[#ffaa1d] text-[#161426]'
+                                          : 'bg-gray-200 text-gray-600'
+                                      }`}
+                                    >
+                                      +{pts} {t.pointsUnit} ({guessedAng > 0 ? `+${guessedAng}°` : `${guessedAng}°`})
+                                    </span>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
 
@@ -2306,30 +2684,32 @@ export function App() {
                   </>
                 )}
 
-                {/* Live Cartoon Reaction Bar + Custom Card Trigger */}
+                {/* Live Custom Cartoon Vector Reaction Bar */}
                 <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                  {['🎯', '🔥', '😂', '🤯', '👏', '🤔'].map((emoji) => (
+                  {REACTION_TYPES.map((rt) => (
                     <button
-                      key={emoji}
+                      key={rt}
                       type="button"
-                      onClick={() => sendEmojiReaction(emoji)}
-                      className="cartoon-btn bg-[#25204d] hover:bg-[#322b66] text-2xl w-12 h-12 flex items-center justify-center"
+                      onClick={() => sendCartoonReaction(rt)}
+                      className="cartoon-btn bg-[#25204d] hover:bg-[#322b66] w-12 h-12 flex items-center justify-center p-2"
                     >
-                      {emoji}
+                      <ReactionSvgIcon type={rt} className="w-7 h-7" />
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => setShowCustomCardModal(true)}
-                    className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 h-12 text-sm flex items-center gap-1"
-                  >
-                    <Plus weight="bold" className="w-4 h-4" />
-                    <span>{t.addCustomCard}</span>
-                  </button>
+                  {activeGameId === 'wavelength' && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomCardModal(true)}
+                      className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 h-12 text-sm flex items-center gap-1"
+                    >
+                      <Plus weight="bold" className="w-4 h-4" />
+                      <span>{t.addCustomCard}</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* LEADERBOARD SIDEBAR (Sits on the left side in RTL) */}
+              {/* LEADERBOARD SIDEBAR */}
               <aside className="lg:col-span-4 lg:sticky lg:top-4 cartoon-panel-dark p-5 space-y-4">
                 <div className="flex items-center justify-between border-b-3 border-[#120f29] pb-3">
                   <div className="flex items-center gap-2">
@@ -2345,35 +2725,13 @@ export function App() {
                   </span>
                 </div>
 
-                {/* Room / Teams Score Summary */}
-                {room.mode === 'coop' ? (
-                  <div className="p-3.5 rounded-2xl bg-[#191636] border-3 border-[#120f29] flex items-center justify-between">
-                    <span className="text-sm font-extrabold text-[#d9d4f7]">
-                      {t.roomTotalProgress}
-                    </span>
-                    <span className="cartoon-badge bg-[#8ac926] text-[#161426] px-3 py-0.5 text-base">
-                      {room.coop_score} / {room.max_rounds * 4}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="p-3 rounded-2xl bg-[#ff924c] text-[#161426] border-3 border-[#161426] text-center">
-                      <div className="text-xs font-extrabold">{t.teamA}</div>
-                      <div className="text-2xl font-extrabold">{room.team_a_score}</div>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-[#00bbf9] text-[#161426] border-3 border-[#161426] text-center">
-                      <div className="text-xs font-extrabold">{t.teamB}</div>
-                      <div className="text-2xl font-extrabold">{room.team_b_score}</div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Ranked Players List */}
-                <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-0.5">
+                <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-0.5">
                   {[...players]
                     .sort((a, b) => (b.score || 0) - (a.score || 0))
                     .map((p, index) => {
-                      const isCurrentPsychic = p.id === room.psychic_id;
+                      const isCurrentPsychic =
+                        activeGameId === 'wavelength' && p.id === room.psychic_id;
                       return (
                         <div
                           key={p.id}
@@ -2449,7 +2807,7 @@ export function App() {
                     })}
                 </div>
 
-                {/* In Pass & Play mode, allow adding players right inside the Leaderboard */}
+                {/* Add Local Player in Pass & Play */}
                 {isPassAndPlay && (
                   <form onSubmit={handleAddLocalPlayer} className="flex gap-2 pt-2">
                     <input
@@ -2477,72 +2835,65 @@ export function App() {
                 room.status === 'psychic_clue' &&
                 isPsychic &&
                 psychicCurtainOpen && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#120f29]/90 backdrop-blur-md"
-                >
                   <motion.div
-                    initial={{ scale: 0.75, y: 40, rotate: -2 }}
-                    animate={{ scale: 1, y: 0, rotate: 0 }}
-                    exit={{ scale: 0.85, y: -30, opacity: 0 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                    className="cartoon-card w-full max-w-lg p-6 md:p-8 text-center space-y-5 relative overflow-hidden"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#120f29]/90 backdrop-blur-md"
                   >
-                    {/* Round Pill */}
-                    <div className="inline-flex items-center gap-2 cartoon-badge bg-[#00bbf9] text-[#161426] px-4 py-1 text-sm">
-                      <Sparkle weight="fill" className="w-4 h-4" />
-                      <span>
-                        {t.round} {room.round_number} {t.of} {room.max_rounds}
-                      </span>
-                    </div>
-
-                    {/* Bouncing Cartoon Eye-Slash & Crystal Ball */}
                     <motion.div
-                      animate={{ y: [0, -10, 0], rotate: [0, -4, 4, 0] }}
-                      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-                      className="w-24 h-24 rounded-3xl bg-[#ff595e] border-4 border-[#161426] shadow-[0_7px_0_#161426] flex items-center justify-center mx-auto"
+                      initial={{ scale: 0.75, y: 40, rotate: -2 }}
+                      animate={{ scale: 1, y: 0, rotate: 0 }}
+                      exit={{ scale: 0.85, y: -30, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                      className="cartoon-card w-full max-w-lg p-6 md:p-8 text-center space-y-5 relative overflow-hidden"
                     >
-                      <EyeSlash weight="fill" className="w-14 h-14 text-[#ffca3a]" />
+                      <div className="inline-flex items-center gap-2 cartoon-badge bg-[#00bbf9] text-[#161426] px-4 py-1 text-sm">
+                        <Sparkle weight="fill" className="w-4 h-4" />
+                        <span>
+                          {t.round} {room.round_number} {t.of} {room.max_rounds}
+                        </span>
+                      </div>
+
+                      <motion.div
+                        animate={{ y: [0, -10, 0], rotate: [0, -4, 4, 0] }}
+                        transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                        className="w-24 h-24 rounded-3xl bg-[#ff595e] border-4 border-[#161426] shadow-[0_7px_0_#161426] flex items-center justify-center mx-auto"
+                      >
+                        <EyeSlash weight="fill" className="w-14 h-14 text-[#ffca3a]" />
+                      </motion.div>
+
+                      <div className="space-y-1">
+                        <h2 className="text-2xl md:text-3xl font-extrabold text-[#161426]">
+                          {t.psychicCurtainTitle}
+                        </h2>
+                        {psychicPlayer && (
+                          <div className="text-lg font-extrabold text-[#1982c4]">
+                            ({psychicPlayer.name})
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-[#ffca3a] border-4 border-[#161426] shadow-[0_5px_0_#161426] text-[#161426] font-extrabold text-base md:text-lg leading-relaxed">
+                        {t.psychicCurtainWarning}
+                      </div>
+
+                      <p className="text-sm font-bold text-[#3f3b5c]">{t.psychicCurtainSub}</p>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPsychicCurtainOpen(false);
+                          setLocalPeekTarget(true);
+                        }}
+                        className="cartoon-btn w-full py-4 px-6 bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] text-xl flex items-center justify-center gap-2.5"
+                      >
+                        <Eye weight="fill" className="w-7 h-7" />
+                        <span>{t.psychicCurtainBtn}</span>
+                      </button>
                     </motion.div>
-
-                    {/* Title */}
-                    <div className="space-y-1">
-                      <h2 className="text-2xl md:text-3xl font-extrabold text-[#161426]">
-                        {t.psychicCurtainTitle}
-                      </h2>
-                      {psychicPlayer && (
-                        <div className="text-lg font-extrabold text-[#1982c4]">
-                          ({psychicPlayer.name})
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Big Cartoon Warning Box */}
-                    <div className="p-4 rounded-2xl bg-[#ffca3a] border-4 border-[#161426] shadow-[0_5px_0_#161426] text-[#161426] font-extrabold text-base md:text-lg leading-relaxed">
-                      🙈 {t.psychicCurtainWarning}
-                    </div>
-
-                    <p className="text-sm font-bold text-[#3f3b5c]">
-                      {t.psychicCurtainSub}
-                    </p>
-
-                    {/* Reveal Button */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPsychicCurtainOpen(false);
-                        setLocalPeekTarget(true);
-                      }}
-                      className="cartoon-btn w-full py-4 px-6 bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] text-xl flex items-center justify-center gap-2.5"
-                    >
-                      <Eye weight="fill" className="w-7 h-7" />
-                      <span>{t.psychicCurtainBtn}</span>
-                    </button>
                   </motion.div>
-                </motion.div>
-              )}
+                )}
             </AnimatePresence>
           </div>
         )}
@@ -2552,6 +2903,14 @@ export function App() {
       <HowToPlayModal
         isOpen={showHowToPlay}
         onClose={() => setShowHowToPlay(false)}
+        lang={lang}
+        activeGameId={room ? activeGameId : homeSelectedGame}
+      />
+      <GamePickerModal
+        isOpen={showGamePickerModal}
+        onClose={() => setShowGamePickerModal(false)}
+        activeGameId={activeGameId}
+        onSelectGame={(gid) => handleSelectPartyGame(gid)}
         lang={lang}
       />
       <CustomCardModal
