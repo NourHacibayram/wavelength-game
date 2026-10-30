@@ -844,10 +844,10 @@ export function App() {
 
                 {/* Cartoon Avatar Color Picker */}
                 <div>
-                  <label className="block text-sm font-extrabold text-[#161426] mb-2">
+                  <label className="block text-sm font-extrabold text-[#161426] mb-2.5">
                     {t.chooseColor}
                   </label>
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="grid grid-cols-8 gap-2 place-items-center">
                     {CARTOON_AVATAR_COLORS.map((c) => (
                       <button
                         key={c}
@@ -857,9 +857,9 @@ export function App() {
                           setLocalPlayerColor(c);
                         }}
                         style={{ backgroundColor: c }}
-                        className={`w-9 h-9 rounded-full border-3 border-[#161426] transition-transform cursor-pointer ${
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full border-3 border-[#161426] transition-transform cursor-pointer ${
                           playerColor === c
-                            ? 'scale-125 shadow-[0_4px_0_#161426] ring-3 ring-[#161426]'
+                            ? 'scale-115 shadow-[0_3px_0_#161426] ring-3 ring-[#161426]'
                             : 'opacity-80 hover:opacity-100'
                         }`}
                       />
@@ -888,20 +888,19 @@ export function App() {
                 </div>
 
                 {/* Join Room Form */}
-                <form onSubmit={handleJoinRoom} className="flex gap-2">
+                <form onSubmit={handleJoinRoom} className="flex items-stretch gap-2.5 w-full">
                   <input
                     type="text"
                     maxLength={6}
                     value={joinCodeInput}
                     onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
-                    placeholder={t.roomCodePlaceholder}
-                    dir="ltr"
-                    className="cartoon-input flex-1 px-3.5 py-2.5 bg-white text-[#161426] text-center font-extrabold tracking-widest uppercase text-lg"
+                    placeholder={lang === 'ar' ? 'كود الغرفة (WAVE)' : 'Room Code (WAVE)'}
+                    className="cartoon-input min-w-0 flex-1 px-3 py-2.5 bg-white text-[#161426] text-center font-extrabold text-base sm:text-lg focus:outline-none focus:ring-4 focus:ring-[#ffca3a]"
                   />
                   <button
                     type="submit"
                     disabled={loading}
-                    className="cartoon-btn bg-[#ffca3a] hover:bg-[#ffd55a] text-[#161426] px-5 py-2.5 text-lg shrink-0"
+                    className="cartoon-btn bg-[#ffca3a] hover:bg-[#ffd55a] text-[#161426] px-4 sm:px-5 py-2.5 text-base sm:text-lg shrink-0 whitespace-nowrap"
                   >
                     {t.joinBtn}
                   </button>
@@ -1303,7 +1302,7 @@ export function App() {
                     <p className="text-sm font-bold text-[#3f3b5c]">
                       {t.psychicHintInstruction}
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-2.5">
+                    <div className="flex flex-col sm:flex-row gap-2.5 w-full">
                       <input
                         type="text"
                         required
@@ -1311,11 +1310,11 @@ export function App() {
                         value={clueInput}
                         onChange={(e) => setClueInput(e.target.value)}
                         placeholder={t.cluePlaceholder}
-                        className="cartoon-input flex-1 px-4 py-3 bg-white text-[#161426] text-lg"
+                        className="cartoon-input min-w-0 flex-1 px-4 py-3 bg-white text-[#161426] text-lg"
                       />
                       <button
                         type="submit"
-                        className="cartoon-btn bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] px-6 py-3 text-lg flex items-center justify-center gap-2 shrink-0"
+                        className="cartoon-btn bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] px-5 py-3 text-lg flex items-center justify-center gap-2 shrink-0 whitespace-nowrap"
                       >
                         <PaperPlaneTilt weight="fill" className="w-5 h-5" />
                         <span>{t.sendClue}</span>
