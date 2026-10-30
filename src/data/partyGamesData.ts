@@ -12,7 +12,8 @@ export type PartyGameId =
   | 'wits'
   | 'insider'
   | 'decrypto'
-  | 'cockroach';
+  | 'cockroach'
+  | 'themind';
 
 export type PartyGameCategory = 'all' | 'telepathy' | 'bluff' | 'drawing' | 'speed';
 

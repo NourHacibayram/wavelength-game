@@ -502,6 +502,98 @@ export const PartyGameSvgIcon: React.FC<{
         </svg>
       );
 
+    case 'themind':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Mystical Glowing Aura */}
+          <circle
+            cx="32"
+            cy="34"
+            r="24"
+            fill="#2b194d"
+            stroke="#161426"
+            strokeWidth="4"
+          />
+          <circle
+            cx="32"
+            cy="34"
+            r="19"
+            fill="none"
+            stroke="#ff924c"
+            strokeWidth="2"
+            strokeDasharray="4 4"
+          />
+          {/* Iconic Telepathic White Bunny Ears & Head */}
+          <path
+            d="M 22 28 C 18 10 24 6 27 18 L 28 26 Z"
+            fill="#fff9ec"
+            stroke="#161426"
+            strokeWidth="3.2"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 42 28 C 46 10 40 6 37 18 L 36 26 Z"
+            fill="#fff9ec"
+            stroke="#161426"
+            strokeWidth="3.2"
+            strokeLinejoin="round"
+          />
+          <ellipse
+            cx="32"
+            cy="38"
+            rx="14"
+            ry="12"
+            fill="#fff9ec"
+            stroke="#161426"
+            strokeWidth="3.5"
+          />
+          {/* Glowing Orange Third-Eye Mind Gem */}
+          <polygon
+            points="32,27 35.5,32 32,37 28.5,32"
+            fill="#ff924c"
+            stroke="#161426"
+            strokeWidth="2"
+          />
+          {/* Calm Closed Zen Eyes */}
+          <path
+            d="M 23 39 Q 25.5 41.5 28 39"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 36 39 Q 38.5 41.5 41 39"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+          />
+          {/* Mini Ascending Number Badge */}
+          <rect
+            x="40"
+            y="43"
+            width="20"
+            height="15"
+            rx="4"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="2.8"
+          />
+          <text
+            x="50"
+            y="51"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fill="#161426"
+            fontSize="9.5"
+            fontWeight="900"
+          >
+            100
+          </text>
+        </svg>
+      );
+
     case 'wordbomb':
     default:
       return (

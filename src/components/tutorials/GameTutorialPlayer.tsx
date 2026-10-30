@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Play,
   Pause,
@@ -25,6 +25,7 @@ import {
   DecryptoTutorialScene,
   ItoTutorialScene,
   WordBombTutorialScene,
+  TheMindTutorialScene,
 } from './GameTutorialScenesB';
 
 interface GameTutorialPlayerProps {
@@ -37,43 +38,49 @@ interface GameTutorialPlayerProps {
 }
 
 const STEP_DURATION_MS = 3800;
+const ENTRANCE_DURATION_MS = 650;
 
 export const GameTutorialSvgScene: React.FC<{
   gameId: PartyGameId;
   step: number;
+  animT: number;
+  clock: number;
   lang: 'ar' | 'en';
-}> = ({ gameId, step, lang }) => {
+}> = ({ gameId, step, animT, clock, lang }) => {
+  const props = { step, animT, clock, lang };
   switch (gameId) {
     case 'wavelength':
-      return <WavelengthTutorialScene step={step} lang={lang} />;
+      return <WavelengthTutorialScene {...props} />;
     case 'chameleon':
-      return <ChameleonTutorialScene step={step} lang={lang} />;
+      return <ChameleonTutorialScene {...props} />;
     case 'dixit':
-      return <DixitTutorialScene step={step} lang={lang} />;
+      return <DixitTutorialScene {...props} />;
     case 'taboo':
-      return <TabooTutorialScene step={step} lang={lang} />;
+      return <TabooTutorialScene {...props} />;
     case 'witness':
-      return <WitnessTutorialScene step={step} lang={lang} />;
+      return <WitnessTutorialScene {...props} />;
     case 'fakeartist':
-      return <FakeArtistTutorialScene step={step} lang={lang} />;
+      return <FakeArtistTutorialScene {...props} />;
     case 'cockroach':
-      return <CockroachTutorialScene step={step} lang={lang} />;
+      return <CockroachTutorialScene {...props} />;
     case 'wits':
-      return <WitsTutorialScene step={step} lang={lang} />;
+      return <WitsTutorialScene {...props} />;
     case 'insider':
-      return <InsiderTutorialScene step={step} lang={lang} />;
+      return <InsiderTutorialScene {...props} />;
     case 'medium':
-      return <MediumTutorialScene step={step} lang={lang} />;
+      return <MediumTutorialScene {...props} />;
     case 'soclover':
-      return <SoCloverTutorialScene step={step} lang={lang} />;
+      return <SoCloverTutorialScene {...props} />;
     case 'decrypto':
-      return <DecryptoTutorialScene step={step} lang={lang} />;
+      return <DecryptoTutorialScene {...props} />;
     case 'ito':
-      return <ItoTutorialScene step={step} lang={lang} />;
+      return <ItoTutorialScene {...props} />;
     case 'wordbomb':
-      return <WordBombTutorialScene step={step} lang={lang} />;
+      return <WordBombTutorialScene {...props} />;
+    case 'themind':
+      return <TheMindTutorialScene {...props} />;
     default:
-      return <WavelengthTutorialScene step={step} lang={lang} />;
+      return <WavelengthTutorialScene {...props} />;
   }
 };
 
@@ -88,52 +95,76 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
   const [internalStep, setInternalStep] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [progress, setProgress] = useState<number>(0);
+  const [animT, setAnimT] = useState<number>(1);
+  const [clock, setClock] = useState<number>(0);
+
+  const stepStartRef = useRef<number>(performance.now());
+  const mountStartRef = useRef<number>(performance.now());
+  const onStepChangeRef = useRef(onStepChange);
+  onStepChangeRef.current = onStepChange;
 
   const currentStep =
     typeof controlledStep === 'number' ? controlledStep : internalStep;
 
   const setStep = (next: number) => {
     const normalized = ((next % 4) + 4) % 4;
+    stepStartRef.current = performance.now();
     setInternalStep(normalized);
     setProgress(0);
-    if (onStepChange) {
-      onStepChange(normalized);
+    setAnimT(0);
+    if (onStepChangeRef.current) {
+      onStepChangeRef.current(normalized);
     }
   };
 
+  // Reset entrance timer whenever controlledStep changes externally (e.g. clicking a rule card)
+  useEffect(() => {
+    stepStartRef.current = performance.now();
+    setAnimT(0);
+    setProgress(0);
+  }, [currentStep]);
+
   // Reset to Step 0 whenever gameId changes
   useEffect(() => {
+    stepStartRef.current = performance.now();
     setInternalStep(0);
     setProgress(0);
+    setAnimT(0);
     setIsPlaying(true);
-    if (onStepChange) {
-      onStepChange(0);
+    if (onStepChangeRef.current) {
+      onStepChangeRef.current(0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId]);
 
-  // Smooth Auto-Advance Progress Loop
+  // Smooth ~30fps Animation & Auto-Advance Loop (Pure Native SVG Driver!)
   useEffect(() => {
-    if (!isPlaying) return;
-    const tickMs = 60;
-    const increment = (tickMs / STEP_DURATION_MS) * 100;
+    const interval = setInterval(() => {
+      const now = performance.now();
+      const stepElapsed = now - stepStartRef.current;
+      const totalElapsedSec = (now - mountStartRef.current) / 1000;
 
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev + increment >= 100) {
+      setClock(totalElapsedSec);
+      setAnimT(Math.min(1, stepElapsed / ENTRANCE_DURATION_MS));
+
+      if (isPlaying) {
+        const pct = (stepElapsed / STEP_DURATION_MS) * 100;
+        if (pct >= 100) {
+          stepStartRef.current = now;
           const next = (currentStep + 1) % 4;
           setInternalStep(next);
-          if (onStepChange) {
-            onStepChange(next);
+          setAnimT(0);
+          setProgress(0);
+          if (onStepChangeRef.current) {
+            onStepChangeRef.current(next);
           }
-          return 0;
+        } else {
+          setProgress(pct);
         }
-        return prev + increment;
-      });
-    }, tickMs);
+      }
+    }, 33);
 
-    return () => clearInterval(timer);
-  }, [isPlaying, currentStep, onStepChange]);
+    return () => clearInterval(interval);
+  }, [isPlaying, currentStep]);
 
   const gameMeta =
     PARTY_GAMES_CATALOG.find((g) => g.id === gameId) || PARTY_GAMES_CATALOG[0];
@@ -142,9 +173,20 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
   return (
     <div className="rounded-3xl bg-[#161426] border-4 border-[#120f29] shadow-[0_6px_0_#120f29] overflow-hidden">
       {/* Top Stage Header Bar */}
-      <div className="px-3.5 py-2 bg-[#120f29] flex items-center justify-between gap-2 border-b-2 border-white/10">
-        <div className="flex items-center gap-1.5 text-xs font-extrabold text-[#ffca3a]">
-          <FilmStrip weight="fill" className="w-4 h-4 text-[#00bbf9]" />
+      <div
+        className={`${
+          compact ? 'px-3.5 py-2' : 'px-4 py-2.5 sm:py-3'
+        } bg-[#120f29] flex items-center justify-between gap-2 border-b-2 border-white/10`}
+      >
+        <div
+          className={`flex items-center gap-1.5 ${
+            compact ? 'text-xs' : 'text-xs sm:text-sm'
+          } font-extrabold text-[#ffca3a]`}
+        >
+          <FilmStrip
+            weight="fill"
+            className={`${compact ? 'w-4 h-4' : 'w-4 h-4 sm:w-5 sm:h-5'} text-[#00bbf9]`}
+          />
           <span>
             {lang === 'ar'
               ? `شرح متحرك — خطوة ${currentStep + 1} من 4`
@@ -153,8 +195,8 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
         </div>
 
         {/* Step Controls: Play/Pause + 1-2-3-4 Pills */}
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             {[0, 1, 2, 3].map((idx) => {
               const active = idx === currentStep;
               return (
@@ -162,7 +204,9 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
                   key={idx}
                   type="button"
                   onClick={() => setStep(idx)}
-                  className={`w-6 h-6 rounded-lg font-extrabold text-xs transition-all cursor-pointer border-2 border-[#161426] flex items-center justify-center ${
+                  className={`${
+                    compact ? 'w-6 h-6 text-xs' : 'w-7 h-7 sm:w-8 sm:h-8 text-xs sm:text-sm'
+                  } rounded-lg font-extrabold transition-all cursor-pointer border-2 border-[#161426] flex items-center justify-center ${
                     active
                       ? 'bg-[#ffca3a] text-[#161426] scale-110'
                       : 'bg-[#2a2456] text-white/80 hover:bg-[#383070]'
@@ -179,8 +223,13 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
 
           <button
             type="button"
-            onClick={() => setIsPlaying((p) => !p)}
-            className="w-7 h-7 rounded-lg bg-[#00bbf9] text-[#161426] border-2 border-[#161426] flex items-center justify-center cursor-pointer hover:brightness-110"
+            onClick={() => {
+              stepStartRef.current = performance.now() - (progress / 100) * STEP_DURATION_MS;
+              setIsPlaying((p) => !p);
+            }}
+            className={`${
+              compact ? 'w-7 h-7' : 'w-8 h-8'
+            } rounded-lg bg-[#00bbf9] text-[#161426] border-2 border-[#161426] flex items-center justify-center cursor-pointer hover:brightness-110`}
             title={
               isPlaying
                 ? lang === 'ar'
@@ -192,9 +241,9 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
             }
           >
             {isPlaying ? (
-              <Pause weight="fill" className="w-3.5 h-3.5" />
+              <Pause weight="fill" className={compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
             ) : (
-              <Play weight="fill" className="w-3.5 h-3.5" />
+              <Play weight="fill" className={compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
             )}
           </button>
         </div>
@@ -203,16 +252,24 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
       {/* Animated SVG Canvas */}
       <div
         onClick={onExpandModal}
-        className={`relative p-2 bg-[#191636] ${onExpandModal ? 'cursor-pointer' : ''}`}
+        className={`relative ${compact ? 'p-2' : 'p-2.5 sm:p-3.5'} bg-[#191636] ${
+          onExpandModal ? 'cursor-pointer' : ''
+        }`}
       >
-        <GameTutorialSvgScene gameId={gameId} step={currentStep} lang={lang} />
+        <GameTutorialSvgScene
+          gameId={gameId}
+          step={currentStep}
+          animT={animT}
+          clock={clock}
+          lang={lang}
+        />
       </div>
 
       {/* Step Auto-Play Progress Bar */}
-      <div className="w-full h-1.5 bg-[#120f29]" dir="ltr">
+      <div className={`w-full ${compact ? 'h-1.5' : 'h-2'} bg-[#120f29]`} dir="ltr">
         <div
           style={{ width: `${progress}%` }}
-          className="h-full bg-[#ffca3a] transition-[width] duration-75"
+          className="h-full bg-[#ffca3a]"
         />
       </div>
 

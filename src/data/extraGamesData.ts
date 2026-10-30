@@ -451,6 +451,37 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
       'Friends can hit the Crowd Referee button to reject gibberish and toss the bomb back!',
     ],
   },
+  {
+    id: 'themind',
+    category: 'telepathy',
+    accent: '#ff924c',
+    bgTint: '#fff1e6',
+    players_ar: '2–10 لاعبين',
+    players_en: '2–10 Players',
+    tag_ar: 'تزامن صامت',
+    tag_en: 'Silent Sync',
+    name_ar: 'ذا مايند (نبض الصمت)',
+    name_en: 'The Mind',
+    desc_ar: 'رتّبوا الأرقام (1–100) تصاعدياً بالوسط بدون ولا كلمة أو دور!',
+    desc_en: 'Play cards 1–100 ascending in total silence with no turns!',
+    longDesc_ar:
+      'اللعبة العالمية الشهيرة! كل لاعب يحمل أرقاماً سرية من 1 إلى 100 وممنوع الكلام أو التلميح؛ اشعروا بالوقت معاً ليرمي صاحب أصغر رقم كرته باللحظة الصح قبل أي لاعب آخر!',
+    longDesc_en:
+      'The legendary silent co-op card game! Hold secret 1–100 cards with zero talking or turn order — feel time together and play your lowest card at the exact right moment!',
+    rules_ar: [
+      'في المستوى 1 يأخذ كل لاعب كرتاً سرياً (1–100)، وفي المستوى 2 كرتين، وهكذا — ممنوع الكلام أو الإشارة للأرقام!',
+      'بدون أدوار! اعتمدوا على الإحساس بالوقت، ومن يشعر أن معه أصغر رقم يرمي كرته مكشوفاً بالوسط.',
+      'إذا رمى لاعب رقماً وكان بيد غيره رقم أصغر منه: تخسر الشلّة قلباً وتُكشف كل الكروت الأصغر!',
+      'استخدموا «نجمة التزامن» بالتصويت ليتخلص الكل من أصغر كرت بيدهم وكسب معلومات تنقذكم!',
+    ],
+    rules_en: [
+      'Level 1 deals 1 secret card (1–100) each, Level 2 deals 2, and so on — zero talking or signaling numbers!',
+      'No turn order! Feel the silent rhythm together; whoever senses they hold the lowest card plays it face-up.',
+      'If someone plays a card while ANY friend holds a lower number, the team loses 1 Life and discards lower cards!',
+      'Vote to spend a Throwing Star so everyone reveals & discards their lowest card at once!',
+    ],
+    isNew: true,
+  },
 ];
 
 /* ============================================================================

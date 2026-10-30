@@ -71,6 +71,11 @@ import {
   randomCritter,
 } from './components/CockroachGame';
 import {
+  TheMindGame,
+  TheMindGameState,
+  buildInitialTheMindState,
+} from './components/TheMindGame';
+import {
   PartyGameSvgIcon,
   CartoonAvatarSvg,
   ReactionSvgIcon,
@@ -553,6 +558,10 @@ export function App() {
           penalties: {},
         };
         return state;
+      }
+
+      case 'themind': {
+        return buildInitialTheMindState(pIds);
       }
 
       case 'wavelength':
@@ -1346,8 +1355,8 @@ export function App() {
 
   // Filtered Home Catalog
   const homeCategories: { id: PartyGameCategory; ar: string; en: string }[] = [
-    { id: 'all', ar: 'الكل (14)', en: 'All (14)' },
-    { id: 'telepathy', ar: 'تخاطر وخيال (5)', en: 'Mind & Art (5)' },
+    { id: 'all', ar: `الكل (${PARTY_GAMES_CATALOG.length})`, en: `All (${PARTY_GAMES_CATALOG.length})` },
+    { id: 'telepathy', ar: 'تخاطر وخيال (6)', en: 'Mind & Art (6)' },
     { id: 'bluff', ar: 'خداع وجواسيس (4)', en: 'Bluff & Spies (4)' },
     { id: 'drawing', ar: 'رسم وإبداع (2)', en: 'Drawing (2)' },
     { id: 'speed', ar: 'سرعة وتحدي (3)', en: 'Speed & Wagers (3)' },
@@ -1582,8 +1591,8 @@ export function App() {
 
                 <p className="text-[11px] font-bold text-[#3f3b5c] text-center leading-relaxed">
                   {lang === 'ar'
-                    ? 'غرفة واحدة تجمع كل الـ 14 لعبة! فيكم تبدلوا اللعبة بأي وقت مع نفس الأصحاب ونفس لوحة النقاط.'
-                    : 'One room, 14 games! Switch games anytime with the same group & shared Leaderboard.'}
+                    ? 'غرفة واحدة تجمع كل الـ 15 لعبة! فيكم تبدلوا اللعبة بأي وقت مع نفس الأصحاب ونفس لوحة النقاط.'
+                    : 'One room, 15 games! Switch games anytime with the same group & shared Leaderboard.'}
                 </p>
               </div>
             </div>
@@ -1687,7 +1696,7 @@ export function App() {
                     type="text"
                     value={homeSearch}
                     onChange={(e) => setHomeSearch(e.target.value)}
-                    placeholder={lang === 'ar' ? 'ابحث في الـ 14 لعبة...' : 'Search 14 games...'}
+                    placeholder={lang === 'ar' ? 'ابحث في الـ 15 لعبة...' : 'Search 15 games...'}
                     className="cartoon-input w-full ps-9 pe-3 py-2 bg-[#fff9ec] text-[#161426] text-xs sm:text-sm"
                   />
                 </div>
@@ -2389,6 +2398,21 @@ export function App() {
                     lang={lang}
                     onUpdateGameData={handleUpdateMiniGameData}
                     onStartNewRound={() => handleSelectPartyGame('cockroach')}
+                  />
+                ) : activeGameId === 'themind' ? (
+                  <TheMindGame
+                    gameData={
+                      typeof room.game_data?.level === 'number' && room.game_data?.hands
+                        ? room.game_data
+                        : (buildInitialGameData('themind', players) as TheMindGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('themind')}
                   />
                 ) : (
                   /* WAVELENGTH GAME BOARD */
