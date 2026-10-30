@@ -1453,7 +1453,13 @@ export function App() {
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="w-full max-w-7xl mx-auto px-4 flex-1 flex flex-col justify-center my-3">
+      <main
+        className={`w-full max-w-7xl mx-auto px-4 flex-1 flex flex-col ${
+          !room || room.status === 'lobby' || room.status === 'finished'
+            ? 'justify-center'
+            : 'justify-start'
+        } my-3 [overflow-anchor:none]`}
+      >
         {!room ? (
           /* ================= REDESIGNED 14-GAME ARCADE HUB HOME PAGE ================= */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start py-2">
@@ -1968,8 +1974,8 @@ export function App() {
                         <SquaresFour weight="fill" className="w-5 h-5" />
                         <span>
                           {lang === 'ar'
-                            ? 'تغيير اللعبة (مكتبة الـ 14 لعبة)'
-                            : 'Switch Game (Browse All 14)'}
+                            ? `تغيير اللعبة (مكتبة الـ ${PARTY_GAMES_CATALOG.length} لعبة)`
+                            : `Switch Game (Browse All ${PARTY_GAMES_CATALOG.length})`}
                         </span>
                       </button>
                     )}
@@ -2153,7 +2159,9 @@ export function App() {
                   >
                     <SquaresFour weight="fill" className="w-4 h-4" />
                     <span>
-                      {lang === 'ar' ? 'تبديل اللعبة (14)' : 'Switch Game (14)'}
+                      {lang === 'ar'
+                        ? `تبديل اللعبة (${PARTY_GAMES_CATALOG.length})`
+                        : `Switch Game (${PARTY_GAMES_CATALOG.length})`}
                     </span>
                   </button>
                 )}

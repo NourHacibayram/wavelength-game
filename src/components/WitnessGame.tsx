@@ -105,6 +105,17 @@ export const WitnessGame: React.FC<WitnessGameProps> = ({
 
   const svgCanvasRef = useRef<SVGSVGElement | null>(null);
   const isDrawingRef = useRef<boolean>(false);
+  const lockedScrollYRef = useRef<number>(0);
+
+  useEffect(() => {
+    const keepScrollLocked = () => {
+      if (isDrawingRef.current && window.scrollY !== lockedScrollYRef.current) {
+        window.scrollTo(window.scrollX, lockedScrollYRef.current);
+      }
+    };
+    window.addEventListener('scroll', keepScrollLocked, { passive: true });
+    return () => window.removeEventListener('scroll', keepScrollLocked);
+  }, []);
 
   const witness = players.find((p) => p.id === gameData.witnessId) || players[0];
   const artists =
@@ -154,7 +165,15 @@ export const WitnessGame: React.FC<WitnessGameProps> = ({
   };
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    lockedScrollYRef.current = window.scrollY;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore if pointer capture is unsupported
+    }
     isDrawingRef.current = true;
     const [x, y] = getPointerCoords(e);
     setStrokes((prev) => [...prev, { c: brushColor, w: brushWidth, pts: [x, y] }]);
@@ -162,6 +181,11 @@ export const WitnessGame: React.FC<WitnessGameProps> = ({
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!isDrawingRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.scrollY !== lockedScrollYRef.current) {
+      window.scrollTo(window.scrollX, lockedScrollYRef.current);
+    }
     const [x, y] = getPointerCoords(e);
     setStrokes((prev) => {
       if (prev.length === 0) return prev;
@@ -178,8 +202,18 @@ export const WitnessGame: React.FC<WitnessGameProps> = ({
     });
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e?: React.PointerEvent<SVGSVGElement>) => {
+    if (!isDrawingRef.current) return;
     isDrawingRef.current = false;
+    if (e) {
+      try {
+        if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Ignore release errors
+      }
+    }
   };
 
   const handleSendWitnessHint = (e: React.FormEvent) => {
@@ -554,7 +588,10 @@ export const WitnessGame: React.FC<WitnessGameProps> = ({
               </div>
 
               {/* Interactive Touch/Mouse SVG Canvas */}
-              <div className="max-w-[320px] mx-auto aspect-square rounded-3xl overflow-hidden border-4 border-[#161426] shadow-[0_6px_0_#161426] bg-white touch-none">
+              <div
+                onDragStart={(e) => e.preventDefault()}
+                className="max-w-[320px] mx-auto aspect-square rounded-3xl overflow-hidden border-4 border-[#161426] shadow-[0_6px_0_#161426] bg-white touch-none select-none"
+              >
                 <svg
                   ref={svgCanvasRef}
                   viewBox="0 0 280 280"
@@ -562,7 +599,11 @@ export const WitnessGame: React.FC<WitnessGameProps> = ({
                   onPointerMove={handlePointerMove}
                   onPointerUp={handlePointerUp}
                   onPointerCancel={handlePointerUp}
-                  className="w-full h-full cursor-crosshair touch-none"
+                  onLostPointerCapture={handlePointerUp}
+                  onDragStart={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
+                  style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
+                  className="w-full h-full block cursor-crosshair touch-none select-none"
                 >
                   {strokes.map((st, idx) => {
                     if (st.pts.length < 2) return null;

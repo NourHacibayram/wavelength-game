@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FAKE_ARTIST_PROMPTS } from '../data/extraGamesData';
 import {
   PaintBrush,
@@ -81,11 +81,23 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
 }) => {
   const [peekRole, setPeekRole] = useState<boolean>(!isPassAndPlay);
   const [draftPts, setDraftPts] = useState<number[]>([]);
+  const [isDrawingStroke, setIsDrawingStroke] = useState<boolean>(false);
   const [activeVoteIdx, setActiveVoteIdx] = useState<number>(0);
   const [fakeGuessInput, setFakeGuessInput] = useState<string>('');
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const drawingNowRef = useRef<boolean>(false);
+  const lockedScrollYRef = useRef<number>(0);
+
+  useEffect(() => {
+    const keepScrollLocked = () => {
+      if (drawingNowRef.current && window.scrollY !== lockedScrollYRef.current) {
+        window.scrollTo(window.scrollX, lockedScrollYRef.current);
+      }
+    };
+    window.addEventListener('scroll', keepScrollLocked, { passive: true });
+    return () => window.removeEventListener('scroll', keepScrollLocked);
+  }, []);
 
   const prompt =
     FAKE_ARTIST_PROMPTS.find((p) => p.id === gameData.promptId) ||
@@ -121,26 +133,51 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
 
   const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!canDrawThisTurn || draftPts.length > 0) return; // ONE continuous stroke only unless reset!
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    lockedScrollYRef.current = window.scrollY;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // Ignore if pointer capture is unsupported
+    }
     drawingNowRef.current = true;
+    setIsDrawingStroke(true);
     const [x, y] = getCoords(e);
     setDraftPts([x, y]);
   };
 
   const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!drawingNowRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.scrollY !== lockedScrollYRef.current) {
+      window.scrollTo(window.scrollX, lockedScrollYRef.current);
+    }
     const [x, y] = getCoords(e);
     setDraftPts((prev) => {
       if (prev.length < 2) return [x, y];
       const lx = prev[prev.length - 2];
       const ly = prev[prev.length - 1];
-      if (Math.hypot(x - lx, y - ly) < 4) return prev;
+      if (Math.hypot(x - lx, y - ly) < 3.5) return prev;
       return [...prev, x, y];
     });
   };
 
-  const handlePointerUp = () => {
+  const finishDrawingPointer = (e?: React.PointerEvent<SVGSVGElement>) => {
+    if (!drawingNowRef.current) return;
     drawingNowRef.current = false;
+    setIsDrawingStroke(false);
+    if (e) {
+      try {
+        if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+          e.currentTarget.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        // Ignore release errors
+      }
+    }
   };
 
   const handleCommitSingleStroke = () => {
@@ -293,9 +330,9 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 select-none [overflow-anchor:none]">
       {/* Top Role & Category Bar */}
-      <div className="cartoon-card bg-[#ff924c] text-[#161426] p-5 flex flex-wrap items-center justify-between gap-3">
+      <div className="cartoon-card bg-[#ff924c] text-[#161426] px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="text-xs font-extrabold uppercase flex items-center gap-1.5">
             <PaintBrush weight="fill" className="w-4 h-4" />
@@ -305,7 +342,7 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
                 : `Public Category: ${prompt.category_en}`}
             </span>
           </div>
-          <h2 className="text-2xl font-extrabold mt-0.5">
+          <h2 className="text-xl sm:text-2xl font-extrabold mt-0.5">
             {lang === 'ar'
               ? 'الفنان المزيّف — خط واحد لكل لاعب!'
               : 'Fake Artist — One Continuous Stroke Each!'}
@@ -335,6 +372,8 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
               type="button"
               onClick={() => {
                 setDraftPts([]);
+                setIsDrawingStroke(false);
+                drawingNowRef.current = false;
                 setActiveVoteIdx(0);
                 onStartNewRound();
               }}
@@ -350,13 +389,13 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
       {/* Secret Role Banner */}
       {peekRole && gameData.phase !== 'reveal' && (
         <div
-          className={`p-4 rounded-2xl border-4 border-[#161426] shadow-[0_5px_0_#161426] text-center animate-in zoom-in-95 duration-150 ${
+          className={`px-4 py-2.5 rounded-2xl border-4 border-[#161426] shadow-[0_5px_0_#161426] text-center ${
             isViewerFake ? 'bg-[#ff595e] text-white' : 'bg-[#fff1c2] text-[#161426]'
           }`}
         >
           {isViewerFake ? (
-            <div className="space-y-1">
-              <div className="font-extrabold text-xl flex items-center justify-center gap-2">
+            <div className="space-y-0.5">
+              <div className="font-extrabold text-lg sm:text-xl flex items-center justify-center gap-2">
                 <Detective weight="fill" className="w-6 h-6 text-[#ffca3a]" />
                 <span>
                   {lang === 'ar'
@@ -371,22 +410,22 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-0.5">
-              <div className="text-xs font-extrabold uppercase text-[#3f3b5c]">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <span className="text-xs sm:text-sm font-extrabold text-[#3f3b5c]">
                 {lang === 'ar'
                   ? 'أنت فنان حقيقي — الكلمة السرية المطلوب رسمها:'
                   : 'Real Artist — Secret Word to Draw:'}
-              </div>
-              <div className="text-3xl font-extrabold text-[#161426]">
+              </span>
+              <span className="text-2xl sm:text-3xl font-extrabold text-[#161426]">
                 {lang === 'ar' ? prompt.word_ar : prompt.word_en}
-              </div>
+              </span>
             </div>
           )}
         </div>
       )}
 
       {/* SHARED CANVAS + PLAYER COLOR LEGEND */}
-      <div className="cartoon-card p-5 space-y-4">
+      <div className="cartoon-card p-4 sm:p-5 space-y-3.5">
         {/* Color Legend & Turn Status */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -418,16 +457,23 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
           </span>
         </div>
 
-        {/* Shared 300x300 SVG Canvas */}
-        <div className="max-w-[330px] mx-auto aspect-square rounded-3xl overflow-hidden border-4 border-[#161426] shadow-[0_6px_0_#161426] bg-white touch-none">
+        {/* Shared 300x300 SVG Canvas — Locked Touch/Drag/Scroll Geometry */}
+        <div
+          onDragStart={(e) => e.preventDefault()}
+          className="max-w-[315px] mx-auto aspect-square rounded-3xl overflow-hidden border-4 border-[#161426] shadow-[0_6px_0_#161426] bg-white touch-none select-none"
+        >
           <svg
             ref={svgRef}
             viewBox="0 0 300 300"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            className={`w-full h-full touch-none ${
+            onPointerUp={finishDrawingPointer}
+            onPointerCancel={finishDrawingPointer}
+            onLostPointerCapture={finishDrawingPointer}
+            onDragStart={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ touchAction: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
+            className={`w-full h-full block touch-none select-none ${
               canDrawThisTurn && draftPts.length === 0 ? 'cursor-crosshair' : 'cursor-default'
             }`}
           >
@@ -439,41 +485,49 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
           </svg>
         </div>
 
-        {/* PHASE CONTROLS */}
+        {/* PHASE CONTROLS — Fixed-Height Action Bar (Zero Layout Jump During Drawing!) */}
         {gameData.phase === 'strokes' && (
-          <div className="space-y-3 text-center">
+          <div className="space-y-2.5 text-center">
             {canDrawThisTurn ? (
               <>
-                <p className="font-extrabold text-sm text-[#161426]">
+                <p className="font-extrabold text-sm text-[#161426] min-h-[1.5rem] flex items-center justify-center">
                   {draftPts.length === 0
                     ? lang === 'ar'
                       ? `دور (${activeDrawer?.name})! ارسم خطاً واحداً متصلاً بدون رفع إصبعك!`
                       : `${activeDrawer?.name}’s turn! Draw ONE single continuous stroke!`
+                    : isDrawingStroke
+                    ? lang === 'ar'
+                      ? 'كمّل خطك المتصل ثم ارفع يدك لاعتماده...'
+                      : 'Finish your single continuous stroke, then lift to confirm...'
                     : lang === 'ar'
                     ? 'تمام! اعتمد خطك أو امسحه لتعيد رسمه:'
                     : 'Great! Confirm your single stroke or redraw it:'}
                 </p>
 
-                {draftPts.length > 0 && (
-                  <div className="flex gap-2.5 justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setDraftPts([])}
-                      className="cartoon-btn bg-[#ffe4e6] text-[#161426] px-4 py-2.5 text-sm flex items-center gap-1.5"
-                    >
-                      <ArrowCounterClockwise weight="bold" className="w-4 h-4" />
-                      <span>{lang === 'ar' ? 'إعادة رسم خطي' : 'Redraw Stroke'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleCommitSingleStroke}
-                      className="cartoon-btn bg-[#8ac926] text-[#161426] px-6 py-2.5 text-base flex items-center gap-1.5"
-                    >
-                      <CheckCircle weight="fill" className="w-5 h-5" />
-                      <span>{lang === 'ar' ? 'اعتماد خطي وتمرير الدور' : 'Lock My Stroke'}</span>
-                    </button>
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-2.5 justify-center">
+                  <button
+                    type="button"
+                    disabled={draftPts.length === 0 || isDrawingStroke}
+                    onClick={() => {
+                      drawingNowRef.current = false;
+                      setIsDrawingStroke(false);
+                      setDraftPts([]);
+                    }}
+                    className="cartoon-btn bg-[#ffe4e6] text-[#161426] px-4 py-2.5 text-sm flex items-center gap-1.5"
+                  >
+                    <ArrowCounterClockwise weight="bold" className="w-4 h-4" />
+                    <span>{lang === 'ar' ? 'إعادة رسم خطي' : 'Redraw Stroke'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={draftPts.length === 0 || isDrawingStroke}
+                    onClick={handleCommitSingleStroke}
+                    className="cartoon-btn bg-[#8ac926] text-[#161426] px-6 py-2.5 text-base flex items-center gap-1.5"
+                  >
+                    <CheckCircle weight="fill" className="w-5 h-5" />
+                    <span>{lang === 'ar' ? 'اعتماد خطي وتمرير الدور' : 'Lock My Stroke'}</span>
+                  </button>
+                </div>
               </>
             ) : (
               <div className="p-3 rounded-2xl bg-[#191636] text-[#ffca3a] font-extrabold text-sm">
