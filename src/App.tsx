@@ -2510,7 +2510,7 @@ export function App() {
                   <TrixGame
                     gameData={
                       Array.isArray(room.game_data?.seats) &&
-                      room.game_data?.rulesVersion === 2
+                      room.game_data?.rulesVersion === 3
                         ? room.game_data
                         : (buildInitialGameData('trix', players) as TrixGameState)
                     }

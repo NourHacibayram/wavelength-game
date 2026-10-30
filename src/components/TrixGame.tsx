@@ -1,19 +1,15 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Crown,
   Robot,
   Users,
   Sparkle,
-  Lightning,
   Trophy,
   ArrowsClockwise,
-  Eye,
-  EyeSlash,
   CheckCircle,
   Flame,
   Play,
-  Sword,
   HandPalm,
 } from '@phosphor-icons/react';
 
@@ -109,9 +105,9 @@ const SUIT_ORDER: Suit[] = ['H', 'S', 'D', 'C'];
 
 const SUIT_NAMES: Record<Suit, { ar: string; en: string; color: string }> = {
   H: { ar: 'كبة', en: 'Hearts', color: '#ff595e' },
-  S: { ar: 'سبيت', en: 'Spades', color: '#94a3b8' },
+  S: { ar: 'سبيت', en: 'Spades', color: '#1e293b' },
   D: { ar: 'ديناري', en: 'Diamonds', color: '#ff924c' },
-  C: { ar: 'سنك', en: 'Clubs', color: '#cbd5e1' },
+  C: { ar: 'سنك', en: 'Clubs', color: '#334155' },
 };
 
 const BOT_PROFILES = [
@@ -148,21 +144,21 @@ const CONTRACT_META: Record<
     en: 'King of Hearts',
     shortAr: 'شيخ الكبة',
     shortEn: 'King H',
-    ptsBadgeAr: '-75 (أو -150 مدبّل)',
-    ptsBadgeEn: '-75 (-150 Doubled)',
-    descAr: 'تجنّب أكل شيخ الكبة! يتضاعف العقاب إلى -150 والمكافأة +75 عند التدبيل وتنتهي الجولة فور أكله.',
-    descEn: 'Avoid eating the King of Hearts! Doubles to -150 (+75 bonus to doubler) and ends the hand immediately.',
+    ptsBadgeAr: '-75 (أو -150)',
+    ptsBadgeEn: '-75 (-150 x2)',
+    descAr: 'تجنّب أكل شيخ الكبة! يتضاعف إلى -150 عند التدبيل.',
+    descEn: 'Avoid eating the King of Hearts! Doubles to -150.',
     accent: '#e63946',
   },
   queens: {
-    ar: 'البنات (الدامات)',
-    en: 'Queens (Banat)',
+    ar: 'البنات',
+    en: 'Queens',
     shortAr: 'البنات',
     shortEn: 'Queens',
-    ptsBadgeAr: '-25 لكل بنت (-50 مدبّلة)',
-    ptsBadgeEn: '-25 each (-50 Doubled)',
-    descAr: 'تجنّب أكل البنات الأربع! كل بنت بـ -25 نقطة، ويمكن تدبيل أي بنت بيدك قبل اللعب لتصبح بـ -50!',
-    descEn: 'Avoid eating the 4 Queens! Each costs -25 pts, or -50 pts (+25 to doubler) when doubled before play.',
+    ptsBadgeAr: '-25 لكل بنت',
+    ptsBadgeEn: '-25 each',
+    descAr: 'كل بنت بـ -25 نقطة (أو -50 عند تدبيلها قبل اللعب).',
+    descEn: 'Each Queen costs -25 pts (-50 if doubled).',
     accent: '#9b5de5',
   },
   diamonds: {
@@ -170,43 +166,43 @@ const CONTRACT_META: Record<
     en: 'Diamonds',
     shortAr: 'الديناري',
     shortEn: 'Diamonds',
-    ptsBadgeAr: '-10 لكل ديناري',
-    ptsBadgeEn: '-10 per Diamond',
-    descAr: 'تجنّب أكل أوراق الديناري! كل ورقة ديناري ضمن الأكلة تخصم -10 نقاط من رصيدك.',
-    descEn: 'Avoid collecting Diamond cards! Every Diamond card taken in a trick costs -10 points.',
+    ptsBadgeAr: '-10 لكل ورقة',
+    ptsBadgeEn: '-10 per card',
+    descAr: 'كل ورقة ديناري تأكلها في اللطشة تخصم -10 نقاط.',
+    descEn: 'Every Diamond card taken costs -10 points.',
     accent: '#ff924c',
   },
   tricks: {
-    ar: 'اللطش (الأكلات)',
-    en: 'Tricks (Laltesh)',
+    ar: 'اللطش',
+    en: 'Tricks',
     shortAr: 'اللطش',
     shortEn: 'Tricks',
     ptsBadgeAr: '-15 لكل أكلة',
-    ptsBadgeEn: '-15 per Trick',
-    descAr: 'العب أصغر أوراقك وتجنّب لمّ الأكلات عن الأرض! كل أكلة تكسبها تخصم -15 نقطة.',
-    descEn: 'Play low and duck under tricks! Every trick you take costs -15 points.',
+    ptsBadgeEn: '-15 per trick',
+    descAr: 'العب أصغر أوراقك وتجنّب أكل اللطشات عن الأرض.',
+    descEn: 'Play low and avoid winning tricks (-15 each).',
     accent: '#00bbf9',
   },
   trix: {
-    ar: 'التركس (ترتيب السلسلة)',
-    en: 'Trix (Jack Domino)',
+    ar: 'التركس',
+    en: 'Trix',
     shortAr: 'التركس',
     shortEn: 'Trix',
-    ptsBadgeAr: '+200 / +150 / +100 / +50',
-    ptsBadgeEn: '+200 / +150 / +100 / +50',
-    descAr: 'العقد الموجب الوحيد! افتح بالولد (J) ورتّب صعوداً للـ A ونزولاً للـ 2 لتفرغ يدك أولاً وتكسب +200!',
-    descEn: 'The positive scoring contract! Open lanes with Jacks (J) up to A and down to 2. First out wins +200!',
+    ptsBadgeAr: '+200 للأول',
+    ptsBadgeEn: '+200 for 1st',
+    descAr: 'افتح بالولد (J) صعوداً للـ A ونزولاً للـ 2 (+200 / +150 / +100 / +50).',
+    descEn: 'Build from Jack (J) up to A & down to 2 (+200 / +150 / +100 / +50).',
     accent: '#8ac926',
   },
   complex: {
-    ar: 'كومبلكس (كل العقوبات معاً!)',
-    en: 'Complex (All Penalties!)',
+    ar: 'كومبلكس (كل العقوبات)',
+    en: 'Complex (All Penalties)',
     shortAr: 'كومبلكس',
     shortEn: 'Complex',
     ptsBadgeAr: 'كل النواقص معاً',
     ptsBadgeEn: 'All 4 Penalties',
-    descAr: 'شيخ الكبة (-75)، البنات (-25)، الديناري (-10)، واللطش (-15) مجتمعة في جولة نارية واحدة!',
-    descEn: 'King of Hearts (-75), Queens (-25), Diamonds (-10) & Tricks (-15) combined in one intense hand!',
+    descAr: 'شيخ الكبة (-75)، البنات (-25)، الديناري (-10)، واللطش (-15) معاً!',
+    descEn: 'King of Hearts, Queens, Diamonds & Tricks combined in one hand!',
     accent: '#f15bb5',
   },
 };
@@ -239,7 +235,7 @@ function sortHand(cards: TrixCard[]): TrixCard[] {
   return [...cards].sort((a, b) => {
     const sDiff = SUIT_ORDER.indexOf(a.suit) - SUIT_ORDER.indexOf(b.suit);
     if (sDiff !== 0) return sDiff;
-    return b.rank - a.rank; // High to low within each suit for instant readability!
+    return b.rank - a.rank;
   });
 }
 
@@ -269,8 +265,14 @@ export function buildInitialTrixState(
   partnership = false
 ): TrixGameState {
   const { hands } = dealFourHands();
+  // Filter out auto-generated Pass-and-Play dummy IDs ('local_p2', 'local_p3') so Seat 0 is ALWAYS the human player and Seats 1..3 are smart Bots unless real online humans joined!
+  const realHumanIds = playerIds.filter(
+    (id) => id !== 'local_p2' && id !== 'local_p3'
+  );
+  const effectiveHumans = realHumanIds.length > 0 ? realHumanIds : [playerIds[0] || 'host'];
+
   const seats: TrixSeat[] = [0, 1, 2, 3].map((idx) => {
-    const humanId = playerIds[idx];
+    const humanId = effectiveHumans[idx];
     if (humanId) {
       return {
         seatIndex: idx,
@@ -300,9 +302,8 @@ export function buildInitialTrixState(
     };
   });
 
-  // Seat 0 (the first human player!) ALWAYS owns Kingdom 1 so the player immediately chooses from the 5 Kingdoms!
   return {
-    rulesVersion: 2,
+    rulesVersion: 3,
     seats,
     mode,
     partnership,
@@ -326,7 +327,7 @@ export function buildInitialTrixState(
 }
 
 /* ============================================================================
- * PURE VECTOR SUIT, CONTRACT EMBLEMS & LUXURY PLAYING CARDS
+ * PURE VECTOR SUIT, CONTRACT EMBLEMS & JAWAKER-CLASS PLAYING CARDS
  * ========================================================================== */
 const SuitVectorSvg: React.FC<{ suit: Suit; className?: string }> = ({
   suit,
@@ -336,18 +337,18 @@ const SuitVectorSvg: React.FC<{ suit: Suit; className?: string }> = ({
     {suit === 'H' && (
       <path
         d="M 12 20.5 C 12 20.5 3 14.5 3 8.5 C 3 5 6 3 9 4.5 C 10.6 5.3 12 7.2 12 7.2 C 12 7.2 13.4 5.3 15 4.5 C 18 3 21 5 21 8.5 C 21 14.5 12 20.5 12 20.5 Z"
-        fill="#ff595e"
+        fill="#e63946"
         stroke="#161426"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinejoin="round"
       />
     )}
     {suit === 'D' && (
       <polygon
         points="12,2.5 20.5,12 12,21.5 3.5,12"
-        fill="#ff924c"
+        fill="#ff7b00"
         stroke="#161426"
-        strokeWidth="2"
+        strokeWidth="1.8"
         strokeLinejoin="round"
       />
     )}
@@ -357,14 +358,14 @@ const SuitVectorSvg: React.FC<{ suit: Suit; className?: string }> = ({
           d="M 12 2.5 C 12 2.5 21 9.5 21 14.5 C 21 18 17.5 19 15 17 L 12 14.5 L 9 17 C 6.5 19 3 18 3 14.5 C 3 9.5 12 2.5 12 2.5 Z"
           fill="#1e293b"
           stroke="#161426"
-          strokeWidth="1.8"
+          strokeWidth="1.6"
           strokeLinejoin="round"
         />
         <path d="M 9.5 16.5 L 12 21.5 L 14.5 16.5 Z" fill="#161426" />
       </g>
     )}
     {suit === 'C' && (
-      <g fill="#334155" stroke="#161426" strokeWidth="1.6">
+      <g fill="#1e293b" stroke="#161426" strokeWidth="1.5">
         <circle cx="12" cy="7.5" r="4.3" />
         <circle cx="7.3" cy="13.5" r="4.3" />
         <circle cx="16.7" cy="13.5" r="4.3" />
@@ -378,16 +379,16 @@ const ContractEmblemSvg: React.FC<{ contract: TrixContract }> = ({ contract }) =
   switch (contract) {
     case 'king_of_hearts':
       return (
-        <svg viewBox="0 0 44 44" className="w-11 h-11 shrink-0">
+        <svg viewBox="0 0 44 44" className="w-10 h-10 shrink-0">
           <rect
-            x="4"
-            y="4"
-            width="36"
-            height="36"
-            rx="10"
+            x="3"
+            y="3"
+            width="38"
+            height="38"
+            rx="11"
             fill="#fff1f2"
             stroke="#161426"
-            strokeWidth="3"
+            strokeWidth="2.8"
           />
           <path
             d="M12 17l4-6 6 5 6-5 4 6H12z"
@@ -406,16 +407,16 @@ const ContractEmblemSvg: React.FC<{ contract: TrixContract }> = ({ contract }) =
       );
     case 'queens':
       return (
-        <svg viewBox="0 0 44 44" className="w-11 h-11 shrink-0">
+        <svg viewBox="0 0 44 44" className="w-10 h-10 shrink-0">
           <rect
-            x="4"
-            y="4"
-            width="36"
-            height="36"
-            rx="10"
+            x="3"
+            y="3"
+            width="38"
+            height="38"
+            rx="11"
             fill="#f3e8ff"
             stroke="#161426"
-            strokeWidth="3"
+            strokeWidth="2.8"
           />
           <path
             d="M10 29l3-13 9 7 9-7 3 13H10z"
@@ -431,16 +432,16 @@ const ContractEmblemSvg: React.FC<{ contract: TrixContract }> = ({ contract }) =
       );
     case 'diamonds':
       return (
-        <svg viewBox="0 0 44 44" className="w-11 h-11 shrink-0">
+        <svg viewBox="0 0 44 44" className="w-10 h-10 shrink-0">
           <rect
-            x="4"
-            y="4"
-            width="36"
-            height="36"
-            rx="10"
+            x="3"
+            y="3"
+            width="38"
+            height="38"
+            rx="11"
             fill="#fff7ed"
             stroke="#161426"
-            strokeWidth="3"
+            strokeWidth="2.8"
           />
           <polygon
             points="22,8 34,22 22,36 10,22"
@@ -453,16 +454,16 @@ const ContractEmblemSvg: React.FC<{ contract: TrixContract }> = ({ contract }) =
       );
     case 'tricks':
       return (
-        <svg viewBox="0 0 44 44" className="w-11 h-11 shrink-0">
+        <svg viewBox="0 0 44 44" className="w-10 h-10 shrink-0">
           <rect
-            x="4"
-            y="4"
-            width="36"
-            height="36"
-            rx="10"
+            x="3"
+            y="3"
+            width="38"
+            height="38"
+            rx="11"
             fill="#e0f2fe"
             stroke="#161426"
-            strokeWidth="3"
+            strokeWidth="2.8"
           />
           <rect
             x="11"
@@ -488,16 +489,16 @@ const ContractEmblemSvg: React.FC<{ contract: TrixContract }> = ({ contract }) =
       );
     case 'trix':
       return (
-        <svg viewBox="0 0 44 44" className="w-11 h-11 shrink-0">
+        <svg viewBox="0 0 44 44" className="w-10 h-10 shrink-0">
           <rect
-            x="4"
-            y="4"
-            width="36"
-            height="36"
-            rx="10"
+            x="3"
+            y="3"
+            width="38"
+            height="38"
+            rx="11"
             fill="#ecfccb"
             stroke="#161426"
-            strokeWidth="3"
+            strokeWidth="2.8"
           />
           <path
             d="M9 30l4-15 9 7 9-7 4 15H9z"
@@ -521,16 +522,16 @@ const ContractEmblemSvg: React.FC<{ contract: TrixContract }> = ({ contract }) =
     case 'complex':
     default:
       return (
-        <svg viewBox="0 0 44 44" className="w-11 h-11 shrink-0">
+        <svg viewBox="0 0 44 44" className="w-10 h-10 shrink-0">
           <rect
-            x="4"
-            y="4"
-            width="36"
-            height="36"
-            rx="10"
+            x="3"
+            y="3"
+            width="38"
+            height="38"
+            rx="11"
             fill="#fce7f3"
             stroke="#161426"
-            strokeWidth="3"
+            strokeWidth="2.8"
           />
           <circle cx="22" cy="22" r="11" fill="#f15bb5" stroke="#161426" strokeWidth="2.6" />
           <text
@@ -548,47 +549,40 @@ const ContractEmblemSvg: React.FC<{ contract: TrixContract }> = ({ contract }) =
   }
 };
 
-/* Ornate Card Back Fanned Stack for Opponents */
-const OpponentCardBacksFan: React.FC<{ count: number; vertical?: boolean }> = ({
+/* Compact Fanned Card Backs Badge for Opponents */
+const OpponentCardCountDeck: React.FC<{ count: number; isAr: boolean }> = ({
   count,
-  vertical = false,
-}) => {
-  const shown = Math.min(count, 8);
-  if (shown <= 0) {
-    return (
-      <span className="px-2.5 py-0.5 rounded-full bg-[#8ac926] text-[#161426] font-black text-xs border-2 border-[#161426]">
-        0
-      </span>
-    );
-  }
-  return (
-    <div
-      className={`flex items-center justify-center ${
-        vertical ? 'flex-col -space-y-4' : '-space-x-3'
-      }`}
-    >
-      {Array.from({ length: shown }).map((_, idx) => (
-        <div
-          key={idx}
-          className={`${
-            vertical ? 'w-9 h-6' : 'w-7 h-10 sm:w-8 sm:h-11'
-          } rounded-lg bg-gradient-to-br from-[#dc2626] to-[#991b1b] border-2 border-[#161426] shadow-[0_2px_0_#161426] flex items-center justify-center`}
-        >
-          <div className="w-3/4 h-3/4 rounded border border-[#ffca3a]/60 bg-[#7f1d1d]/40" />
-        </div>
-      ))}
+  isAr,
+}) => (
+  <div className="inline-flex items-center gap-1.5 bg-[#0a1c14] border-2 border-[#161426] rounded-xl px-2.5 py-1 shadow-[0_2px_0_#161426]">
+    <div className="relative w-6 h-7 flex items-center justify-center">
+      <div className="absolute -rotate-12 w-4 h-6 rounded bg-[#dc2626] border border-[#161426]" />
+      <div className="absolute rotate-6 w-4 h-6 rounded bg-[#ef4444] border border-[#161426] flex items-center justify-center">
+        <div className="w-2.5 h-4 rounded-xs border border-[#ffca3a]/70" />
+      </div>
     </div>
-  );
-};
+    <span className="text-xs font-black text-[#ffca3a]">
+      {isAr ? `${count} ورقة` : `${count}`}
+    </span>
+  </div>
+);
 
-/* Large Luxury Playing Card Component */
+/* Bright, High-Contrast Luxury Playing Card Component — ALWAYS 100% Bright White & Legible! */
 const TrixPlayingCardButton: React.FC<{
   card: TrixCard;
   playable: boolean;
+  isTurnActive: boolean;
   doubled?: boolean;
   size?: 'hand' | 'table' | 'mini';
   onClick?: () => void;
-}> = ({ card, playable, doubled = false, size = 'hand', onClick }) => {
+}> = ({
+  card,
+  playable,
+  isTurnActive,
+  doubled = false,
+  size = 'hand',
+  onClick,
+}) => {
   const isRed = card.suit === 'H' || card.suit === 'D';
   const isKingHearts = card.id === 'KH';
   const isQueen = card.rank === 12;
@@ -597,49 +591,51 @@ const TrixPlayingCardButton: React.FC<{
 
   const dims =
     size === 'hand'
-      ? 'w-[70px] h-[104px] sm:w-[84px] sm:h-[124px] md:w-[92px] md:h-[136px] p-1.5 sm:p-2 rounded-2xl'
+      ? 'w-[66px] h-[98px] sm:w-[78px] sm:h-[116px] md:w-[86px] md:h-[128px] p-1.5 sm:p-2 rounded-2xl'
       : size === 'table'
-      ? 'w-[68px] h-[100px] sm:w-[82px] sm:h-[120px] p-1.5 sm:p-2 rounded-2xl'
+      ? 'w-[68px] h-[100px] sm:w-[80px] sm:h-[118px] p-1.5 sm:p-2 rounded-2xl'
       : 'w-11 h-15 p-1 rounded-xl';
+
+  // Cards are ALWAYS crisp bright white (#ffffff)! When it's your turn to play, playable cards pop up with a glowing green/gold ring.
+  const interactiveStyle = playable
+    ? 'bg-white hover:-translate-y-4 -translate-y-1.5 shadow-[0_8px_0_#161426] ring-3 ring-[#8ac926] cursor-pointer active:translate-y-0 z-20'
+    : isTurnActive && size === 'hand'
+    ? 'bg-[#f8fafc] text-[#161426] shadow-[0_4px_0_#161426] cursor-not-allowed'
+    : 'bg-white text-[#161426] shadow-[0_5px_0_#161426] hover:-translate-y-1 transition-transform';
 
   return (
     <button
       type="button"
       disabled={!playable}
       onClick={onClick}
-      className={`relative border-3 border-[#161426] select-none transition-all flex flex-col justify-between ${dims} ${
-        playable
-          ? 'bg-[#fffef9] hover:-translate-y-3.5 shadow-[0_6px_0_#161426] ring-3 ring-[#8ac926] cursor-pointer active:translate-y-0 z-10'
-          : size === 'table'
-          ? 'bg-[#fffef9] shadow-[0_5px_0_#161426] cursor-default'
-          : 'bg-[#e2e8f0] opacity-75 shadow-[0_3px_0_#161426] cursor-not-allowed'
-      }`}
+      className={`relative border-3 border-[#161426] select-none transition-all flex flex-col justify-between shrink-0 ${dims} ${interactiveStyle}`}
     >
+      {/* Inner Subtle Card Frame */}
+      <div className="pointer-events-none absolute inset-1 rounded-xl border border-[#161426]/10" />
+
       {doubled && (
-        <span className="absolute -top-2.5 -end-2 z-20 bg-[#ff595e] text-white text-[11px] font-black px-2 py-0.5 rounded-full border-2 border-[#161426] shadow-[0_2px_0_#161426]">
+        <span className="absolute -top-2.5 -end-2 z-30 bg-[#ff595e] text-white text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-[#161426] shadow-[0_2px_0_#161426]">
           ×2
         </span>
       )}
 
-      {/* Top Corner */}
-      <div className="flex items-center justify-between w-full leading-none">
+      {/* Top Corner Index */}
+      <div className="flex items-center justify-between w-full leading-none relative z-10">
         <span
-          className={`font-black ${
-            size === 'mini'
-              ? 'text-xs'
-              : 'text-base sm:text-lg md:text-xl'
+          className={`font-black tracking-tight ${
+            size === 'mini' ? 'text-xs' : 'text-base sm:text-lg md:text-xl'
           } ${isRed ? 'text-[#e63946]' : 'text-[#161426]'}`}
         >
           {rText}
         </span>
         <SuitVectorSvg
           suit={card.suit}
-          className={size === 'mini' ? 'w-3 h-3' : 'w-4 h-4 sm:w-5 sm:h-5'}
+          className={size === 'mini' ? 'w-3 h-3' : 'w-4 h-4 sm:w-4.5 sm:h-4.5'}
         />
       </div>
 
       {/* Center Court / Suit Artwork */}
-      <div className="flex flex-col items-center justify-center my-auto">
+      <div className="flex flex-col items-center justify-center my-auto relative z-10">
         {isKingHearts ? (
           <div className="flex flex-col items-center">
             <Crown
@@ -653,10 +649,7 @@ const TrixPlayingCardButton: React.FC<{
           </div>
         ) : isQueen ? (
           <div className="flex flex-col items-center">
-            <Sparkle
-              weight="fill"
-              className="w-4 h-4 sm:w-5 sm:h-5 text-[#9b5de5]"
-            />
+            <Sparkle weight="fill" className="w-4 h-4 sm:w-5 sm:h-5 text-[#9b5de5]" />
             <SuitVectorSvg
               suit={card.suit}
               className={size === 'mini' ? 'w-4 h-4' : 'w-6 h-6 sm:w-7 sm:h-7'}
@@ -664,7 +657,7 @@ const TrixPlayingCardButton: React.FC<{
           </div>
         ) : isJack ? (
           <div className="flex flex-col items-center">
-            <span className="px-1.5 py-0.2 rounded bg-[#ffca3a]/40 text-[#161426] text-[9px] font-black">
+            <span className="px-1.5 py-0.2 rounded bg-[#ffca3a] text-[#161426] border border-[#161426] text-[8px] font-black mb-0.5">
               JACK
             </span>
             <SuitVectorSvg
@@ -680,8 +673,12 @@ const TrixPlayingCardButton: React.FC<{
         )}
       </div>
 
-      {/* Bottom Corner */}
-      <div className="flex items-center justify-end w-full leading-none opacity-85">
+      {/* Bottom Corner Index */}
+      <div className="flex items-center justify-between w-full leading-none relative z-10">
+        <SuitVectorSvg
+          suit={card.suit}
+          className={size === 'mini' ? 'w-2.5 h-2.5 opacity-60' : 'w-3 h-3 opacity-60'}
+        />
         <span
           className={`font-black ${
             size === 'mini' ? 'text-[10px]' : 'text-xs sm:text-sm'
@@ -713,52 +710,44 @@ function getContractHintForHand(
     case 'king_of_hearts':
       if (!hasKh && heartsCount <= 3) {
         return {
-          badge: isAr ? 'ممتاز ليدك (بدون شيخ الكبة)' : 'Great (Safe from K of Hearts)',
+          badge: isAr ? 'آمن ليدك' : 'Safe for your hand',
           good: true,
         };
       }
       if (hasKh && heartsCount >= 4) {
         return {
-          badge: isAr ? 'فرصة تدبيل شيخ الكبة!' : 'Good for Doubling King!',
+          badge: isAr ? 'فرصة تدبيل ×2!' : 'Double x2 chance!',
           good: true,
         };
       }
       return {
-        badge: isAr ? `معك ${heartsCount} أوراق كبة` : `You hold ${heartsCount} Hearts`,
+        badge: isAr ? `معك ${heartsCount} كبة` : `${heartsCount} Hearts`,
         good: false,
       };
     case 'queens':
       return {
-        badge: isAr
-          ? `في يدك ${queensCount} بنات`
-          : `You hold ${queensCount} Queens`,
+        badge: isAr ? `معك ${queensCount} بنات` : `${queensCount} Queens`,
         good: queensCount <= 1,
       };
     case 'diamonds':
       return {
-        badge: isAr
-          ? `في يدك ${diamondsCount} أوراق ديناري`
-          : `You hold ${diamondsCount} Diamonds`,
+        badge: isAr ? `معك ${diamondsCount} ديناري` : `${diamondsCount} Diamonds`,
         good: diamondsCount <= 2,
       };
     case 'tricks':
       return {
-        badge: isAr
-          ? `معك ${lowCardsCount} أوراق صغيرة آمنة`
-          : `${lowCardsCount} low ducking cards`,
+        badge: isAr ? `${lowCardsCount} أوراق صغيرة` : `${lowCardsCount} low cards`,
         good: lowCardsCount >= 6,
       };
     case 'trix':
       return {
-        badge: isAr
-          ? `معك ${jacks} أولاد (J) لفتح السلاسل`
-          : `You hold ${jacks} Jacks (J)`,
+        badge: isAr ? `معك ${jacks} أولاد (J)` : `${jacks} Jacks (J)`,
         good: jacks >= 2,
       };
     case 'complex':
     default:
       return {
-        badge: isAr ? 'كل العقوبات الأربع معاً' : 'All 4 penalties active',
+        badge: isAr ? 'كل العقوبات الأربع' : 'All 4 penalties',
         good: lowCardsCount >= 6,
       };
   }
@@ -770,7 +759,7 @@ function getLegalTrixDominoCards(
 ): TrixCard[] {
   return hand.filter((c) => {
     const lane = lanes[c.suit];
-    if (!lane) return c.rank === 11; // Jack opens suit
+    if (!lane) return c.rank === 11;
     return c.rank === lane.low - 1 || c.rank === lane.high + 1;
   });
 }
@@ -796,10 +785,14 @@ function getLegalTrickCards(
   return hand;
 }
 
-function getDoubleableCardsInHand(hand: TrixCard[], contract: TrixContract | null): TrixCard[] {
+function getDoubleableCardsInHand(
+  hand: TrixCard[],
+  contract: TrixContract | null
+): TrixCard[] {
   if (!contract) return [];
   return hand.filter((c) => {
-    if (c.id === 'KH' && (contract === 'complex' || contract === 'king_of_hearts')) return true;
+    if (c.id === 'KH' && (contract === 'complex' || contract === 'king_of_hearts'))
+      return true;
     if (c.rank === 12 && (contract === 'complex' || contract === 'queens')) return true;
     return false;
   });
@@ -809,7 +802,10 @@ function chooseBotContract(hand: TrixCard[], remaining: TrixContract[]): TrixCon
   if (remaining.length === 1) return remaining[0];
   const jacksAndLow = hand.filter((c) => c.rank === 11 || c.rank <= 5).length;
   if (remaining.includes('trix') && jacksAndLow >= 5) return 'trix';
-  if (remaining.includes('king_of_hearts') && !hand.some((c) => c.id === 'KH' || c.id === 'AH')) {
+  if (
+    remaining.includes('king_of_hearts') &&
+    !hand.some((c) => c.id === 'KH' || c.id === 'AH')
+  ) {
     return 'king_of_hearts';
   }
   if (remaining.includes('queens') && hand.filter((c) => c.rank >= 12).length <= 2) {
@@ -821,18 +817,12 @@ function chooseBotContract(hand: TrixCard[], remaining: TrixContract[]): TrixCon
   return remaining[0];
 }
 
-function chooseBotTrixDominoCard(
-  hand: TrixCard[],
-  legal: TrixCard[]
-): TrixCard {
+function chooseBotTrixDominoCard(hand: TrixCard[], legal: TrixCard[]): TrixCard {
   let best = legal[0];
   let bestScore = -999;
   for (const c of legal) {
     const sameSuit = hand.filter((x) => x.suit === c.suit);
-    const extremeWeight = sameSuit.reduce(
-      (acc, x) => acc + Math.abs(x.rank - 8),
-      0
-    );
+    const extremeWeight = sameSuit.reduce((acc, x) => acc + Math.abs(x.rank - 8), 0);
     const distanceWeight = Math.abs(c.rank - 11) * 3;
     const score = extremeWeight + distanceWeight;
     if (score > bestScore) {
@@ -875,11 +865,13 @@ function chooseBotTrickCard(
   const kh = legal.find((c) => c.id === 'KH');
   if (kh && (contract === 'complex' || contract === 'king_of_hearts')) return kh;
   const queens = legal.filter((c) => c.rank === 12);
-  if (queens.length > 0 && (contract === 'complex' || contract === 'queens')) return queens[0];
+  if (queens.length > 0 && (contract === 'complex' || contract === 'queens'))
+    return queens[0];
   const diamonds = legal
     .filter((c) => c.suit === 'D')
     .sort((a, b) => b.rank - a.rank);
-  if (diamonds.length > 0 && (contract === 'complex' || contract === 'diamonds')) return diamonds[0];
+  if (diamonds.length > 0 && (contract === 'complex' || contract === 'diamonds'))
+    return diamonds[0];
 
   return [...legal].sort((a, b) => b.rank - a.rank)[0];
 }
@@ -897,7 +889,6 @@ export const TrixGame: React.FC<TrixGameProps> = ({
   onUpdateGameData,
 }) => {
   const isAr = lang === 'ar';
-  const [passAndPlayRevealed, setPassAndPlayRevealed] = useState<boolean>(!isPassAndPlay);
   const botTimerRef = useRef<number | null>(null);
 
   const seats = gameData.seats || [];
@@ -922,52 +913,19 @@ export const TrixGame: React.FC<TrixGameProps> = ({
     return BOT_PROFILES[seatIdx % BOT_PROFILES.length].color;
   };
 
-  // Determine which seat is at the bottom perspective
+  // Viewer seat at the bottom is ALWAYS your seat (Seat 0 in local/solo or your online seat)!
   const viewerSeatIdx = useMemo(() => {
-    if (isPassAndPlay) {
-      if (gameData.phase === 'choose_contract' && !seats[gameData.kingdomOwnerSeat]?.isBot) {
-        return gameData.kingdomOwnerSeat;
-      }
-      if (gameData.phase === 'doubling') {
-        const pendingHuman = seats.find(
-          (s) => !s.isBot && !gameData.doublingReadySeats.includes(s.seatIndex)
-        );
-        if (pendingHuman) return pendingHuman.seatIndex;
-      }
-      if (!seats[gameData.turnSeat]?.isBot) {
-        return gameData.turnSeat;
-      }
-      const firstHuman = seats.find((s) => !s.isBot);
-      return firstHuman ? firstHuman.seatIndex : 0;
-    }
-    const mySeat = seats.find((s) => s.playerId === myPlayerId);
-    return mySeat ? mySeat.seatIndex : 0;
-  }, [
-    isPassAndPlay,
-    seats,
-    myPlayerId,
-    gameData.phase,
-    gameData.kingdomOwnerSeat,
-    gameData.doublingReadySeats,
-    gameData.turnSeat,
-  ]);
-
-  const humanCount = seats.filter((s) => !s.isBot).length;
-
-  useEffect(() => {
-    if (isPassAndPlay && humanCount > 1) {
-      setPassAndPlayRevealed(false);
-    } else {
-      setPassAndPlayRevealed(true);
-    }
-  }, [viewerSeatIdx, isPassAndPlay, humanCount]);
+    const mySeat = seats.find((s) => !s.isBot && s.playerId === myPlayerId);
+    if (mySeat) return mySeat.seatIndex;
+    const firstHuman = seats.find((s) => !s.isBot);
+    return firstHuman ? firstHuman.seatIndex : 0;
+  }, [seats, myPlayerId]);
 
   // Core Actions
   const handleSelectContract = (contract: TrixContract) => {
     const needsDoubling =
       contract === 'complex' || contract === 'king_of_hearts' || contract === 'queens';
 
-    // In Trix Domino contract, the holder of 7 of Hearts (or kingdom owner if starting with J) leads; let's let Kingdom Owner or 7H lead if they hold a J, otherwise Kingdom Owner!
     const startTurnSeat = gameData.kingdomOwnerSeat;
 
     if (needsDoubling) {
@@ -1039,7 +997,9 @@ export const TrixGame: React.FC<TrixGameProps> = ({
   };
 
   const handleConfirmDoublingSeat = (seatIdx: number) => {
-    const nextReady = Array.from(new Set([...(gameData.doublingReadySeats || []), seatIdx]));
+    const nextReady = Array.from(
+      new Set([...(gameData.doublingReadySeats || []), seatIdx])
+    );
     const allReady = seats.every((s) => nextReady.includes(s.seatIndex));
     onUpdateGameData({
       ...gameData,
@@ -1091,7 +1051,7 @@ export const TrixGame: React.FC<TrixGameProps> = ({
       : {
           low: Math.min(curLane.low, card.rank),
           high: Math.max(curLane.high, card.rank),
-         };
+        };
     const nextLanes = { ...gameData.trixLanes, [card.suit]: nextLane };
 
     let nextFinish = [...gameData.trixFinishOrder];
@@ -1367,7 +1327,6 @@ export const TrixGame: React.FC<TrixGameProps> = ({
     });
   };
 
-  // Switch directly to a specific player's Kingdom (1..4) with all 5 contracts fresh!
   const handleJumpToKingdom = (targetSeat: number) => {
     const { hands } = dealFourHands();
     const resetSeats = gameData.seats.map((s) => ({
@@ -1499,6 +1458,14 @@ export const TrixGame: React.FC<TrixGameProps> = ({
     gameData.heartsBroken,
   ]);
 
+  // Group viewer's hand by Suit so there is a visual separation between Hearts, Spades, Diamonds, Clubs!
+  const viewerSuitGroups = useMemo(() => {
+    return SUIT_ORDER.map((suit) => ({
+      suit,
+      cards: viewerHand.filter((c) => c.suit === suit),
+    })).filter((g) => g.cards.length > 0);
+  }, [viewerHand]);
+
   // Relative compass seats around the table from viewerSeatIdx
   const southSeat = viewerSeatIdx;
   const eastSeat = (viewerSeatIdx + 1) % 4;
@@ -1510,8 +1477,8 @@ export const TrixGame: React.FC<TrixGameProps> = ({
 
   const allModeContracts = contractsForMode(gameData.mode);
 
-  // Render opponent seat card with penalty counters
-  const renderOpponentSeatBox = (seatIdx: number, vertical = false) => {
+  // Sleek Jawaker-style Opponent Seat Pod
+  const renderOpponentPod = (seatIdx: number) => {
     const s = seats[seatIdx];
     if (!s) return null;
     const isTurn =
@@ -1524,24 +1491,22 @@ export const TrixGame: React.FC<TrixGameProps> = ({
 
     return (
       <div
-        className={`rounded-2xl border-3 border-[#161426] p-2.5 sm:p-3 transition-all ${
+        className={`rounded-2xl border-3 border-[#161426] px-3 py-2 transition-all inline-flex flex-wrap items-center justify-center gap-2.5 ${
           isTurn
             ? 'bg-[#ffca3a] text-[#161426] shadow-[0_5px_0_#161426] ring-3 ring-white scale-[1.03]'
-            : 'bg-[#11261d]/90 text-white shadow-[0_4px_0_#0b1a13]'
-        } flex ${
-          vertical ? 'flex-col items-center text-center gap-2' : 'items-center justify-between gap-3'
+            : 'bg-[#0c231a]/95 text-white shadow-[0_4px_0_#07150f]'
         }`}
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2">
           <div
             style={{ backgroundColor: col }}
-            className="w-10 h-10 rounded-2xl border-2 border-[#161426] flex items-center justify-center font-black text-sm text-[#161426] shrink-0 shadow-[0_2px_0_#161426]"
+            className="w-10 h-10 rounded-full border-2 border-[#161426] flex items-center justify-center font-black text-sm text-[#161426] shrink-0 shadow-[0_2px_0_#161426]"
           >
             {s.isBot ? <Robot weight="fill" className="w-5 h-5" /> : name.slice(0, 1)}
           </div>
-          <div className="min-w-0 text-start">
-            <div className="font-black text-xs sm:text-sm truncate flex items-center gap-1">
-              <span className="truncate">{name}</span>
+          <div className="text-start leading-tight">
+            <div className="font-black text-xs sm:text-sm flex items-center gap-1">
+              <span className="truncate max-w-[110px]">{name}</span>
               {isOwner && (
                 <Crown
                   weight="fill"
@@ -1551,10 +1516,10 @@ export const TrixGame: React.FC<TrixGameProps> = ({
                 />
               )}
             </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
+            <div className="mt-0.5 flex items-center gap-1.5">
               <span
                 dir="ltr"
-                className={`px-2 py-0.2 rounded-full text-xs font-black border border-[#161426] ${
+                className={`px-2 py-0.2 rounded-full text-[11px] font-black border border-[#161426] ${
                   s.totalScore >= 0
                     ? 'bg-[#8ac926] text-[#161426]'
                     : 'bg-[#ff595e] text-white'
@@ -1562,223 +1527,173 @@ export const TrixGame: React.FC<TrixGameProps> = ({
               >
                 {s.totalScore > 0 ? `+${s.totalScore}` : s.totalScore}
               </span>
-              <span className="text-[11px] font-extrabold opacity-80">
-                {isAr ? `${handCount} ورقة` : `${handCount} cards`}
-              </span>
             </div>
           </div>
         </div>
 
-        {/* Opponent Fanned Card Backs */}
-        <OpponentCardBacksFan count={handCount} vertical={vertical} />
+        <OpponentCardCountDeck count={handCount} isAr={isAr} />
 
         {/* Live Eaten Penalties / Trix Rank Badges */}
-        <div className="flex flex-wrap items-center justify-center gap-1">
-          {finishRank !== -1 && (
-            <span className="px-2 py-0.5 rounded-lg bg-[#8ac926] text-[#161426] text-xs font-black border border-[#161426]">
-              #{finishRank + 1}
-            </span>
-          )}
-          {s.ateKingOfHearts && (
-            <span className="px-2 py-0.5 rounded-lg bg-[#e63946] text-white text-[11px] font-black border border-[#161426] inline-flex items-center gap-1">
-              <span>K</span>
-              <SuitVectorSvg suit="H" className="w-3 h-3" />
-              <span>-75</span>
-            </span>
-          )}
-          {s.queensEaten.length > 0 && (
-            <span className="px-2 py-0.5 rounded-lg bg-[#9b5de5] text-white text-[11px] font-black border border-[#161426]">
-              Q×{s.queensEaten.length}
-            </span>
-          )}
-          {s.diamondsEaten > 0 && (
-            <span className="px-2 py-0.5 rounded-lg bg-[#ff924c] text-[#161426] text-[11px] font-black border border-[#161426] inline-flex items-center gap-0.5">
-              <SuitVectorSvg suit="D" className="w-3 h-3" />
-              <span>×{s.diamondsEaten}</span>
-            </span>
-          )}
-          {s.tricksWon > 0 && (
-            <span className="px-2 py-0.5 rounded-lg bg-[#00bbf9] text-[#161426] text-[11px] font-black border border-[#161426]">
-              {isAr ? `أكلات: ${s.tricksWon}` : `Tricks: ${s.tricksWon}`}
-            </span>
-          )}
-        </div>
+        {(finishRank !== -1 ||
+          s.ateKingOfHearts ||
+          s.queensEaten.length > 0 ||
+          s.diamondsEaten > 0 ||
+          s.tricksWon > 0) && (
+          <div className="flex flex-wrap items-center gap-1">
+            {finishRank !== -1 && (
+              <span className="px-2 py-0.5 rounded-lg bg-[#8ac926] text-[#161426] text-xs font-black border border-[#161426]">
+                #{finishRank + 1}
+              </span>
+            )}
+            {s.ateKingOfHearts && (
+              <span className="px-2 py-0.5 rounded-lg bg-[#e63946] text-white text-[11px] font-black border border-[#161426] inline-flex items-center gap-1">
+                <span>K</span>
+                <SuitVectorSvg suit="H" className="w-3 h-3" />
+                <span>-75</span>
+              </span>
+            )}
+            {s.queensEaten.length > 0 && (
+              <span className="px-2 py-0.5 rounded-lg bg-[#9b5de5] text-white text-[11px] font-black border border-[#161426]">
+                Q×{s.queensEaten.length}
+              </span>
+            )}
+            {s.diamondsEaten > 0 && (
+              <span className="px-2 py-0.5 rounded-lg bg-[#ff924c] text-[#161426] text-[11px] font-black border border-[#161426] inline-flex items-center gap-0.5">
+                <SuitVectorSvg suit="D" className="w-3 h-3" />
+                <span>×{s.diamondsEaten}</span>
+              </span>
+            )}
+            {s.tricksWon > 0 && (
+              <span className="px-2 py-0.5 rounded-lg bg-[#00bbf9] text-[#161426] text-[11px] font-black border border-[#161426]">
+                {isAr ? `أكلات: ${s.tricksWon}` : `Tricks: ${s.tricksWon}`}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <div className="w-full space-y-4 select-none [overflow-anchor:none]">
-      {/* TOP BAR: 4 KINGDOMS & 5 CONTRACTS TRACKER + MODE SWITCHER */}
-      <div className="cartoon-card bg-[#fffbeb] p-4 sm:p-5 space-y-3.5 border-4 border-[#161426]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-[#ffca3a] border-3 border-[#161426] shadow-[0_4px_0_#161426] flex items-center justify-center shrink-0">
-              <Crown weight="fill" className="w-7 h-7 text-[#161426]" />
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-[#161426] leading-tight">
-                {isAr
-                  ? 'تركس الملوك — نظام الممالك الخمس الكامل'
-                  : 'Trix Royal — Full 5-Kingdoms Championship'}
-              </h2>
-              <p className="text-xs sm:text-sm font-extrabold text-[#78350f]">
-                {isAr
-                  ? `المملكة الحالية (${gameData.kingdomNumber} من 4): مملكة ${getSeatDisplayName(
-                      gameData.kingdomOwnerSeat
-                    )} — باقي ${gameData.remainingContracts.length} من ${allModeContracts.length} عقود`
-                  : `Kingdom ${gameData.kingdomNumber}/4: ${getSeatDisplayName(
-                      gameData.kingdomOwnerSeat
-                    )} — ${gameData.remainingContracts.length}/${allModeContracts.length} contracts left`}
-              </p>
-            </div>
-          </div>
+    <div className="w-full space-y-3 select-none [overflow-anchor:none]">
+      {/* COMPACT TOP KINGDOMS & 5-CONTRACTS BAR */}
+      <div className="cartoon-card bg-[#fffbeb] px-4 py-3 border-4 border-[#161426] flex flex-wrap items-center justify-between gap-2.5">
+        {/* 4 Player Kingdoms Switcher */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {[0, 1, 2, 3].map((sIdx) => {
+            const isCurrentKing = gameData.kingdomOwnerSeat === sIdx;
+            const sName = getSeatDisplayName(sIdx);
+            return (
+              <button
+                key={sIdx}
+                type="button"
+                disabled={!isHost && !isPassAndPlay}
+                onClick={() => handleJumpToKingdom(sIdx)}
+                className={`px-3 py-1 rounded-xl border-2 border-[#161426] text-xs font-black flex items-center gap-1.5 transition ${
+                  isCurrentKing
+                    ? 'bg-[#ffca3a] text-[#161426] shadow-[0_3px_0_#161426]'
+                    : 'bg-white text-[#161426]/75 hover:bg-[#fef3c7]'
+                }`}
+              >
+                <Crown
+                  weight="fill"
+                  className={`w-3.5 h-3.5 ${
+                    isCurrentKing ? 'text-[#d97706]' : 'text-[#94a3b8]'
+                  }`}
+                />
+                <span>
+                  {isAr ? `مملكة ${sIdx + 1}: ${sName}` : `K${sIdx + 1}: ${sName}`}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-          {/* Mode & Partnership Controls for Host */}
+        {/* The 5 Contracts of the Active Kingdom + Mode Controls */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {allModeContracts.map((ct) => {
+            const meta = CONTRACT_META[ct];
+            const isCompleted = !gameData.remainingContracts.includes(ct);
+            const isActive = gameData.activeContract === ct;
+            const canPickNow =
+              gameData.phase === 'choose_contract' &&
+              !isCompleted &&
+              !seats[gameData.kingdomOwnerSeat]?.isBot &&
+              (isPassAndPlay ||
+                seats[gameData.kingdomOwnerSeat]?.playerId === myPlayerId);
+
+            return (
+              <button
+                key={ct}
+                type="button"
+                disabled={!canPickNow}
+                onClick={() => canPickNow && handleSelectContract(ct)}
+                style={{
+                  backgroundColor: isActive
+                    ? meta.accent
+                    : isCompleted
+                    ? '#e2e8f0'
+                    : '#161426',
+                }}
+                className={`px-2.5 py-1 rounded-xl border-2 border-[#161426] text-xs font-black flex items-center gap-1 transition ${
+                  isActive
+                    ? 'text-white ring-2 ring-[#ffca3a] shadow-[0_2px_0_#161426]'
+                    : isCompleted
+                    ? 'text-[#64748b] line-through opacity-65'
+                    : canPickNow
+                    ? 'text-white hover:scale-105 cursor-pointer shadow-[0_2px_0_#161426]'
+                    : 'text-white'
+                }`}
+              >
+                {isCompleted && (
+                  <CheckCircle weight="fill" className="w-3.5 h-3.5 text-[#8ac926]" />
+                )}
+                {isActive && <Flame weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />}
+                <span>{isAr ? meta.shortAr : meta.shortEn}</span>
+              </button>
+            );
+          })}
+
           {(isHost || isPassAndPlay) && (
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Explicit 5 Kingdoms vs Complex Segmented Toggle */}
-              <div className="inline-flex rounded-xl border-3 border-[#161426] bg-[#161426] p-0.5 shadow-[0_3px_0_#161426]">
-                <button
-                  type="button"
-                  onClick={() => handleRestartMatch('kingdoms', gameData.partnership)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition ${
-                    gameData.mode === 'kingdoms'
-                      ? 'bg-[#ffca3a] text-[#161426]'
-                      : 'text-white hover:text-[#ffca3a]'
-                  }`}
-                >
-                  {isAr ? 'الممالك الـ 5 (الأصلية)' : '5 Kingdoms (Classic)'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRestartMatch('complex', gameData.partnership)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-black transition ${
-                    gameData.mode === 'complex'
-                      ? 'bg-[#ff595e] text-white'
-                      : 'text-white hover:text-[#ffca3a]'
-                  }`}
-                >
-                  {isAr ? 'كومبلكس' : 'Complex'}
-                </button>
-              </div>
-
+            <>
               <button
                 type="button"
                 onClick={() => handleRestartMatch(gameData.mode, !gameData.partnership)}
-                className={`cartoon-btn px-3.5 py-2 text-xs font-black flex items-center gap-1.5 ${
+                className={`cartoon-btn px-2.5 py-1 text-xs font-black flex items-center gap-1 ${
                   gameData.partnership
                     ? 'bg-[#00bbf9] text-[#161426]'
                     : 'bg-white text-[#161426]'
                 }`}
               >
-                <Users weight="fill" className="w-4 h-4" />
+                <Users weight="fill" className="w-3.5 h-3.5" />
                 <span>
                   {gameData.partnership
                     ? isAr
-                      ? 'شراكة 2 ضد 2'
-                      : 'Partners 2v2'
+                      ? 'شراكة 2×2'
+                      : '2v2'
                     : isAr
-                    ? 'لعب فردي'
-                    : 'Solo Play'}
+                    ? 'فردي'
+                    : 'Solo'}
                 </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleRestartMatch(gameData.mode, gameData.partnership)}
-                className="cartoon-btn bg-white text-[#161426] px-3.5 py-2 text-xs font-black flex items-center gap-1.5"
+                className="cartoon-btn bg-white text-[#161426] px-2.5 py-1 text-xs font-black flex items-center gap-1"
               >
-                <ArrowsClockwise weight="bold" className="w-4 h-4" />
+                <ArrowsClockwise weight="bold" className="w-3.5 h-3.5" />
                 <span>{isAr ? 'توزيع جديد' : 'Redeal'}</span>
               </button>
-            </div>
+            </>
           )}
-        </div>
-
-        {/* 4 KINGDOMS TABS + 5 CONTRACTS STATUS STRIP */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-2 border-t-2 border-[#161426]/15 items-center">
-          {/* 4 Player Kingdoms Switcher */}
-          <div className="lg:col-span-5 flex flex-wrap items-center gap-1.5">
-            {[0, 1, 2, 3].map((sIdx) => {
-              const isCurrentKing = gameData.kingdomOwnerSeat === sIdx;
-              const sName = getSeatDisplayName(sIdx);
-              return (
-                <button
-                  key={sIdx}
-                  type="button"
-                  disabled={!isHost && !isPassAndPlay}
-                  onClick={() => handleJumpToKingdom(sIdx)}
-                  className={`px-3 py-1.5 rounded-xl border-2 border-[#161426] text-xs font-black flex items-center gap-1.5 transition ${
-                    isCurrentKing
-                      ? 'bg-[#ffca3a] text-[#161426] shadow-[0_3px_0_#161426] -translate-y-0.5'
-                      : 'bg-white text-[#161426]/75 hover:bg-[#fef3c7]'
-                  }`}
-                >
-                  <Crown
-                    weight="fill"
-                    className={`w-3.5 h-3.5 ${
-                      isCurrentKing ? 'text-[#d97706]' : 'text-[#94a3b8]'
-                    }`}
-                  />
-                  <span>
-                    {isAr ? `مملكة ${sIdx + 1}: ${sName}` : `K${sIdx + 1}: ${sName}`}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* The 5 Contracts of the Active Kingdom */}
-          <div className="lg:col-span-7 flex flex-wrap items-center justify-end gap-1.5">
-            {allModeContracts.map((ct) => {
-              const meta = CONTRACT_META[ct];
-              const isCompleted = !gameData.remainingContracts.includes(ct);
-              const isActive = gameData.activeContract === ct;
-              const canPickNow =
-                gameData.phase === 'choose_contract' &&
-                !isCompleted &&
-                !seats[gameData.kingdomOwnerSeat]?.isBot &&
-                (isPassAndPlay ||
-                  seats[gameData.kingdomOwnerSeat]?.playerId === myPlayerId);
-
-              return (
-                <button
-                  key={ct}
-                  type="button"
-                  disabled={!canPickNow}
-                  onClick={() => canPickNow && handleSelectContract(ct)}
-                  style={{
-                    backgroundColor: isActive
-                      ? meta.accent
-                      : isCompleted
-                      ? '#e2e8f0'
-                      : '#161426',
-                  }}
-                  className={`px-3 py-1.5 rounded-xl border-2 border-[#161426] text-xs font-black flex items-center gap-1.5 transition ${
-                    isActive
-                      ? 'text-white ring-3 ring-[#ffca3a] shadow-[0_3px_0_#161426] scale-105'
-                      : isCompleted
-                      ? 'text-[#64748b] line-through opacity-65'
-                      : canPickNow
-                      ? 'text-white hover:scale-105 cursor-pointer shadow-[0_3px_0_#161426]'
-                      : 'text-white'
-                  }`}
-                >
-                  {isCompleted && <CheckCircle weight="fill" className="w-3.5 h-3.5 text-[#8ac926]" />}
-                  {isActive && <Flame weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />}
-                  <span>{isAr ? meta.shortAr : meta.shortEn}</span>
-                </button>
-              );
-            })}
-          </div>
         </div>
       </div>
 
       {/* PARTNERSHIP SCORE BANNER (When 2v2 Active) */}
       {gameData.partnership && (
         <div className="grid grid-cols-2 gap-3">
-          <div className="cartoon-badge bg-[#fde68a] text-[#161426] px-4 py-2 text-sm flex items-center justify-between">
+          <div className="cartoon-badge bg-[#fde68a] text-[#161426] px-4 py-1.5 text-xs sm:text-sm flex items-center justify-between">
             <span>
               {isAr
                 ? `الفريق الأول (${getSeatDisplayName(0)} + ${getSeatDisplayName(2)})`
@@ -1788,7 +1703,7 @@ export const TrixGame: React.FC<TrixGameProps> = ({
               {teamAScore}
             </span>
           </div>
-          <div className="cartoon-badge bg-[#bae6fd] text-[#161426] px-4 py-2 text-sm flex items-center justify-between">
+          <div className="cartoon-badge bg-[#bae6fd] text-[#161426] px-4 py-1.5 text-xs sm:text-sm flex items-center justify-between">
             <span>
               {isAr
                 ? `الفريق الثاني (${getSeatDisplayName(1)} + ${getSeatDisplayName(3)})`
@@ -1801,697 +1716,657 @@ export const TrixGame: React.FC<TrixGameProps> = ({
         </div>
       )}
 
-      {/* MASSIVE ROYAL DAMASCENE EMERALD FELT TABLE STAGE */}
-      <div className="rounded-[32px] border-4 border-[#161426] shadow-[0_10px_0_#161426] bg-[radial-gradient(circle_at_center,#1f5c43_0%,#133b2b_68%,#0c261c_100%)] p-3 sm:p-6 text-white space-y-5 relative overflow-hidden min-h-[700px] flex flex-col justify-between">
-        {/* Decorative Gold Inner Felt Trim */}
-        <div className="pointer-events-none absolute inset-3 rounded-[24px] border-2 border-[#ffca3a]/25" />
-
-        {/* NORTH OPPONENT SEAT (TOP OF TABLE) */}
-        <div className="relative z-10 max-w-xl mx-auto w-full">
-          {renderOpponentSeatBox(northSeat, false)}
+      {/* ROYAL DAMASCENE EMERALD FELT TABLE STAGE */}
+      <div className="rounded-[28px] border-4 border-[#161426] shadow-[0_10px_0_#161426] bg-[radial-gradient(circle_at_center,#1f5c43_0%,#133b2b_70%,#0c261c_100%)] p-3 sm:p-5 text-white space-y-4 relative overflow-hidden">
+        {/* TOP COMPASS ROW: WEST POD + NORTH POD + EAST POD */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="order-2 sm:order-1">{renderOpponentPod(eastSeat)}</div>
+          <div className="order-1 sm:order-2 mx-auto">{renderOpponentPod(northSeat)}</div>
+          <div className="order-3">{renderOpponentPod(westSeat)}</div>
         </div>
 
-        {/* MIDDLE ARENA: WEST SEAT + CENTER FELT STAGE + EAST SEAT */}
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center my-auto">
-          {/* WEST SEAT */}
-          <div className="lg:col-span-2 order-2 lg:order-1">
-            {renderOpponentSeatBox(westSeat, true)}
-          </div>
-
-          {/* CENTER FELT STAGE (8 COLUMNS) */}
-          <div className="lg:col-span-8 order-1 lg:order-2">
-            {/* PHASE 1: CHOOSE ONE OF THE 5 KINGDOM CONTRACTS */}
-            {gameData.phase === 'choose_contract' && (
-              <div className="bg-[#0f1f18]/92 border-3 border-[#ffca3a] rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3.5 py-1 text-xs sm:text-sm font-black flex items-center gap-1.5">
-                      <Crown weight="fill" className="w-4 h-4" />
-                      <span>
-                        {isAr
-                          ? `ديوان مملكة ${getSeatDisplayName(gameData.kingdomOwnerSeat)} (${
-                              gameData.kingdomNumber
-                            }/4)`
-                          : `${getSeatDisplayName(gameData.kingdomOwnerSeat)}'s Kingdom (${
-                              gameData.kingdomNumber
-                            }/4)`}
-                      </span>
-                    </span>
-                  </div>
-                  <span className="text-xs sm:text-sm font-extrabold text-[#ffca3a]">
-                    {isAr
-                      ? 'افحص أوراق يدك الـ 13 بالأسفل ثم اختر العقد الأنسب:'
-                      : 'Inspect your 13 cards below and pick a contract:'}
-                  </span>
-                </div>
-
-                {seats[gameData.kingdomOwnerSeat]?.isBot ? (
-                  <div className="py-8 text-center space-y-3">
-                    <Robot weight="fill" className="w-12 h-12 text-[#ffca3a] mx-auto animate-bounce" />
-                    <p className="text-lg font-black text-[#ffca3a]">
-                      {isAr
-                        ? `${getSeatDisplayName(gameData.kingdomOwnerSeat)} يفحص أوراقه ويختار عقد المملكة...`
-                        : `${getSeatDisplayName(gameData.kingdomOwnerSeat)} is choosing a contract...`}
-                    </p>
-                  </div>
-                ) : isPassAndPlay ||
-                  seats[gameData.kingdomOwnerSeat]?.playerId === myPlayerId ? (
-                  <div
-                    className={`grid grid-cols-1 sm:grid-cols-2 ${
-                      allModeContracts.length === 5
-                        ? 'xl:grid-cols-5'
-                        : 'xl:grid-cols-2'
-                    } gap-2.5`}
-                  >
-                    {allModeContracts.map((ct) => {
-                      const meta = CONTRACT_META[ct];
-                      const isAvailable = gameData.remainingContracts.includes(ct);
-                      const hint = getContractHintForHand(viewerHand, ct, isAr);
-
-                      return (
-                        <button
-                          key={ct}
-                          type="button"
-                          disabled={!isAvailable}
-                          onClick={() => handleSelectContract(ct)}
-                          className={`rounded-2xl border-3 border-[#161426] p-3.5 text-start transition-all flex flex-col justify-between gap-2.5 ${
-                            isAvailable
-                              ? 'bg-[#fffdf7] text-[#161426] hover:-translate-y-1.5 shadow-[0_6px_0_#161426] cursor-pointer hover:ring-3 hover:ring-[#ffca3a]'
-                              : 'bg-gray-800/60 text-white/40 opacity-50 cursor-not-allowed'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <ContractEmblemSvg contract={ct} />
-                            <span
-                              style={{ backgroundColor: meta.accent }}
-                              className="px-2.5 py-0.5 rounded-full text-[11px] font-black text-white border-2 border-[#161426] shadow-[0_2px_0_#161426]"
-                            >
-                              {isAr ? meta.ptsBadgeAr : meta.ptsBadgeEn}
-                            </span>
-                          </div>
-
-                          <div>
-                            <div className="font-black text-base sm:text-lg text-[#161426] flex items-center justify-between">
-                              <span>{isAr ? meta.ar : meta.en}</span>
-                              {!isAvailable && (
-                                <span className="text-xs text-[#8ac926]">
-                                  {isAr ? '✓ لُعبت' : '✓ Played'}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs font-bold text-[#3f3b5c] mt-0.5 leading-snug">
-                              {isAr ? meta.descAr : meta.descEn}
-                            </p>
-                          </div>
-
-                          {isAvailable && (
-                            <div
-                              className={`rounded-xl px-2.5 py-1 text-[11px] font-black border border-[#161426]/20 flex items-center justify-between ${
-                                hint.good
-                                  ? 'bg-[#ecfccb] text-[#161426]'
-                                  : 'bg-[#f1f5f9] text-[#475569]'
-                              }`}
-                            >
-                              <span>{hint.badge}</span>
-                              <Play weight="fill" className="w-3.5 h-3.5 shrink-0" />
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="py-8 text-center text-lg font-black text-[#ffca3a]">
-                    {isAr
-                      ? `بانتظار (${getSeatDisplayName(
-                          gameData.kingdomOwnerSeat
-                        )}) ليختار عقد المملكة...`
-                      : `Waiting for ${getSeatDisplayName(
-                          gameData.kingdomOwnerSeat
-                        )} to pick a contract...`}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* PHASE 2: DOUBLING WINDOW (تدبيل شيخ الكبة والبنات!) */}
-            {gameData.phase === 'doubling' && (
-              <div className="bg-[#161426]/95 border-3 border-[#ff595e] rounded-3xl p-6 text-center space-y-4 shadow-2xl">
-                <div className="inline-flex items-center gap-2 cartoon-badge bg-[#ff595e] text-white px-4 py-1.5 text-sm font-black">
-                  <Flame weight="fill" className="w-5 h-5 text-[#ffca3a]" />
+        {/* CENTER FELT STAGE */}
+        <div className="w-full max-w-6xl mx-auto">
+          {/* PHASE 1: CHOOSE ONE OF THE 5 KINGDOM CONTRACTS */}
+          {gameData.phase === 'choose_contract' && (
+            <div className="bg-[#0b1f17]/95 border-3 border-[#ffca3a] rounded-3xl p-4 sm:p-5 space-y-3.5 shadow-2xl">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
+                <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3.5 py-1 text-xs sm:text-sm font-black flex items-center gap-1.5">
+                  <Crown weight="fill" className="w-4 h-4" />
                   <span>
                     {isAr
-                      ? 'فرصة التدبيل (×2) قبل بدء اللعب!'
-                      : 'Doubling Window (x2) Before Play!'}
+                      ? `ديوان مملكة ${getSeatDisplayName(gameData.kingdomOwnerSeat)} (${
+                          gameData.kingdomNumber
+                        }/4)`
+                      : `${getSeatDisplayName(gameData.kingdomOwnerSeat)}'s Kingdom (${
+                          gameData.kingdomNumber
+                        }/4)`}
                   </span>
-                </div>
-
-                {!viewerSeat?.isBot &&
-                !gameData.doublingReadySeats.includes(viewerSeatIdx) ? (
-                  <div className="space-y-4">
-                    <p className="text-base sm:text-lg font-extrabold text-[#fff9ec]">
-                      {isAr
-                        ? `يا (${getSeatDisplayName(
-                            viewerSeatIdx
-                          )})، معك أوراق قابلة للتدبيل! إذا دبّلتها وأكلها خصمك يتضاعف العقاب عليه وتكسب مكافأة فورية:`
-                        : `${getSeatDisplayName(
-                            viewerSeatIdx
-                          )}, double your King of Hearts / Queens for x2 damage & bonus?`}
-                    </p>
-
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                      {getDoubleableCardsInHand(viewerHand, gameData.activeContract).map(
-                        (dc) => {
-                          const isDbl = gameData.doubledCards[dc.id] === viewerSeatIdx;
-                          return (
-                            <button
-                              key={dc.id}
-                              type="button"
-                              onClick={() => handleToggleDoubleCard(viewerSeatIdx, dc.id)}
-                              className={`cartoon-btn px-5 py-3 text-base font-black flex items-center gap-2.5 ${
-                                isDbl
-                                  ? 'bg-[#ff595e] text-white ring-3 ring-[#ffca3a]'
-                                  : 'bg-white text-[#161426]'
-                              }`}
-                            >
-                              <SuitVectorSvg suit={dc.suit} className="w-5 h-5" />
-                              <span>
-                                {dc.id === 'KH'
-                                  ? isAr
-                                    ? 'شيخ الكبة'
-                                    : 'King of Hearts'
-                                  : `${rankLabel(dc.rank)}`}
-                              </span>
-                              <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-2.5 py-0.5 text-xs">
-                                {isDbl
-                                  ? isAr
-                                    ? 'مدبّل ×2!'
-                                    : 'DOUBLED!'
-                                  : isAr
-                                  ? 'دبّل ×2'
-                                  : 'Double x2'}
-                              </span>
-                            </button>
-                          );
-                        }
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleConfirmDoublingSeat(viewerSeatIdx)}
-                      className="cartoon-btn bg-[#8ac926] text-[#161426] px-8 py-3 text-lg font-black inline-flex items-center gap-2"
-                    >
-                      <CheckCircle weight="fill" className="w-6 h-6" />
-                      <span>{isAr ? 'اعتمد وبلّش اللعب!' : 'Confirm & Start Hand!'}</span>
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-base font-extrabold text-[#ffca3a] animate-pulse">
-                    {isAr
-                      ? 'بانتظار باقي اللاعبين لإنهاء قرار التدبيل...'
-                      : 'Waiting for other players to confirm doubling...'}
-                  </p>
-                )}
+                </span>
+                <span className="text-xs sm:text-sm font-extrabold text-[#ffca3a]">
+                  {isAr
+                    ? 'أوراق يدك الـ 13 مكشوفة بالأسفل — اختر أحد العقود الخمسة:'
+                    : 'Your 13 cards are visible below — choose one of the 5 contracts:'}
+                </span>
               </div>
-            )}
 
-            {/* PHASE 3: ACTIVE TABLE CENTER (VISUAL TRIX SUIT COLUMNS OR 4-COMPASS TRICK CARPET) */}
-            {(gameData.phase === 'playing' || gameData.phase === 'trick_pause') && (
-              <div className="space-y-3">
-                {/* Active Contract & Turn Status Banner */}
-                <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0d2118]/90 border-2 border-[#ffca3a]/40 rounded-2xl px-4 py-2.5">
-                  <div className="flex items-center gap-2">
-                    {gameData.activeContract && (
-                      <span
-                        style={{
-                          backgroundColor: CONTRACT_META[gameData.activeContract].accent,
-                        }}
-                        className="px-3 py-1 rounded-xl font-black text-xs sm:text-sm text-white border-2 border-[#161426]"
+              {seats[gameData.kingdomOwnerSeat]?.isBot ? (
+                <div className="py-6 text-center space-y-2">
+                  <Robot
+                    weight="fill"
+                    className="w-10 h-10 text-[#ffca3a] mx-auto animate-bounce"
+                  />
+                  <p className="text-base sm:text-lg font-black text-[#ffca3a]">
+                    {isAr
+                      ? `${getSeatDisplayName(
+                          gameData.kingdomOwnerSeat
+                        )} يفحص أوراقه ويختار عقد المملكة...`
+                      : `${getSeatDisplayName(
+                          gameData.kingdomOwnerSeat
+                        )} is choosing a contract...`}
+                  </p>
+                </div>
+              ) : isPassAndPlay ||
+                seats[gameData.kingdomOwnerSeat]?.playerId === myPlayerId ? (
+                <div
+                  className={`grid grid-cols-1 sm:grid-cols-2 ${
+                    allModeContracts.length === 5
+                      ? 'lg:grid-cols-5'
+                      : 'lg:grid-cols-2'
+                  } gap-2.5`}
+                >
+                  {allModeContracts.map((ct) => {
+                    const meta = CONTRACT_META[ct];
+                    const isAvailable = gameData.remainingContracts.includes(ct);
+                    const hint = getContractHintForHand(viewerHand, ct, isAr);
+
+                    return (
+                      <button
+                        key={ct}
+                        type="button"
+                        disabled={!isAvailable}
+                        onClick={() => handleSelectContract(ct)}
+                        className={`rounded-2xl border-3 border-[#161426] p-3 text-start transition-all flex flex-col justify-between gap-2 ${
+                          isAvailable
+                            ? 'bg-white text-[#161426] hover:-translate-y-1.5 shadow-[0_5px_0_#161426] cursor-pointer hover:ring-3 hover:ring-[#ffca3a]'
+                            : 'bg-gray-800/60 text-white/40 opacity-50 cursor-not-allowed'
+                        }`}
                       >
-                        {isAr
-                          ? CONTRACT_META[gameData.activeContract].ar
-                          : CONTRACT_META[gameData.activeContract].en}
-                      </span>
-                    )}
-                    {Object.keys(gameData.doubledCards || {}).length > 0 && (
-                      <span className="px-2.5 py-1 rounded-xl bg-[#ff595e] text-white text-xs font-black border-2 border-[#161426]">
-                        {isAr
-                          ? `مدبّل ×2: ${Object.keys(gameData.doubledCards).join(' + ')}`
-                          : `Doubled x2: ${Object.keys(gameData.doubledCards).join(' + ')}`}
-                      </span>
+                        <div className="flex items-center justify-between gap-1.5">
+                          <ContractEmblemSvg contract={ct} />
+                          <span
+                            style={{ backgroundColor: meta.accent }}
+                            className="px-2 py-0.5 rounded-full text-[10px] font-black text-white border-2 border-[#161426]"
+                          >
+                            {isAr ? meta.ptsBadgeAr : meta.ptsBadgeEn}
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="font-black text-base text-[#161426] flex items-center justify-between">
+                            <span>{isAr ? meta.ar : meta.en}</span>
+                            {!isAvailable && (
+                              <span className="text-[11px] text-[#8ac926]">
+                                {isAr ? '✓ لُعبت' : '✓ Done'}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] font-bold text-[#3f3b5c] mt-0.5 leading-snug">
+                            {isAr ? meta.descAr : meta.descEn}
+                          </p>
+                        </div>
+
+                        {isAvailable && (
+                          <div
+                            className={`rounded-xl px-2.5 py-1 text-[11px] font-black border border-[#161426]/20 flex items-center justify-between gap-1 ${
+                              hint.good
+                                ? 'bg-[#ecfccb] text-[#161426]'
+                                : 'bg-[#f1f5f9] text-[#475569]'
+                            }`}
+                          >
+                            <span className="truncate">{hint.badge}</span>
+                            <Play weight="fill" className="w-3.5 h-3.5 shrink-0" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="py-6 text-center text-base font-black text-[#ffca3a]">
+                  {isAr
+                    ? `بانتظار (${getSeatDisplayName(
+                        gameData.kingdomOwnerSeat
+                      )}) ليختار عقد المملكة...`
+                    : `Waiting for ${getSeatDisplayName(
+                        gameData.kingdomOwnerSeat
+                      )} to pick a contract...`}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* PHASE 2: DOUBLING WINDOW (تدبيل شيخ الكبة والبنات!) */}
+          {gameData.phase === 'doubling' && (
+            <div className="bg-[#161426]/95 border-3 border-[#ff595e] rounded-3xl p-5 text-center space-y-3.5 shadow-2xl">
+              <div className="inline-flex items-center gap-2 cartoon-badge bg-[#ff595e] text-white px-4 py-1 text-xs sm:text-sm font-black">
+                <Flame weight="fill" className="w-4 h-4 text-[#ffca3a]" />
+                <span>
+                  {isAr
+                    ? 'فرصة التدبيل (×2) قبل بدء اللعب!'
+                    : 'Doubling Window (x2) Before Play!'}
+                </span>
+              </div>
+
+              {!viewerSeat?.isBot &&
+              !gameData.doublingReadySeats.includes(viewerSeatIdx) ? (
+                <div className="space-y-3">
+                  <p className="text-sm sm:text-base font-extrabold text-[#fff9ec]">
+                    {isAr
+                      ? `معك أوراق قابلة للتدبيل! إذا دبّلتها وأكلها خصمك يتضاعف العقاب عليه وتكسب مكافأة فورية:`
+                      : `Double your King of Hearts / Queens for x2 penalty & bonus?`}
+                  </p>
+
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    {getDoubleableCardsInHand(viewerHand, gameData.activeContract).map(
+                      (dc) => {
+                        const isDbl = gameData.doubledCards[dc.id] === viewerSeatIdx;
+                        return (
+                          <button
+                            key={dc.id}
+                            type="button"
+                            onClick={() => handleToggleDoubleCard(viewerSeatIdx, dc.id)}
+                            className={`cartoon-btn px-4 py-2.5 text-sm font-black flex items-center gap-2 ${
+                              isDbl
+                                ? 'bg-[#ff595e] text-white ring-3 ring-[#ffca3a]'
+                                : 'bg-white text-[#161426]'
+                            }`}
+                          >
+                            <SuitVectorSvg suit={dc.suit} className="w-4 h-4" />
+                            <span>
+                              {dc.id === 'KH'
+                                ? isAr
+                                  ? 'شيخ الكبة'
+                                  : 'King of Hearts'
+                                : `${rankLabel(dc.rank)}`}
+                            </span>
+                            <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-2 py-0.5 text-xs">
+                              {isDbl
+                                ? isAr
+                                  ? 'مدبّل ×2!'
+                                  : 'DOUBLED!'
+                                : isAr
+                                ? 'دبّل ×2'
+                                : 'Double x2'}
+                            </span>
+                          </button>
+                        );
+                      }
                     )}
                   </div>
 
-                  <div className="text-xs sm:text-sm font-black text-[#ffca3a]">
-                    {gameData.phase === 'trick_pause'
-                      ? isAr
-                        ? gameData.lastTrickMessageAr
-                        : gameData.lastTrickMessageEn
-                      : isAr
-                      ? `الدور الآن عند: ${getSeatDisplayName(gameData.turnSeat)}`
-                      : `Active Turn: ${getSeatDisplayName(gameData.turnSeat)}`}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleConfirmDoublingSeat(viewerSeatIdx)}
+                    className="cartoon-btn bg-[#8ac926] text-[#161426] px-7 py-2.5 text-base font-black inline-flex items-center gap-2"
+                  >
+                    <CheckCircle weight="fill" className="w-5 h-5" />
+                    <span>{isAr ? 'اعتمد وبلّش اللعب!' : 'Confirm & Start Hand!'}</span>
+                  </button>
+                </div>
+              ) : (
+                <p className="text-sm font-extrabold text-[#ffca3a] animate-pulse">
+                  {isAr
+                    ? 'بانتظار باقي اللاعبين لإنهاء قرار التدبيل...'
+                    : 'Waiting for other players to confirm doubling...'}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* PHASE 3: ACTIVE TABLE CENTER (VISUAL TRIX SUIT COLUMNS OR 4-COMPASS TRICK CARPET) */}
+          {(gameData.phase === 'playing' || gameData.phase === 'trick_pause') && (
+            <div className="space-y-3">
+              {/* Active Contract & Turn Status Banner */}
+              <div className="flex flex-wrap items-center justify-between gap-2 bg-[#0b1f17]/90 border-2 border-[#ffca3a]/40 rounded-2xl px-4 py-2">
+                <div className="flex items-center gap-2">
+                  {gameData.activeContract && (
+                    <span
+                      style={{
+                        backgroundColor: CONTRACT_META[gameData.activeContract].accent,
+                      }}
+                      className="px-3 py-0.5 rounded-xl font-black text-xs sm:text-sm text-white border-2 border-[#161426]"
+                    >
+                      {isAr
+                        ? CONTRACT_META[gameData.activeContract].ar
+                        : CONTRACT_META[gameData.activeContract].en}
+                    </span>
+                  )}
+                  {Object.keys(gameData.doubledCards || {}).length > 0 && (
+                    <span className="px-2.5 py-0.5 rounded-xl bg-[#ff595e] text-white text-xs font-black border-2 border-[#161426]">
+                      {isAr
+                        ? `مدبّل ×2: ${Object.keys(gameData.doubledCards).join(' + ')}`
+                        : `Doubled x2: ${Object.keys(gameData.doubledCards).join(' + ')}`}
+                    </span>
+                  )}
                 </div>
 
-                {gameData.activeContract === 'trix' ? (
-                  /* 4 FULL VISUAL SUIT COLUMNS ON THE FELT (A .. J .. 2) */
-                  <div className="grid grid-cols-4 gap-2.5 sm:gap-4 bg-[#0d241a]/80 rounded-3xl p-3 sm:p-4 border-2 border-white/15">
-                    {SUIT_ORDER.map((suit) => {
-                      const lane = gameData.trixLanes[suit];
-                      const nextUp = lane && lane.high < 14 ? lane.high + 1 : null;
-                      const nextDown = lane && lane.low > 2 ? lane.low - 1 : null;
+                <div className="text-xs sm:text-sm font-black text-[#ffca3a]">
+                  {gameData.phase === 'trick_pause'
+                    ? isAr
+                      ? gameData.lastTrickMessageAr
+                      : gameData.lastTrickMessageEn
+                    : isAr
+                    ? `الدور الآن عند: ${getSeatDisplayName(gameData.turnSeat)}`
+                    : `Active Turn: ${getSeatDisplayName(gameData.turnSeat)}`}
+                </div>
+              </div>
 
-                      return (
-                        <div
-                          key={suit}
-                          className="rounded-2xl border-3 border-[#161426] bg-[#143326] p-2.5 sm:p-3 flex flex-col items-center justify-between min-h-[250px] shadow-inner"
-                        >
-                          {/* Suit Column Header */}
-                          <div className="w-full flex items-center justify-between border-b border-white/15 pb-1.5">
-                            <SuitVectorSvg suit={suit} className="w-6 h-6" />
-                            <span className="text-xs sm:text-sm font-black text-white">
-                              {isAr ? SUIT_NAMES[suit].ar : SUIT_NAMES[suit].en}
-                            </span>
-                          </div>
+              {gameData.activeContract === 'trix' ? (
+                /* 4 FULL VISUAL SUIT COLUMNS ON THE FELT (A .. J .. 2) */
+                <div className="grid grid-cols-4 gap-2.5 sm:gap-4 bg-[#0b1f17]/80 rounded-3xl p-3 sm:p-4 border-2 border-white/15">
+                  {SUIT_ORDER.map((suit) => {
+                    const lane = gameData.trixLanes[suit];
+                    const nextUp = lane && lane.high < 14 ? lane.high + 1 : null;
+                    const nextDown = lane && lane.low > 2 ? lane.low - 1 : null;
 
-                          {!lane ? (
-                            <div className="my-auto py-8 px-2 rounded-2xl border-2 border-dashed border-[#ffca3a]/50 bg-[#161426]/35 text-center space-y-1 w-full">
-                              <div className="text-lg font-black text-[#ffca3a]">J</div>
-                              <div className="text-[11px] font-extrabold text-white/80">
-                                {isAr ? 'تُفتح بالولد (J)' : 'Opens with Jack (J)'}
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="w-full space-y-2 my-auto py-1">
-                              {/* Upper End (Towards Ace) */}
-                              <div className="rounded-xl bg-[#161426]/60 p-2 text-center border border-white/15">
-                                <div className="text-[10px] font-bold text-[#8ac926]">
-                                  {lane.high === 14
-                                    ? isAr
-                                      ? 'اكتمل للأعلى (A)!'
-                                      : 'Top Closed (A)!'
-                                    : isAr
-                                    ? `مطلوب للأعلى: ${rankLabel(nextUp!)}`
-                                    : `Next Up: ${rankLabel(nextUp!)}`}
-                                </div>
-                                <div className="mt-1 flex justify-center">
-                                  <TrixPlayingCardButton
-                                    card={{ id: `${rankLabel(lane.high)}${suit}`, suit, rank: lane.high }}
-                                    playable={false}
-                                    size="mini"
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Center Jack Anchor */}
-                              <div className="text-center">
-                                <span className="px-3 py-0.5 rounded-full bg-[#ffca3a] text-[#161426] font-black text-xs border border-[#161426]">
-                                  {isAr ? 'المركز: J' : 'Anchor: J'}
-                                </span>
-                              </div>
-
-                              {/* Lower End (Towards 2) */}
-                              <div className="rounded-xl bg-[#161426]/60 p-2 text-center border border-white/15">
-                                <div className="flex justify-center mb-1">
-                                  <TrixPlayingCardButton
-                                    card={{ id: `${rankLabel(lane.low)}${suit}`, suit, rank: lane.low }}
-                                    playable={false}
-                                    size="mini"
-                                  />
-                                </div>
-                                <div className="text-[10px] font-bold text-[#00bbf9]">
-                                  {lane.low === 2
-                                    ? isAr
-                                      ? 'اكتمل للأسفل (2)!'
-                                      : 'Bottom Closed (2)!'
-                                    : isAr
-                                    ? `مطلوب للأسفل: ${rankLabel(nextDown!)}`
-                                    : `Next Down: ${rankLabel(nextDown!)}`}
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                    return (
+                      <div
+                        key={suit}
+                        className="rounded-2xl border-3 border-[#161426] bg-[#143326] p-2.5 flex flex-col items-center justify-between min-h-[220px] shadow-inner"
+                      >
+                        <div className="w-full flex items-center justify-between border-b border-white/15 pb-1.5">
+                          <SuitVectorSvg suit={suit} className="w-5 h-5" />
+                          <span className="text-xs sm:text-sm font-black text-white">
+                            {isAr ? SUIT_NAMES[suit].ar : SUIT_NAMES[suit].en}
+                          </span>
                         </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  /* 4-COMPASS TRICK CARPET WITH FULL-SIZE CARDS */
-                  <div className="rounded-3xl bg-[#0d241a]/80 border-2 border-[#ffca3a]/30 p-4 sm:p-5 min-h-[290px] flex flex-col justify-between">
-                    {/* North Trick Card Slot */}
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-xs font-black text-[#ffca3a]">
-                        {getSeatDisplayName(northSeat)}
-                      </span>
-                      <div className="h-[104px] sm:h-[124px] flex items-center justify-center">
-                        {(() => {
-                          const played = gameData.currentTrick.find(
-                            (p) => p.seatIndex === northSeat
-                          );
-                          return played ? (
-                            <TrixPlayingCardButton
-                              card={played.card}
-                              playable={false}
-                              size="table"
-                              doubled={Boolean(gameData.doubledCards[played.card.id])}
-                            />
-                          ) : (
-                            <div className="w-[68px] h-[100px] sm:w-[82px] sm:h-[120px] rounded-2xl border-2 border-dashed border-white/25 bg-white/5 flex items-center justify-center text-xs font-bold text-white/40">
-                              {gameData.turnSeat === northSeat ? '...' : ''}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
 
-                    {/* West + Center Lead Suit Badge + East */}
-                    <div className="flex items-center justify-between gap-3 px-2 sm:px-8 my-1">
-                      {/* West Card */}
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-xs font-black text-[#ffca3a]">
-                          {getSeatDisplayName(westSeat)}
-                        </span>
-                        {(() => {
-                          const played = gameData.currentTrick.find(
-                            (p) => p.seatIndex === westSeat
-                          );
-                          return played ? (
-                            <TrixPlayingCardButton
-                              card={played.card}
-                              playable={false}
-                              size="table"
-                              doubled={Boolean(gameData.doubledCards[played.card.id])}
-                            />
-                          ) : (
-                            <div className="w-[68px] h-[100px] sm:w-[82px] sm:h-[120px] rounded-2xl border-2 border-dashed border-white/25 bg-white/5 flex items-center justify-center text-xs font-bold text-white/40">
-                              {gameData.turnSeat === westSeat ? '...' : ''}
-                            </div>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Center Trick Carpet Info */}
-                      <div className="text-center space-y-1.5 px-2">
-                        {gameData.currentTrick.length > 0 ? (
-                          <div className="inline-flex flex-col items-center gap-1 bg-[#161426]/85 border-2 border-[#ffca3a] rounded-2xl px-4 py-2">
-                            <span className="text-[11px] font-extrabold text-white/75">
-                              {isAr ? 'النوع المطلوب اتباعه:' : 'Lead Suit:'}
-                            </span>
-                            <div className="flex items-center gap-1.5">
-                              <SuitVectorSvg
-                                suit={gameData.currentTrick[0].card.suit}
-                                className="w-6 h-6"
-                              />
-                              <span className="font-black text-sm text-[#ffca3a]">
-                                {isAr
-                                  ? SUIT_NAMES[gameData.currentTrick[0].card.suit].ar
-                                  : SUIT_NAMES[gameData.currentTrick[0].card.suit].en}
-                              </span>
+                        {!lane ? (
+                          <div className="my-auto py-6 px-2 rounded-2xl border-2 border-dashed border-[#ffca3a]/50 bg-[#161426]/35 text-center space-y-1 w-full">
+                            <div className="text-lg font-black text-[#ffca3a]">J</div>
+                            <div className="text-[11px] font-extrabold text-white/80">
+                              {isAr ? 'تُفتح بالولد (J)' : 'Opens with Jack (J)'}
                             </div>
                           </div>
                         ) : (
-                          <div className="text-xs sm:text-sm font-black text-white/70">
-                            {isAr
-                              ? `بانتظار ضربة البداية من ${getSeatDisplayName(
-                                  gameData.turnSeat
-                                )}`
-                              : `Waiting for ${getSeatDisplayName(
-                                  gameData.turnSeat
-                                )} to lead`}
+                          <div className="w-full space-y-1.5 my-auto py-1">
+                            <div className="rounded-xl bg-[#161426]/60 p-1.5 text-center border border-white/15">
+                              <div className="text-[10px] font-bold text-[#8ac926]">
+                                {lane.high === 14
+                                  ? isAr
+                                    ? 'اكتمل للأعلى (A)!'
+                                    : 'Top Closed (A)!'
+                                  : isAr
+                                  ? `مطلوب للأعلى: ${rankLabel(nextUp!)}`
+                                  : `Next Up: ${rankLabel(nextUp!)}`}
+                              </div>
+                              <div className="mt-1 flex justify-center">
+                                <TrixPlayingCardButton
+                                  card={{
+                                    id: `${rankLabel(lane.high)}${suit}`,
+                                    suit,
+                                    rank: lane.high,
+                                  }}
+                                  playable={false}
+                                  isTurnActive={false}
+                                  size="mini"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="text-center">
+                              <span className="px-2.5 py-0.5 rounded-full bg-[#ffca3a] text-[#161426] font-black text-[11px] border border-[#161426]">
+                                {isAr ? 'المركز: J' : 'Anchor: J'}
+                              </span>
+                            </div>
+
+                            <div className="rounded-xl bg-[#161426]/60 p-1.5 text-center border border-white/15">
+                              <div className="flex justify-center mb-1">
+                                <TrixPlayingCardButton
+                                  card={{
+                                    id: `${rankLabel(lane.low)}${suit}`,
+                                    suit,
+                                    rank: lane.low,
+                                  }}
+                                  playable={false}
+                                  isTurnActive={false}
+                                  size="mini"
+                                />
+                              </div>
+                              <div className="text-[10px] font-bold text-[#00bbf9]">
+                                {lane.low === 2
+                                  ? isAr
+                                    ? 'اكتمل للأسفل (2)!'
+                                    : 'Bottom Closed (2)!'
+                                  : isAr
+                                  ? `مطلوب للأسفل: ${rankLabel(nextDown!)}`
+                                  : `Next Down: ${rankLabel(nextDown!)}`}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
-
-                      {/* East Card */}
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-xs font-black text-[#ffca3a]">
-                          {getSeatDisplayName(eastSeat)}
-                        </span>
-                        {(() => {
-                          const played = gameData.currentTrick.find(
-                            (p) => p.seatIndex === eastSeat
-                          );
-                          return played ? (
-                            <TrixPlayingCardButton
-                              card={played.card}
-                              playable={false}
-                              size="table"
-                              doubled={Boolean(gameData.doubledCards[played.card.id])}
-                            />
-                          ) : (
-                            <div className="w-[68px] h-[100px] sm:w-[82px] sm:h-[120px] rounded-2xl border-2 border-dashed border-white/25 bg-white/5 flex items-center justify-center text-xs font-bold text-white/40">
-                              {gameData.turnSeat === eastSeat ? '...' : ''}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* South Trick Card Slot */}
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="h-[104px] sm:h-[124px] flex items-center justify-center">
-                        {(() => {
-                          const played = gameData.currentTrick.find(
-                            (p) => p.seatIndex === southSeat
-                          );
-                          return played ? (
-                            <TrixPlayingCardButton
-                              card={played.card}
-                              playable={false}
-                              size="table"
-                              doubled={Boolean(gameData.doubledCards[played.card.id])}
-                            />
-                          ) : (
-                            <div className="w-[68px] h-[100px] sm:w-[82px] sm:h-[120px] rounded-2xl border-2 border-dashed border-[#ffca3a]/40 bg-white/5 flex items-center justify-center text-xs font-black text-[#ffca3a]">
-                              {isViewerTurn ? (isAr ? 'العب ورقة' : 'Play Card') : ''}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                      <span className="text-xs font-black text-[#8ac926]">
-                        {getSeatDisplayName(southSeat)}
-                      </span>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* 4-COMPASS TRICK CARPET WITH FULL-SIZE CARDS */
+                <div className="rounded-3xl bg-[#0b1f17]/80 border-2 border-[#ffca3a]/30 p-3 sm:p-4 flex flex-col justify-between">
+                  {/* North Trick Card Slot */}
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs font-black text-[#ffca3a]">
+                      {getSeatDisplayName(northSeat)}
+                    </span>
+                    <div className="h-[102px] sm:h-[120px] flex items-center justify-center">
+                      {(() => {
+                        const played = gameData.currentTrick.find(
+                          (p) => p.seatIndex === northSeat
+                        );
+                        return played ? (
+                          <TrixPlayingCardButton
+                            card={played.card}
+                            playable={false}
+                            isTurnActive={false}
+                            size="table"
+                            doubled={Boolean(gameData.doubledCards[played.card.id])}
+                          />
+                        ) : (
+                          <div className="w-[68px] h-[100px] sm:w-[80px] sm:h-[118px] rounded-2xl border-2 border-dashed border-white/25 bg-white/5 flex items-center justify-center text-xs font-bold text-white/40">
+                            {gameData.turnSeat === northSeat ? '...' : ''}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* PHASE 4: HAND SUMMARY OR MATCH VICTORY */}
-            {(gameData.phase === 'hand_summary' || gameData.phase === 'match_over') && (
-              <div className="bg-[#161426]/95 border-3 border-[#ffca3a] rounded-3xl p-6 text-center space-y-4 shadow-2xl">
-                <Trophy weight="fill" className="w-12 h-12 text-[#ffca3a] mx-auto" />
-                <h3 className="text-2xl sm:text-3xl font-black text-[#ffca3a]">
-                  {gameData.phase === 'match_over'
-                    ? isAr
-                      ? 'اكتملت الممالك الأربع — النتائج النهائية!'
-                      : 'All 4 Kingdoms Completed — Final Standings!'
-                    : isAr
-                    ? `حصيلة عقد (${
-                        gameData.activeContract
-                          ? CONTRACT_META[gameData.activeContract].ar
-                          : ''
-                      })`
-                    : `Hand Summary (${
-                        gameData.activeContract
-                          ? CONTRACT_META[gameData.activeContract].en
-                          : ''
-                      })`}
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
-                  {seats.map((s) => (
-                    <div
-                      key={s.seatIndex}
-                      className="p-3.5 rounded-2xl bg-[#25204d] border-2 border-white/20 flex items-center justify-between"
-                    >
-                      <div className="text-start">
-                        <div className="font-black text-base text-white">
-                          {getSeatDisplayName(s.seatIndex)}
-                        </div>
-                        <div className="text-xs text-[#cbd5e1] font-bold">
-                          {isAr
-                            ? `نقاط هذا العقد: ${
-                                s.handScore > 0 ? `+${s.handScore}` : s.handScore
-                              }`
-                            : `This contract: ${
-                                s.handScore > 0 ? `+${s.handScore}` : s.handScore
-                              }`}
-                        </div>
-                      </div>
-                      <span
-                        dir="ltr"
-                        className={`cartoon-badge px-3.5 py-1 text-base font-black ${
-                          s.totalScore >= 0
-                            ? 'bg-[#8ac926] text-[#161426]'
-                            : 'bg-[#ff595e] text-white'
-                        }`}
-                      >
-                        {s.totalScore > 0 ? `+${s.totalScore}` : s.totalScore}
+                  {/* West + Center Lead Suit Badge + East */}
+                  <div className="flex items-center justify-between gap-3 px-2 sm:px-10 my-1">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs font-black text-[#ffca3a]">
+                        {getSeatDisplayName(westSeat)}
                       </span>
+                      {(() => {
+                        const played = gameData.currentTrick.find(
+                          (p) => p.seatIndex === westSeat
+                        );
+                        return played ? (
+                          <TrixPlayingCardButton
+                            card={played.card}
+                            playable={false}
+                            isTurnActive={false}
+                            size="table"
+                            doubled={Boolean(gameData.doubledCards[played.card.id])}
+                          />
+                        ) : (
+                          <div className="w-[68px] h-[100px] sm:w-[80px] sm:h-[118px] rounded-2xl border-2 border-dashed border-white/25 bg-white/5 flex items-center justify-center text-xs font-bold text-white/40">
+                            {gameData.turnSeat === westSeat ? '...' : ''}
+                          </div>
+                        );
+                      })()}
                     </div>
-                  ))}
-                </div>
 
-                {gameData.phase === 'match_over' ? (
-                  <button
-                    type="button"
-                    onClick={() => handleRestartMatch(gameData.mode, gameData.partnership)}
-                    className="cartoon-btn bg-[#8ac926] text-[#161426] px-8 py-3.5 text-lg font-black inline-flex items-center gap-2"
-                  >
-                    <ArrowsClockwise weight="bold" className="w-6 h-6" />
-                    <span>{isAr ? 'بطولة ممالك جديدة!' : 'New Kingdoms Match!'}</span>
-                  </button>
-                ) : (
-                  (isHost || isPassAndPlay) && (
-                    <button
-                      type="button"
-                      onClick={handleDealNextContractOrKingdom}
-                      className="cartoon-btn bg-[#8ac926] text-[#161426] px-8 py-3.5 text-lg font-black inline-flex items-center gap-2"
-                    >
-                      <Play weight="fill" className="w-6 h-6" />
-                      <span>
-                        {gameData.remainingContracts.length > 0
-                          ? isAr
-                            ? `وزّع أوراق العقد القادم (باقي ${gameData.remainingContracts.length} بالمملكة)!`
-                            : `Deal Next Contract (${gameData.remainingContracts.length} left in Kingdom)!`
-                          : isAr
-                          ? 'انتقل إلى المملكة التالية!'
-                          : 'Advance to Next Kingdom!'}
+                    <div className="text-center space-y-1.5 px-2">
+                      {gameData.currentTrick.length > 0 ? (
+                        <div className="inline-flex flex-col items-center gap-1 bg-[#161426]/85 border-2 border-[#ffca3a] rounded-2xl px-4 py-2">
+                          <span className="text-[11px] font-extrabold text-white/75">
+                            {isAr ? 'النوع المطلوب اتباعه:' : 'Lead Suit:'}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <SuitVectorSvg
+                              suit={gameData.currentTrick[0].card.suit}
+                              className="w-5 h-5"
+                            />
+                            <span className="font-black text-sm text-[#ffca3a]">
+                              {isAr
+                                ? SUIT_NAMES[gameData.currentTrick[0].card.suit].ar
+                                : SUIT_NAMES[gameData.currentTrick[0].card.suit].en}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs sm:text-sm font-black text-white/75">
+                          {isAr
+                            ? `ضربة البداية عند ${getSeatDisplayName(gameData.turnSeat)}`
+                            : `${getSeatDisplayName(gameData.turnSeat)} leads`}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs font-black text-[#ffca3a]">
+                        {getSeatDisplayName(eastSeat)}
                       </span>
-                    </button>
-                  )
-                )}
-              </div>
-            )}
-          </div>
+                      {(() => {
+                        const played = gameData.currentTrick.find(
+                          (p) => p.seatIndex === eastSeat
+                        );
+                        return played ? (
+                          <TrixPlayingCardButton
+                            card={played.card}
+                            playable={false}
+                            isTurnActive={false}
+                            size="table"
+                            doubled={Boolean(gameData.doubledCards[played.card.id])}
+                          />
+                        ) : (
+                          <div className="w-[68px] h-[100px] sm:w-[80px] sm:h-[118px] rounded-2xl border-2 border-dashed border-white/25 bg-white/5 flex items-center justify-center text-xs font-bold text-white/40">
+                            {gameData.turnSeat === eastSeat ? '...' : ''}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
 
-          {/* EAST SEAT */}
-          <div className="lg:col-span-2 order-3">
-            {renderOpponentSeatBox(eastSeat, true)}
-          </div>
-        </div>
-
-        {/* SOUTH SEAT: VIEWER'S FULL-SIZE SORTED HAND TRAY */}
-        {!viewerSeat?.isBot && gameData.phase !== 'match_over' && (
-          <div className="relative z-10 bg-[#0d2118]/92 rounded-3xl p-4 sm:p-5 border-3 border-[#ffca3a]/40 space-y-3 shadow-2xl">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div
-                  style={{ backgroundColor: getSeatColor(viewerSeatIdx) }}
-                  className="w-9 h-9 rounded-xl border-2 border-[#161426] flex items-center justify-center font-black text-sm text-[#161426]"
-                >
-                  {getSeatDisplayName(viewerSeatIdx).slice(0, 1)}
-                </div>
-                <div>
-                  <div className="text-sm sm:text-base font-black text-white flex items-center gap-2">
-                    <Sword weight="fill" className="w-4 h-4 text-[#ffca3a]" />
-                    <span>
-                      {isAr
-                        ? `أوراق يدك (${getSeatDisplayName(viewerSeatIdx)})`
-                        : `Your Hand (${getSeatDisplayName(viewerSeatIdx)})`}
+                  {/* South Trick Card Slot */}
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="h-[102px] sm:h-[120px] flex items-center justify-center">
+                      {(() => {
+                        const played = gameData.currentTrick.find(
+                          (p) => p.seatIndex === southSeat
+                        );
+                        return played ? (
+                          <TrixPlayingCardButton
+                            card={played.card}
+                            playable={false}
+                            isTurnActive={false}
+                            size="table"
+                            doubled={Boolean(gameData.doubledCards[played.card.id])}
+                          />
+                        ) : (
+                          <div className="w-[68px] h-[100px] sm:w-[80px] sm:h-[118px] rounded-2xl border-2 border-dashed border-[#ffca3a]/40 bg-white/5 flex items-center justify-center text-xs font-black text-[#ffca3a]">
+                            {isViewerTurn ? (isAr ? 'العب ورقة' : 'Play Card') : ''}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <span className="text-xs font-black text-[#8ac926]">
+                      {getSeatDisplayName(southSeat)}
                     </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PHASE 4: HAND SUMMARY OR MATCH VICTORY */}
+          {(gameData.phase === 'hand_summary' || gameData.phase === 'match_over') && (
+            <div className="bg-[#161426]/95 border-3 border-[#ffca3a] rounded-3xl p-5 text-center space-y-4 shadow-2xl">
+              <Trophy weight="fill" className="w-11 h-11 text-[#ffca3a] mx-auto" />
+              <h3 className="text-xl sm:text-2xl font-black text-[#ffca3a]">
+                {gameData.phase === 'match_over'
+                  ? isAr
+                    ? 'اكتملت الممالك الأربع — النتائج النهائية!'
+                    : 'All 4 Kingdoms Completed — Final Standings!'
+                  : isAr
+                  ? `حصيلة عقد (${
+                      gameData.activeContract
+                        ? CONTRACT_META[gameData.activeContract].ar
+                        : ''
+                    })`
+                  : `Hand Summary (${
+                      gameData.activeContract
+                        ? CONTRACT_META[gameData.activeContract].en
+                        : ''
+                    })`}
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-xl mx-auto">
+                {seats.map((s) => (
+                  <div
+                    key={s.seatIndex}
+                    className="p-3 rounded-2xl bg-[#25204d] border-2 border-white/20 flex items-center justify-between"
+                  >
+                    <div className="text-start">
+                      <div className="font-black text-sm text-white">
+                        {getSeatDisplayName(s.seatIndex)}
+                      </div>
+                      <div className="text-xs text-[#cbd5e1] font-bold">
+                        {isAr
+                          ? `نقاط هذا العقد: ${
+                              s.handScore > 0 ? `+${s.handScore}` : s.handScore
+                            }`
+                          : `This contract: ${
+                              s.handScore > 0 ? `+${s.handScore}` : s.handScore
+                            }`}
+                      </div>
+                    </div>
                     <span
                       dir="ltr"
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-black border border-[#161426] ${
-                        (viewerSeat?.totalScore || 0) >= 0
+                      className={`cartoon-badge px-3 py-1 text-sm font-black ${
+                        s.totalScore >= 0
                           ? 'bg-[#8ac926] text-[#161426]'
                           : 'bg-[#ff595e] text-white'
                       }`}
                     >
-                      {(viewerSeat?.totalScore || 0) > 0
-                        ? `+${viewerSeat?.totalScore}`
-                        : viewerSeat?.totalScore || 0}
+                      {s.totalScore > 0 ? `+${s.totalScore}` : s.totalScore}
                     </span>
                   </div>
-                </div>
-
-                {/* Suit Breakdown Pills */}
-                <div className="hidden sm:flex items-center gap-1.5 ps-2">
-                  {SUIT_ORDER.map((st) => {
-                    const cnt = viewerHand.filter((c) => c.suit === st).length;
-                    return (
-                      <span
-                        key={st}
-                        className="px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-xs font-extrabold flex items-center gap-1"
-                      >
-                        <SuitVectorSvg suit={st} className="w-3.5 h-3.5" />
-                        <span>{cnt}</span>
-                      </span>
-                    );
-                  })}
-                </div>
+                ))}
               </div>
 
-              <div className="flex items-center gap-2">
-                {isViewerTurn && (
-                  <span className="px-3 py-1 rounded-full bg-[#8ac926] text-[#161426] font-black text-xs sm:text-sm animate-pulse">
-                    {isAr ? 'دورك الآن — اضغط على ورقة متاحة!' : 'Your Turn — Play a highlighted card!'}
-                  </span>
-                )}
-
-                {/* Pass Turn Button ONLY when in Trix contract and 0 legal moves */}
-                {isViewerTurn &&
-                  gameData.activeContract === 'trix' &&
-                  viewerLegalIds.size === 0 &&
-                  viewerHand.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => handlePassTrixDominoTurn(viewerSeatIdx)}
-                      className="cartoon-btn bg-[#ff595e] text-white px-5 py-2 text-sm font-black flex items-center gap-1.5 animate-bounce"
-                    >
-                      <HandPalm weight="fill" className="w-5 h-5" />
-                      <span>
-                        {isAr ? 'باس (لا توجد نقلة متاحة)' : 'Pass Turn (No Legal Play)'}
-                      </span>
-                    </button>
-                  )}
-
-                {isPassAndPlay && humanCount > 1 && (
+              {gameData.phase === 'match_over' ? (
+                <button
+                  type="button"
+                  onClick={() => handleRestartMatch(gameData.mode, gameData.partnership)}
+                  className="cartoon-btn bg-[#8ac926] text-[#161426] px-7 py-3 text-base font-black inline-flex items-center gap-2"
+                >
+                  <ArrowsClockwise weight="bold" className="w-5 h-5" />
+                  <span>{isAr ? 'بطولة ممالك جديدة!' : 'New Kingdoms Match!'}</span>
+                </button>
+              ) : (
+                (isHost || isPassAndPlay) && (
                   <button
                     type="button"
-                    onClick={() => setPassAndPlayRevealed(!passAndPlayRevealed)}
-                    className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-1.5 text-xs font-black flex items-center gap-1.5"
+                    onClick={handleDealNextContractOrKingdom}
+                    className="cartoon-btn bg-[#8ac926] text-[#161426] px-7 py-3 text-base font-black inline-flex items-center gap-2"
                   >
-                    {passAndPlayRevealed ? (
-                      <EyeSlash className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
+                    <Play weight="fill" className="w-5 h-5" />
                     <span>
-                      {passAndPlayRevealed
+                      {gameData.remainingContracts.length > 0
                         ? isAr
-                          ? 'إخفاء الأوراق'
-                          : 'Hide Hand'
+                          ? `وزّع أوراق العقد القادم (باقي ${gameData.remainingContracts.length} بالمملكة)!`
+                          : `Deal Next Contract (${gameData.remainingContracts.length} left in Kingdom)!`
                         : isAr
-                        ? `اكشف أوراق (${getSeatDisplayName(viewerSeatIdx)})`
-                        : 'Reveal Hand'}
+                        ? 'انتقل إلى المملكة التالية!'
+                        : 'Advance to Next Kingdom!'}
                     </span>
                   </button>
-                )}
+                )
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* SOUTH SEAT: PLAYER'S HAND — ALWAYS 100% VISIBLE & BRIGHT WHITE IN EVERY PHASE! */}
+        <div className="bg-[#081a12] rounded-3xl p-3.5 sm:p-4 border-3 border-[#ffca3a] space-y-3 shadow-[0_6px_0_#04100b]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div
+                style={{ backgroundColor: getSeatColor(viewerSeatIdx) }}
+                className="w-9 h-9 rounded-full border-2 border-[#161426] flex items-center justify-center font-black text-sm text-[#161426]"
+              >
+                {getSeatDisplayName(viewerSeatIdx).slice(0, 1)}
+              </div>
+              <div className="text-sm sm:text-base font-black text-white flex items-center gap-2">
+                <span>
+                  {isAr
+                    ? `أوراق يدك (${getSeatDisplayName(viewerSeatIdx)})`
+                    : `Your Hand (${getSeatDisplayName(viewerSeatIdx)})`}
+                </span>
+                <span
+                  dir="ltr"
+                  className={`px-2.5 py-0.5 rounded-full text-xs font-black border border-[#161426] ${
+                    (viewerSeat?.totalScore || 0) >= 0
+                      ? 'bg-[#8ac926] text-[#161426]'
+                      : 'bg-[#ff595e] text-white'
+                  }`}
+                >
+                  {(viewerSeat?.totalScore || 0) > 0
+                    ? `+${viewerSeat?.totalScore}`
+                    : viewerSeat?.totalScore || 0}
+                </span>
+              </div>
+
+              {/* Suit Count Pills */}
+              <div className="flex items-center gap-1.5">
+                {SUIT_ORDER.map((st) => {
+                  const cnt = viewerHand.filter((c) => c.suit === st).length;
+                  return (
+                    <span
+                      key={st}
+                      className="px-2.5 py-0.5 rounded-full bg-white text-[#161426] border-2 border-[#161426] text-xs font-black flex items-center gap-1"
+                    >
+                      <SuitVectorSvg suit={st} className="w-3.5 h-3.5" />
+                      <span>{cnt}</span>
+                    </span>
+                  );
+                })}
               </div>
             </div>
 
-            {!passAndPlayRevealed ? (
-              <div className="py-8 text-center text-base font-black text-[#ffca3a]">
-                {isAr
-                  ? `مرّر الجهاز إلى (${getSeatDisplayName(
-                      viewerSeatIdx
-                    )}) ثم اضغط «اكشف أوراق»!`
-                  : `Pass device to ${getSeatDisplayName(
-                      viewerSeatIdx
-                    )} and tap Reveal Hand!`}
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 pt-2 pb-1">
-                {viewerHand.map((card) => {
+            <div className="flex items-center gap-2">
+              {isViewerTurn && (
+                <span className="px-3.5 py-1 rounded-full bg-[#8ac926] text-[#161426] font-black text-xs sm:text-sm border-2 border-[#161426]">
+                  {isAr
+                    ? 'دورك الآن — اضغط على ورقة متاحة للعب!'
+                    : 'Your Turn — Click a highlighted card!'}
+                </span>
+              )}
+
+              {isViewerTurn &&
+                gameData.activeContract === 'trix' &&
+                viewerLegalIds.size === 0 &&
+                viewerHand.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => handlePassTrixDominoTurn(viewerSeatIdx)}
+                    className="cartoon-btn bg-[#ff595e] text-white px-5 py-2 text-sm font-black flex items-center gap-1.5 animate-bounce"
+                  >
+                    <HandPalm weight="fill" className="w-5 h-5" />
+                    <span>
+                      {isAr ? 'باس (لا توجد نقلة متاحة)' : 'Pass Turn (No Legal Play)'}
+                    </span>
+                  </button>
+                )}
+            </div>
+          </div>
+
+          {/* ALWAYS-VISIBLE BRIGHT WHITE CARDS GROUPED BY SUIT */}
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5 pt-2 pb-1">
+            {viewerSuitGroups.map((grp) => (
+              <div
+                key={grp.suit}
+                className="flex items-center justify-center gap-1.5 sm:gap-2 bg-white/5 px-2.5 py-2 rounded-2xl border border-white/10"
+              >
+                {grp.cards.map((card) => {
                   const canPlay = isViewerTurn && viewerLegalIds.has(card.id);
                   return (
                     <TrixPlayingCardButton
                       key={card.id}
                       card={card}
                       playable={canPlay}
+                      isTurnActive={isViewerTurn}
                       size="hand"
                       doubled={Boolean(gameData.doubledCards[card.id])}
                       onClick={() => {
@@ -2506,9 +2381,9 @@ export const TrixGame: React.FC<TrixGameProps> = ({
                   );
                 })}
               </div>
-            )}
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
