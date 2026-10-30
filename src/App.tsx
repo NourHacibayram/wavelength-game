@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import {
   supabase,
@@ -101,7 +102,8 @@ export function App() {
   const [room, setRoom] = useState<RoomState | null>(null);
   const [players, setPlayers] = useState<PlayerItem[]>([]);
   const [isPassAndPlay, setIsPassAndPlay] = useState<boolean>(false);
-  const [localPeekTarget, setLocalPeekTarget] = useState<boolean>(true);
+  const [localPeekTarget, setLocalPeekTarget] = useState<boolean>(false);
+  const [psychicCurtainOpen, setPsychicCurtainOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
@@ -140,6 +142,16 @@ export function App() {
       setLiveDialAngle(Number(room.dial_angle) || 0);
     }
   }, [room?.dial_angle, room?.round_number, room?.status]);
+
+  // Trigger Psychic Safety Curtain at the start of every psychic_clue phase
+  useEffect(() => {
+    if (room?.status === 'psychic_clue') {
+      setLocalPeekTarget(false);
+      setPsychicCurtainOpen(true);
+    } else {
+      setPsychicCurtainOpen(false);
+    }
+  }, [room?.status, room?.round_number]);
 
   // Trigger confetti on high score reveal!
   useEffect(() => {
@@ -378,7 +390,8 @@ export function App() {
     const firstCard = pickNextCard();
     const initialTarget = generateRandomTargetAngle();
     setIsPassAndPlay(true);
-    setLocalPeekTarget(true);
+    setLocalPeekTarget(false);
+    setPsychicCurtainOpen(true);
     setClueInput('');
     setLiveDialAngle(0);
     setRoom({
@@ -633,7 +646,8 @@ export function App() {
     }
 
     setClueInput('');
-    setLocalPeekTarget(true);
+    setLocalPeekTarget(false);
+    setPsychicCurtainOpen(true);
     setLiveDialAngle(0);
 
     await updateRoomState({
@@ -686,10 +700,10 @@ export function App() {
   const shouldShowTarget = (() => {
     if (!room) return false;
     if (room.status === 'reveal' || room.status === 'finished') return true;
-    if (isPassAndPlay) {
-      return room.status === 'psychic_clue' && localPeekTarget;
+    if (room.status === 'psychic_clue' && isPsychic) {
+      return localPeekTarget && !psychicCurtainOpen;
     }
-    return isPsychic;
+    return false;
   })();
 
   // Determine whether this player can drag the red pointer right now
@@ -1244,8 +1258,8 @@ export function App() {
               </div>
             )}
 
-            {/* Pass & Play Secret Target Toggle */}
-            {isPassAndPlay && room.status === 'psychic_clue' && (
+            {/* Secret Target Toggle for Psychic */}
+            {isPsychic && room.status === 'psychic_clue' && !psychicCurtainOpen && (
               <div className="flex justify-center">
                 <button
                   type="button"
@@ -1266,6 +1280,77 @@ export function App() {
                 </button>
               </div>
             )}
+
+            {/* Animated Cartoon Psychic Turn Curtain (Anti-Spoiler Overlay) */}
+            <AnimatePresence>
+              {room.status === 'psychic_clue' && isPsychic && psychicCurtainOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#120f29]/90 backdrop-blur-md"
+                >
+                  <motion.div
+                    initial={{ scale: 0.75, y: 40, rotate: -2 }}
+                    animate={{ scale: 1, y: 0, rotate: 0 }}
+                    exit={{ scale: 0.85, y: -30, opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                    className="cartoon-card w-full max-w-lg p-6 md:p-8 text-center space-y-5 relative overflow-hidden"
+                  >
+                    {/* Round Pill */}
+                    <div className="inline-flex items-center gap-2 cartoon-badge bg-[#00bbf9] text-[#161426] px-4 py-1 text-sm">
+                      <Sparkle weight="fill" className="w-4 h-4" />
+                      <span>
+                        {t.round} {room.round_number} {t.of} {room.max_rounds}
+                      </span>
+                    </div>
+
+                    {/* Bouncing Cartoon Eye-Slash & Crystal Ball */}
+                    <motion.div
+                      animate={{ y: [0, -10, 0], rotate: [0, -4, 4, 0] }}
+                      transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+                      className="w-24 h-24 rounded-3xl bg-[#ff595e] border-4 border-[#161426] shadow-[0_7px_0_#161426] flex items-center justify-center mx-auto"
+                    >
+                      <EyeSlash weight="fill" className="w-14 h-14 text-[#ffca3a]" />
+                    </motion.div>
+
+                    {/* Title */}
+                    <div className="space-y-1">
+                      <h2 className="text-2xl md:text-3xl font-extrabold text-[#161426]">
+                        {t.psychicCurtainTitle}
+                      </h2>
+                      {!isPassAndPlay && psychicPlayer && (
+                        <div className="text-lg font-extrabold text-[#1982c4]">
+                          ({psychicPlayer.name})
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Big Cartoon Warning Box */}
+                    <div className="p-4 rounded-2xl bg-[#ffca3a] border-4 border-[#161426] shadow-[0_5px_0_#161426] text-[#161426] font-extrabold text-base md:text-lg leading-relaxed">
+                      🙈 {t.psychicCurtainWarning}
+                    </div>
+
+                    <p className="text-sm font-bold text-[#3f3b5c]">
+                      {t.psychicCurtainSub}
+                    </p>
+
+                    {/* Reveal Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPsychicCurtainOpen(false);
+                        setLocalPeekTarget(true);
+                      }}
+                      className="cartoon-btn w-full py-4 px-6 bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] text-xl flex items-center justify-center gap-2.5"
+                    >
+                      <Eye weight="fill" className="w-7 h-7" />
+                      <span>{t.psychicCurtainBtn}</span>
+                    </button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* THE WAVELENGTH WHEEL */}
             <WavelengthWheel
