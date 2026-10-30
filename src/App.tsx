@@ -114,6 +114,7 @@ export function App() {
 
   // Gameplay local inputs
   const [clueInput, setClueInput] = useState<string>('');
+  const [localNewPlayerName, setLocalNewPlayerName] = useState<string>('');
   const [liveDialAngle, setLiveDialAngle] = useState<number>(0);
   const [demoDialAngle, setDemoDialAngle] = useState<number>(14);
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
@@ -389,7 +390,30 @@ export function App() {
   const handleStartPassAndPlay = () => {
     const firstCard = pickNextCard();
     const initialTarget = generateRandomTargetAngle();
+    const p1Name = playerName.trim() || (lang === 'ar' ? 'اللاعب 1' : 'Player 1');
+    const p2Name = lang === 'ar' ? 'اللاعب 2' : 'Player 2';
+    const initialLocalPlayers: PlayerItem[] = [
+      {
+        id: playerId,
+        room_id: 'local_room',
+        name: p1Name,
+        avatar_color: playerColor,
+        team: 'A',
+        score: 0,
+        is_host: true,
+      },
+      {
+        id: 'local_p2',
+        room_id: 'local_room',
+        name: p2Name,
+        avatar_color: '#00bbf9',
+        team: 'B',
+        score: 0,
+        is_host: false,
+      },
+    ];
     setIsPassAndPlay(true);
+    setPlayers(initialLocalPlayers);
     setLocalPeekTarget(false);
     setPsychicCurtainOpen(true);
     setClueInput('');
@@ -403,7 +427,7 @@ export function App() {
       status: 'psychic_clue',
       round_number: 1,
       max_rounds: 7,
-      psychic_id: playerId,
+      psychic_id: initialLocalPlayers[0].id,
       active_team: 'A',
       target_angle: initialTarget,
       dial_angle: 0,
@@ -422,6 +446,25 @@ export function App() {
       used_card_indices: [firstCard.id],
       custom_cards: [],
     });
+  };
+
+  const handleAddLocalPlayer = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = localNewPlayerName.trim();
+    if (!trimmed) return;
+    const nextColor =
+      CARTOON_AVATAR_COLORS[players.length % CARTOON_AVATAR_COLORS.length];
+    const newP: PlayerItem = {
+      id: 'local_' + Date.now().toString(36),
+      room_id: 'local_room',
+      name: trimmed,
+      avatar_color: nextColor,
+      team: players.length % 2 === 0 ? 'A' : 'B',
+      score: 0,
+      is_host: false,
+    };
+    setPlayers((prev) => [...prev, newP]);
+    setLocalNewPlayerName('');
   };
 
   // Leave Room
@@ -473,6 +516,14 @@ export function App() {
     const target = generateRandomTargetAngle();
     const firstPsychic = players[0]?.id || playerId;
     setClueInput('');
+    // Reset player scores for new game
+    setPlayers((prev) => prev.map((p) => ({ ...p, score: 0 })));
+    if (!isPassAndPlay) {
+      await supabase
+        .from('wavelength_players')
+        .update({ score: 0 })
+        .eq('room_id', room.id);
+    }
     await updateRoomState({
       status: 'psychic_clue',
       round_number: 1,
@@ -607,6 +658,31 @@ export function App() {
     const nextTeamBScore =
       room.team_b_score + (room.active_team === 'B' ? pts : bonus);
 
+    // Update individual player scores on Leaderboard
+    if (pts > 0) {
+      const winnerIds = new Set<string>();
+      if (room.psychic_id) winnerIds.add(room.psychic_id);
+      if (!isPassAndPlay && playerId) winnerIds.add(playerId);
+
+      const updatedPlayers = players.map((p) =>
+        winnerIds.has(p.id) ? { ...p, score: (p.score || 0) + pts } : p
+      );
+      setPlayers(updatedPlayers);
+
+      if (!isPassAndPlay) {
+        for (const wid of winnerIds) {
+          const targetPlayer = updatedPlayers.find((p) => p.id === wid);
+          if (targetPlayer) {
+            await supabase
+              .from('wavelength_players')
+              .update({ score: targetPlayer.score })
+              .eq('room_id', room.id)
+              .eq('id', wid);
+          }
+        }
+      }
+    }
+
     await updateRoomState({
       dial_angle: finalDialAngle,
       other_team_guess: sideGuess,
@@ -632,9 +708,9 @@ export function App() {
     const nextTarget = generateRandomTargetAngle();
     const nextTeam: 'A' | 'B' = room.active_team === 'A' ? 'B' : 'A';
 
-    // Rotate Psychic to next player in list
+    // Rotate Psychic to next player in list (works for both Online & Pass-and-Play!)
     let nextPsychicId = playerId;
-    if (!isPassAndPlay && players.length > 0) {
+    if (players.length > 0) {
       const candidatePool =
         room.mode === 'teams'
           ? players.filter((p) => p.team === nextTeam)
@@ -803,7 +879,7 @@ export function App() {
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="w-full max-w-5xl mx-auto px-4 flex-1 flex flex-col justify-center my-2">
+      <main className="w-full max-w-6xl mx-auto px-4 flex-1 flex flex-col justify-center my-2">
         {!room ? (
           /* ================= HOME SCREEN / LANDING ================= */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto py-4">
@@ -1246,40 +1322,336 @@ export function App() {
               )}
             </div>
 
-            {/* Clue Display Banner (when Clue has been given) */}
-            {room.clue && (
-              <div className="cartoon-card bg-[#ffca3a] px-5 py-3 text-center max-w-xl mx-auto">
-                <div className="text-xs font-extrabold uppercase text-[#161426]/75">
-                  {t.theClueIs}
-                </div>
-                <div className="text-2xl md:text-3xl font-extrabold text-[#161426] mt-0.5">
-                  &ldquo;{room.clue}&rdquo;
-                </div>
-              </div>
-            )}
+            {/* MAIN 2-COLUMN GAMEPLAY + LEADERBOARD GRID */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Primary Game Column (Wheel + Card + Actions) */}
+              <div className="lg:col-span-8 space-y-3">
+                {/* Clue Display Banner (when Clue has been given) */}
+                {room.clue && (
+                  <div className="cartoon-card bg-[#ffca3a] px-5 py-3 text-center max-w-xl mx-auto">
+                    <div className="text-xs font-extrabold uppercase text-[#161426]/75">
+                      {t.theClueIs}
+                    </div>
+                    <div className="text-2xl md:text-3xl font-extrabold text-[#161426] mt-0.5">
+                      &ldquo;{room.clue}&rdquo;
+                    </div>
+                  </div>
+                )}
 
-            {/* Secret Target Toggle for Psychic */}
-            {isPsychic && room.status === 'psychic_clue' && !psychicCurtainOpen && (
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={() => setLocalPeekTarget(!localPeekTarget)}
-                  className="cartoon-btn bg-[#ff924c] text-[#161426] px-4 py-1.5 text-sm flex items-center gap-2"
-                >
-                  {localPeekTarget ? (
-                    <>
-                      <EyeSlash weight="bold" className="w-5 h-5" />
-                      <span>{t.hideTargetAndPass}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Eye weight="bold" className="w-5 h-5" />
-                      <span>{t.iAmPsychicShowTarget}</span>
-                    </>
+                {/* Secret Target Toggle for Psychic */}
+                {isPsychic && room.status === 'psychic_clue' && !psychicCurtainOpen && (
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setLocalPeekTarget(!localPeekTarget)}
+                      className="cartoon-btn bg-[#ff924c] text-[#161426] px-4 py-1.5 text-sm flex items-center gap-2"
+                    >
+                      {localPeekTarget ? (
+                        <>
+                          <EyeSlash weight="bold" className="w-5 h-5" />
+                          <span>{t.hideTargetAndPass}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye weight="bold" className="w-5 h-5" />
+                          <span>{t.iAmPsychicShowTarget}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {/* THE WAVELENGTH WHEEL */}
+                <WavelengthWheel
+                  targetAngle={Number(room.target_angle)}
+                  dialAngle={liveDialAngle}
+                  showTarget={shouldShowTarget}
+                  canMoveDial={canDragDial}
+                  onDialChange={handleDialChange}
+                  otherTeamGuess={room.other_team_guess}
+                  lang={lang}
+                />
+
+                {/* THE SPECTRUM CARD */}
+                <SpectrumCard
+                  leftText={leftCardText}
+                  rightText={rightCardText}
+                  lang={lang}
+                  canSwap={room.status === 'psychic_clue' && isPsychic}
+                  onSwap={handleSwapCard}
+                />
+
+                {/* PHASE ACTION PANEL */}
+                <div className="max-w-xl mx-auto w-full pt-2">
+                  {room.status === 'psychic_clue' && (
+                    isPsychic ? (
+                      <form
+                        onSubmit={handleSubmitClue}
+                        className="cartoon-card p-5 space-y-3 text-center"
+                      >
+                        <div className="flex items-center justify-center gap-2 text-[#ff595e] font-extrabold text-lg">
+                          <Sparkle weight="fill" className="w-6 h-6" />
+                          <span>{t.youArePsychic}</span>
+                        </div>
+                        <p className="text-sm font-bold text-[#3f3b5c]">
+                          {t.psychicHintInstruction}
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-2.5 w-full">
+                          <input
+                            type="text"
+                            required
+                            maxLength={60}
+                            value={clueInput}
+                            onChange={(e) => setClueInput(e.target.value)}
+                            placeholder={t.cluePlaceholder}
+                            className="cartoon-input min-w-0 flex-1 px-4 py-3 bg-white text-[#161426] text-lg"
+                          />
+                          <button
+                            type="submit"
+                            className="cartoon-btn bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] px-5 py-3 text-lg flex items-center justify-center gap-2 shrink-0 whitespace-nowrap"
+                          >
+                            <PaperPlaneTilt weight="fill" className="w-5 h-5" />
+                            <span>{t.sendClue}</span>
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="cartoon-panel-dark p-5 text-center space-y-2">
+                        <div className="text-xl font-extrabold text-[#ffca3a] animate-pulse">
+                          🔮 {psychicPlayer?.name || t.psychicRole} {t.waitingForPsychic}
+                        </div>
+                      </div>
+                    )
                   )}
-                </button>
+
+                  {room.status === 'guessing' && (
+                    <div className="cartoon-card p-5 text-center space-y-3">
+                      {canDragDial ? (
+                        <>
+                          <p className="font-extrabold text-base text-[#161426]">
+                            {t.moveDialInstruction}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleLockGuess}
+                            className="cartoon-btn bg-[#ff595e] hover:bg-[#ff6f73] text-white w-full py-3.5 text-xl flex items-center justify-center gap-2"
+                          >
+                            <Target weight="fill" className="w-6 h-6" />
+                            <span>
+                              {room.mode === 'teams' && !isPassAndPlay
+                                ? t.lockTeamGuess
+                                : t.lockGuess}
+                            </span>
+                          </button>
+                        </>
+                      ) : (
+                        <p className="font-extrabold text-base text-[#161426]">
+                          👀 {t.psychicWatchingInstruction}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {room.status === 'left_right' && (
+                    <div className="cartoon-card p-5 text-center space-y-3">
+                      <h3 className="font-extrabold text-lg text-[#161426]">
+                        {t.otherTeamTurn}
+                      </h3>
+                      <div dir="ltr" className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => handleOtherTeamGuess('left')}
+                          className="cartoon-btn bg-[#38bdf8] text-[#161426] py-3 text-lg"
+                        >
+                          {t.guessLeft}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOtherTeamGuess('right')}
+                          className="cartoon-btn bg-[#fb7185] text-[#161426] py-3 text-lg"
+                        >
+                          {t.guessRight}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {room.status === 'reveal' && (
+                    <div className="cartoon-card p-5 text-center space-y-3 animate-in zoom-in-95 duration-200">
+                      <div className="text-3xl font-extrabold text-[#161426]">
+                        {room.last_round_points === 4
+                          ? `🎯 ${t.bullseye}`
+                          : room.last_round_points === 3
+                          ? `🔥 ${t.greatJob}`
+                          : room.last_round_points === 2
+                          ? `👍 ${t.goodTry}`
+                          : `😅 ${t.missed}`}
+                      </div>
+
+                      {room.last_bonus_points > 0 && (
+                        <div className="cartoon-badge bg-[#ffca3a] text-[#161426] px-4 py-1 text-sm inline-block">
+                          {t.bonusEarned}
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleNextRound}
+                        className="cartoon-btn bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] w-full py-3.5 text-xl"
+                      >
+                        {room.round_number >= room.max_rounds ? t.finishGame : t.nextRound}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Live Cartoon Reaction Bar + Custom Card Trigger */}
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                  {['🎯', '🔥', '😂', '🤯', '👏', '🤔'].map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => sendEmojiReaction(emoji)}
+                      className="cartoon-btn bg-[#25204d] hover:bg-[#322b66] text-2xl w-12 h-12 flex items-center justify-center"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomCardModal(true)}
+                    className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 h-12 text-sm flex items-center gap-1"
+                  >
+                    <Plus weight="bold" className="w-4 h-4" />
+                    <span>{t.addCustomCard}</span>
+                  </button>
+                </div>
               </div>
-            )}
+
+              {/* LEADERBOARD SIDEBAR (Sits on the left side in RTL) */}
+              <aside className="lg:col-span-4 lg:sticky lg:top-4 cartoon-panel-dark p-5 space-y-4">
+                <div className="flex items-center justify-between border-b-3 border-[#120f29] pb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-xl bg-[#ffca3a] border-3 border-[#161426] flex items-center justify-center">
+                      <Trophy weight="fill" className="w-5 h-5 text-[#161426]" />
+                    </div>
+                    <h3 className="text-xl font-extrabold text-[#fff9ec]">
+                      {t.leaderboardTitle}
+                    </h3>
+                  </div>
+                  <span className="cartoon-badge bg-[#191636] text-[#ffca3a] px-3 py-0.5 text-xs">
+                    {players.length} {lang === 'ar' ? 'لاعبين' : 'Players'}
+                  </span>
+                </div>
+
+                {/* Room / Teams Score Summary */}
+                {room.mode === 'coop' ? (
+                  <div className="p-3.5 rounded-2xl bg-[#191636] border-3 border-[#120f29] flex items-center justify-between">
+                    <span className="text-sm font-extrabold text-[#d9d4f7]">
+                      {t.roomTotalProgress}
+                    </span>
+                    <span className="cartoon-badge bg-[#8ac926] text-[#161426] px-3 py-0.5 text-base">
+                      {room.coop_score} / {room.max_rounds * 4}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-[#ff924c] text-[#161426] border-3 border-[#161426] text-center">
+                      <div className="text-xs font-extrabold">{t.teamA}</div>
+                      <div className="text-2xl font-extrabold">{room.team_a_score}</div>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-[#00bbf9] text-[#161426] border-3 border-[#161426] text-center">
+                      <div className="text-xs font-extrabold">{t.teamB}</div>
+                      <div className="text-2xl font-extrabold">{room.team_b_score}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Ranked Players List */}
+                <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-0.5">
+                  {[...players]
+                    .sort((a, b) => (b.score || 0) - (a.score || 0))
+                    .map((p, index) => {
+                      const isCurrentPsychic = p.id === room.psychic_id;
+                      const rankMedal =
+                        index === 0
+                          ? '🥇'
+                          : index === 1
+                          ? '🥈'
+                          : index === 2
+                          ? '🥉'
+                          : `#${index + 1}`;
+                      return (
+                        <div
+                          key={p.id}
+                          className={`flex items-center justify-between p-3 rounded-2xl border-3 transition-transform ${
+                            isCurrentPsychic
+                              ? 'bg-[#322b66] border-[#ffca3a] shadow-[0_4px_0_#120f29]'
+                              : 'bg-[#191636] border-[#120f29] shadow-[0_4px_0_#120f29]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="text-lg font-extrabold w-6 text-center shrink-0">
+                              {rankMedal}
+                            </span>
+                            <div
+                              style={{ backgroundColor: p.avatar_color }}
+                              className="w-9 h-9 rounded-full border-3 border-[#161426] flex items-center justify-center font-extrabold text-[#161426] text-base shrink-0"
+                            >
+                              {p.name.slice(0, 1).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-extrabold text-sm md:text-base text-white truncate flex items-center gap-1">
+                                <span className="truncate">{p.name}</span>
+                                {p.id === playerId && !isPassAndPlay && (
+                                  <span className="text-[11px] bg-[#00bbf9] text-[#161426] px-1.5 py-0.2 rounded-full font-extrabold">
+                                    {t.youBadge}
+                                  </span>
+                                )}
+                                {p.is_host && (
+                                  <Crown
+                                    weight="fill"
+                                    className="w-4 h-4 text-[#ffca3a] shrink-0"
+                                  />
+                                )}
+                              </div>
+                              {isCurrentPsychic && (
+                                <span className="text-xs font-extrabold text-[#ffca3a] block">
+                                  {t.currentPsychicBadge}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3 py-1 text-xs md:text-sm shrink-0">
+                            {p.score || 0} {t.pointsUnit}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* In Pass & Play mode, allow adding players right inside the Leaderboard */}
+                {isPassAndPlay && (
+                  <form onSubmit={handleAddLocalPlayer} className="flex gap-2 pt-2">
+                    <input
+                      type="text"
+                      maxLength={16}
+                      value={localNewPlayerName}
+                      onChange={(e) => setLocalNewPlayerName(e.target.value)}
+                      placeholder={t.addLocalPlayerPlaceholder}
+                      className="cartoon-input min-w-0 flex-1 px-3 py-2 bg-white text-[#161426] text-sm"
+                    />
+                    <button
+                      type="submit"
+                      className="cartoon-btn bg-[#8ac926] text-[#161426] px-3 py-2 text-sm shrink-0 flex items-center justify-center"
+                    >
+                      <Plus weight="bold" className="w-4 h-4" />
+                    </button>
+                  </form>
+                )}
+              </aside>
+            </div>
 
             {/* Animated Cartoon Psychic Turn Curtain (Anti-Spoiler Overlay) */}
             <AnimatePresence>
@@ -1319,7 +1691,7 @@ export function App() {
                       <h2 className="text-2xl md:text-3xl font-extrabold text-[#161426]">
                         {t.psychicCurtainTitle}
                       </h2>
-                      {!isPassAndPlay && psychicPlayer && (
+                      {psychicPlayer && (
                         <div className="text-lg font-extrabold text-[#1982c4]">
                           ({psychicPlayer.name})
                         </div>
@@ -1351,172 +1723,6 @@ export function App() {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* THE WAVELENGTH WHEEL */}
-            <WavelengthWheel
-              targetAngle={Number(room.target_angle)}
-              dialAngle={liveDialAngle}
-              showTarget={shouldShowTarget}
-              canMoveDial={canDragDial}
-              onDialChange={handleDialChange}
-              otherTeamGuess={room.other_team_guess}
-              lang={lang}
-            />
-
-            {/* THE SPECTRUM CARD */}
-            <SpectrumCard
-              leftText={leftCardText}
-              rightText={rightCardText}
-              lang={lang}
-              canSwap={room.status === 'psychic_clue' && isPsychic}
-              onSwap={handleSwapCard}
-            />
-
-            {/* PHASE ACTION PANEL */}
-            <div className="max-w-xl mx-auto w-full pt-2">
-              {room.status === 'psychic_clue' && (
-                isPsychic ? (
-                  <form
-                    onSubmit={handleSubmitClue}
-                    className="cartoon-card p-5 space-y-3 text-center"
-                  >
-                    <div className="flex items-center justify-center gap-2 text-[#ff595e] font-extrabold text-lg">
-                      <Sparkle weight="fill" className="w-6 h-6" />
-                      <span>{t.youArePsychic}</span>
-                    </div>
-                    <p className="text-sm font-bold text-[#3f3b5c]">
-                      {t.psychicHintInstruction}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-2.5 w-full">
-                      <input
-                        type="text"
-                        required
-                        maxLength={60}
-                        value={clueInput}
-                        onChange={(e) => setClueInput(e.target.value)}
-                        placeholder={t.cluePlaceholder}
-                        className="cartoon-input min-w-0 flex-1 px-4 py-3 bg-white text-[#161426] text-lg"
-                      />
-                      <button
-                        type="submit"
-                        className="cartoon-btn bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] px-5 py-3 text-lg flex items-center justify-center gap-2 shrink-0 whitespace-nowrap"
-                      >
-                        <PaperPlaneTilt weight="fill" className="w-5 h-5" />
-                        <span>{t.sendClue}</span>
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="cartoon-panel-dark p-5 text-center space-y-2">
-                    <div className="text-xl font-extrabold text-[#ffca3a] animate-pulse">
-                      🔮 {psychicPlayer?.name || t.psychicRole} {t.waitingForPsychic}
-                    </div>
-                  </div>
-                )
-              )}
-
-              {room.status === 'guessing' && (
-                <div className="cartoon-card p-5 text-center space-y-3">
-                  {canDragDial ? (
-                    <>
-                      <p className="font-extrabold text-base text-[#161426]">
-                        {t.moveDialInstruction}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={handleLockGuess}
-                        className="cartoon-btn bg-[#ff595e] hover:bg-[#ff6f73] text-white w-full py-3.5 text-xl flex items-center justify-center gap-2"
-                      >
-                        <Target weight="fill" className="w-6 h-6" />
-                        <span>
-                          {room.mode === 'teams' && !isPassAndPlay
-                            ? t.lockTeamGuess
-                            : t.lockGuess}
-                        </span>
-                      </button>
-                    </>
-                  ) : (
-                    <p className="font-extrabold text-base text-[#161426]">
-                      👀 {t.psychicWatchingInstruction}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {room.status === 'left_right' && (
-                <div className="cartoon-card p-5 text-center space-y-3">
-                  <h3 className="font-extrabold text-lg text-[#161426]">
-                    {t.otherTeamTurn}
-                  </h3>
-                  <div dir="ltr" className="grid grid-cols-2 gap-3">
-                    <button
-                      type="button"
-                      onClick={() => handleOtherTeamGuess('left')}
-                      className="cartoon-btn bg-[#38bdf8] text-[#161426] py-3 text-lg"
-                    >
-                      {t.guessLeft}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleOtherTeamGuess('right')}
-                      className="cartoon-btn bg-[#fb7185] text-[#161426] py-3 text-lg"
-                    >
-                      {t.guessRight}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {room.status === 'reveal' && (
-                <div className="cartoon-card p-5 text-center space-y-3 animate-in zoom-in-95 duration-200">
-                  <div className="text-3xl font-extrabold text-[#161426]">
-                    {room.last_round_points === 4
-                      ? `🎯 ${t.bullseye}`
-                      : room.last_round_points === 3
-                      ? `🔥 ${t.greatJob}`
-                      : room.last_round_points === 2
-                      ? `👍 ${t.goodTry}`
-                      : `😅 ${t.missed}`}
-                  </div>
-
-                  {room.last_bonus_points > 0 && (
-                    <div className="cartoon-badge bg-[#ffca3a] text-[#161426] px-4 py-1 text-sm inline-block">
-                      {t.bonusEarned}
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={handleNextRound}
-                    className="cartoon-btn bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] w-full py-3.5 text-xl"
-                  >
-                    {room.round_number >= room.max_rounds ? t.finishGame : t.nextRound}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Live Cartoon Reaction Bar + Custom Card Trigger */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-              {['🎯', '🔥', '😂', '🤯', '👏', '🤔'].map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => sendEmojiReaction(emoji)}
-                  className="cartoon-btn bg-[#25204d] hover:bg-[#322b66] text-2xl w-12 h-12 flex items-center justify-center"
-                >
-                  {emoji}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setShowCustomCardModal(true)}
-                className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 h-12 text-sm flex items-center gap-1"
-              >
-                <Plus weight="bold" className="w-4 h-4" />
-                <span>{t.addCustomCard}</span>
-              </button>
-            </div>
           </div>
         )}
       </main>
