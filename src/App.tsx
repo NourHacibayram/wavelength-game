@@ -150,12 +150,14 @@ export function App() {
     }
   }, []);
 
-  // Sync liveDialAngle when room.dial_angle updates from DB
+  // Reset liveDialAngle to 0 at the start of a new round
   useEffect(() => {
-    if (room) {
+    if (room?.status === 'psychic_clue') {
+      setLiveDialAngle(0);
+    } else if (room?.mode === 'teams' && room) {
       setLiveDialAngle(Number(room.dial_angle) || 0);
     }
-  }, [room?.dial_angle, room?.round_number, room?.status]);
+  }, [room?.round_number, room?.status, room?.mode, room?.dial_angle]);
 
   // Trigger Psychic Safety Curtain at the start of every psychic_clue phase (for Wavelength)
   useEffect(() => {
@@ -229,7 +231,13 @@ export function App() {
         }
       )
       .on('broadcast', { event: 'dial_move' }, ({ payload }) => {
-        if (payload && typeof payload.angle === 'number' && payload.senderId !== playerId) {
+        // Only sync live dial in Teams mode; in Co-op/Individual mode each player controls their own needle!
+        if (
+          room.mode === 'teams' &&
+          payload &&
+          typeof payload.angle === 'number' &&
+          payload.senderId !== playerId
+        ) {
           setLiveDialAngle(payload.angle);
         }
       })
@@ -617,31 +625,38 @@ export function App() {
       clue: clueInput.trim(),
       status: 'guessing',
       dial_angle: 0,
+      game_data: {
+        ...(room.game_data || {}),
+        wavelength_guesses: {},
+        wavelength_points: {},
+      },
     });
     setClueInput('');
   };
 
-  // Dial Change Handler (Realtime Broadcast + DB commit on release)
+  // Dial Change Handler (Personal in Individual/Coop mode, synced in Teams mode)
   const handleDialChange = async (newAngle: number, isFinal = false) => {
     setLiveDialAngle(newAngle);
     if (!room) return;
 
-    const now = Date.now();
-    if (!isPassAndPlay && channelRef.current && now - lastBroadcastRef.current > 40) {
-      lastBroadcastRef.current = now;
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'dial_move',
-        payload: { angle: newAngle, senderId: playerId },
-      });
-    }
+    if (room.mode === 'teams') {
+      const now = Date.now();
+      if (!isPassAndPlay && channelRef.current && now - lastBroadcastRef.current > 40) {
+        lastBroadcastRef.current = now;
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'dial_move',
+          payload: { angle: newAngle, senderId: playerId },
+        });
+      }
 
-    if (isFinal) {
-      await updateRoomState({ dial_angle: newAngle });
+      if (isFinal) {
+        await updateRoomState({ dial_angle: newAngle });
+      }
     }
   };
 
-  // Lock Team/Coop Guess
+  // Lock Personal Guess (or Team Guess in Teams mode)
   const handleLockGuess = async () => {
     if (!room) return;
     if (room.mode === 'teams' && !isPassAndPlay) {
@@ -649,9 +664,98 @@ export function App() {
         dial_angle: liveDialAngle,
         status: 'left_right',
       });
-    } else {
-      await performReveal(liveDialAngle, null);
+      return;
     }
+
+    // Individual Personal Guessing!
+    const expectedGuessers =
+      players.length > 1
+        ? players.filter((p) => p.id !== room.psychic_id)
+        : players;
+
+    const currentGuesses: Record<string, number> = {
+      ...(room.game_data?.wavelength_guesses || {}),
+    };
+
+    if (isPassAndPlay) {
+      // Find the first expected guesser who hasn't guessed yet
+      const nextLocalGuesser =
+        expectedGuessers.find((p) => currentGuesses[p.id] === undefined) ||
+        expectedGuessers[0];
+      if (nextLocalGuesser) {
+        currentGuesses[nextLocalGuesser.id] = liveDialAngle;
+      }
+      setLiveDialAngle(0);
+    } else {
+      currentGuesses[playerId] = liveDialAngle;
+    }
+
+    const allGuessed = expectedGuessers.every(
+      (p) => typeof currentGuesses[p.id] === 'number'
+    );
+
+    if (allGuessed) {
+      await performMultiPlayerReveal(currentGuesses);
+    } else {
+      await updateRoomState({
+        game_data: {
+          ...(room.game_data || {}),
+          wavelength_guesses: currentGuesses,
+        },
+      });
+    }
+  };
+
+  // Reveal all players' personal guesses & award each player their exact personal points!
+  const performMultiPlayerReveal = async (allGuesses: Record<string, number>) => {
+    if (!room) return;
+    const perPlayerPoints: Record<string, number> = {};
+    let bestPoints = 0;
+    let sumPoints = 0;
+
+    Object.entries(allGuesses).forEach(([pid, guessedAngle]) => {
+      const pts = calculateScoreFromAngles(Number(room.target_angle), Number(guessedAngle));
+      perPlayerPoints[pid] = pts;
+      sumPoints += pts;
+      if (pts > bestPoints) bestPoints = pts;
+    });
+
+    // Psychic earns the best score achieved by any guesser from their clue!
+    if (room.psychic_id && players.length > 1) {
+      perPlayerPoints[room.psychic_id] = bestPoints;
+    }
+
+    const updatedPlayers = players.map((p) => {
+      const earned = perPlayerPoints[p.id] || 0;
+      return earned > 0 ? { ...p, score: (p.score || 0) + earned } : p;
+    });
+    setPlayers(updatedPlayers);
+
+    if (!isPassAndPlay) {
+      for (const [pid, earned] of Object.entries(perPlayerPoints)) {
+        if (earned > 0) {
+          const targetP = updatedPlayers.find((item) => item.id === pid);
+          if (targetP) {
+            await supabase
+              .from('wavelength_players')
+              .update({ score: targetP.score })
+              .eq('room_id', room.id)
+              .eq('id', pid);
+          }
+        }
+      }
+    }
+
+    await updateRoomState({
+      status: 'reveal',
+      last_round_points: bestPoints,
+      coop_score: room.coop_score + sumPoints,
+      game_data: {
+        ...(room.game_data || {}),
+        wavelength_guesses: allGuesses,
+        wavelength_points: perPlayerPoints,
+      },
+    });
   };
 
   // Opposing team guesses Left or Right (in Teams Mode)
@@ -963,6 +1067,32 @@ export function App() {
     : '';
 
   const activeGameId: PartyGameId = room?.selected_game || 'wavelength';
+  const wavelengthGuesses: Record<string, number> =
+    room?.game_data?.wavelength_guesses || {};
+  const wavelengthPoints: Record<string, number> =
+    room?.game_data?.wavelength_points || {};
+  const expectedWavelengthGuessers =
+    room && players.length > 1
+      ? players.filter((p) => p.id !== room.psychic_id)
+      : players;
+  const hasLockedMyGuess =
+    !isPassAndPlay && typeof wavelengthGuesses[playerId] === 'number';
+  const nextPassAndPlayGuesser = isPassAndPlay
+    ? expectedWavelengthGuessers.find(
+        (p) => typeof wavelengthGuesses[p.id] !== 'number'
+      ) || expectedWavelengthGuessers[0]
+    : null;
+  const wheelPlayerPins = Object.entries(wavelengthGuesses).map(
+    ([pid, angle]) => {
+      const p = players.find((item) => item.id === pid);
+      return {
+        id: pid,
+        name: p?.name || '?',
+        color: p?.avatar_color || '#ffca3a',
+        angle: Number(angle),
+      };
+    }
+  );
   const partyGamesCatalog: { id: PartyGameId; emoji: string; name_ar: string; name_en: string; desc_ar: string; desc_en: string }[] = [
     {
       id: 'wavelength',
@@ -1694,6 +1824,7 @@ export function App() {
                       canMoveDial={canDragDial}
                       onDialChange={handleDialChange}
                       otherTeamGuess={room.other_team_guess}
+                      playerPins={wheelPlayerPins}
                       lang={lang}
                     />
 
@@ -1750,22 +1881,44 @@ export function App() {
                       )}
 
                       {room.status === 'guessing' && (
-                        <div className="cartoon-card p-5 text-center space-y-3">
+                        <div className="cartoon-card p-5 text-center space-y-3.5">
                           {canDragDial ? (
                             <>
                               <p className="font-extrabold text-base text-[#161426]">
-                                {t.moveDialInstruction}
+                                {isPassAndPlay && nextPassAndPlayGuesser
+                                  ? lang === 'ar'
+                                    ? `🎯 دور (${nextPassAndPlayGuesser.name}) ليحرك المؤشر ويثبت تخمينه الشخصي!`
+                                    : `🎯 ${nextPassAndPlayGuesser.name}'s turn to move the pointer and lock their guess!`
+                                  : hasLockedMyGuess
+                                  ? lang === 'ar'
+                                    ? `✅ ثبتت تخمينك على (${wavelengthGuesses[playerId]}°)! فيك تعدله قبل ما يخلصوا الباقين:`
+                                    : `✅ Locked your guess at (${wavelengthGuesses[playerId]}°)! You can still adjust it:`
+                                  : t.moveDialInstruction}
                               </p>
                               <button
                                 type="button"
                                 onClick={handleLockGuess}
-                                className="cartoon-btn bg-[#ff595e] hover:bg-[#ff6f73] text-white w-full py-3.5 text-xl flex items-center justify-center gap-2"
+                                className={`cartoon-btn w-full py-3.5 text-xl flex items-center justify-center gap-2 ${
+                                  hasLockedMyGuess
+                                    ? 'bg-[#ffca3a] text-[#161426]'
+                                    : 'bg-[#ff595e] hover:bg-[#ff6f73] text-white'
+                                }`}
                               >
                                 <Target weight="fill" className="w-6 h-6" />
                                 <span>
                                   {room.mode === 'teams' && !isPassAndPlay
                                     ? t.lockTeamGuess
-                                    : t.lockGuess}
+                                    : isPassAndPlay && nextPassAndPlayGuesser
+                                    ? lang === 'ar'
+                                      ? `تثبيت تخمين ${nextPassAndPlayGuesser.name}!`
+                                      : `Lock ${nextPassAndPlayGuesser.name}'s Guess!`
+                                    : hasLockedMyGuess
+                                    ? lang === 'ar'
+                                      ? 'تحديث تخميني الشخصي 🔄'
+                                      : 'Update My Personal Guess 🔄'
+                                    : lang === 'ar'
+                                    ? 'تثبيت تخميني الشخصي! 🎯'
+                                    : 'Lock My Personal Guess! 🎯'}
                                 </span>
                               </button>
                             </>
@@ -1773,6 +1926,52 @@ export function App() {
                             <p className="font-extrabold text-base text-[#161426]">
                               👀 {t.psychicWatchingInstruction}
                             </p>
+                          )}
+
+                          {/* Live Player Guessing Progress Badges */}
+                          {room.mode === 'coop' && expectedWavelengthGuessers.length > 0 && (
+                            <div className="pt-2 border-t-2 border-[#161426]/15 space-y-2">
+                              <div className="text-xs font-extrabold text-[#3f3b5c]">
+                                {lang === 'ar'
+                                  ? `حالة تخمينات اللاعبين (${Object.keys(wavelengthGuesses).length} / ${expectedWavelengthGuessers.length}):`
+                                  : `Players Guessed (${Object.keys(wavelengthGuesses).length} / ${expectedWavelengthGuessers.length}):`}
+                              </div>
+                              <div className="flex flex-wrap items-center justify-center gap-2">
+                                {expectedWavelengthGuessers.map((gp) => {
+                                  const locked =
+                                    typeof wavelengthGuesses[gp.id] === 'number';
+                                  return (
+                                    <span
+                                      key={gp.id}
+                                      className={`cartoon-badge px-3 py-1 text-xs flex items-center gap-1 ${
+                                        locked
+                                          ? 'bg-[#8ac926] text-[#161426]'
+                                          : 'bg-gray-200 text-gray-600'
+                                      }`}
+                                    >
+                                      <span>{gp.name}</span>
+                                      <span>{locked ? '✓ جاوب' : '⏳ عم يفكر'}</span>
+                                    </span>
+                                  );
+                                })}
+                              </div>
+
+                              {/* Host / Psychic Force Reveal if at least 1 person answered */}
+                              {(isHost || isPsychic) &&
+                                Object.keys(wavelengthGuesses).length > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      performMultiPlayerReveal(wavelengthGuesses)
+                                    }
+                                    className="cartoon-btn bg-[#00bbf9] text-[#161426] px-4 py-2 text-sm mt-2"
+                                  >
+                                    {lang === 'ar'
+                                      ? 'اكشف النتيجة الآن (بمن جاوب) 🎉'
+                                      : 'Reveal Results Now 🎉'}
+                                  </button>
+                                )}
+                            </div>
                           )}
                         </div>
                       )}
@@ -1802,7 +2001,7 @@ export function App() {
                       )}
 
                       {room.status === 'reveal' && (
-                        <div className="cartoon-card p-5 text-center space-y-3 animate-in zoom-in-95 duration-200">
+                        <div className="cartoon-card p-5 text-center space-y-3.5 animate-in zoom-in-95 duration-200">
                           <div className="text-3xl font-extrabold text-[#161426]">
                             {room.last_round_points === 4
                               ? `🎯 ${t.bullseye}`
@@ -1812,6 +2011,57 @@ export function App() {
                               ? `👍 ${t.goodTry}`
                               : `😅 ${t.missed}`}
                           </div>
+
+                          {/* Individual Player Results Breakdown */}
+                          {Object.keys(wavelengthGuesses).length > 0 && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                              {Object.entries(wavelengthGuesses).map(
+                                ([pid, guessedAng]) => {
+                                  const p = players.find((item) => item.id === pid);
+                                  const pts =
+                                    wavelengthPoints[pid] ??
+                                    calculateScoreFromAngles(
+                                      Number(room.target_angle),
+                                      Number(guessedAng)
+                                    );
+                                  return (
+                                    <div
+                                      key={pid}
+                                      className="flex items-center justify-between p-2.5 rounded-2xl bg-white border-3 border-[#161426]"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          style={{
+                                            backgroundColor:
+                                              p?.avatar_color || '#ffca3a',
+                                          }}
+                                          className="w-7 h-7 rounded-full border-2 border-[#161426] flex items-center justify-center font-extrabold text-xs text-[#161426]"
+                                        >
+                                          {p?.name?.slice(0, 1) || '?'}
+                                        </span>
+                                        <span className="font-extrabold text-sm text-[#161426]">
+                                          {p?.name || 'Player'}
+                                        </span>
+                                      </div>
+                                      <span
+                                        className={`cartoon-badge px-2.5 py-0.5 text-xs ${
+                                          pts === 4
+                                            ? 'bg-[#3898b8] text-white'
+                                            : pts === 3
+                                            ? 'bg-[#ff5722] text-white'
+                                            : pts === 2
+                                            ? 'bg-[#ffaa1d] text-[#161426]'
+                                            : 'bg-gray-200 text-gray-600'
+                                        }`}
+                                      >
+                                        +{pts} {t.pointsUnit} ({guessedAng > 0 ? `+${guessedAng}°` : `${guessedAng}°`})
+                                      </span>
+                                    </div>
+                                  );
+                                }
+                              )}
+                            </div>
+                          )}
 
                           {room.last_bonus_points > 0 && (
                             <div className="cartoon-badge bg-[#ffca3a] text-[#161426] px-4 py-1 text-sm inline-block">

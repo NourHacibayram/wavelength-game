@@ -2,6 +2,13 @@ import React, { useRef, useState, useCallback } from 'react';
 import { WEDGE_WIDTH_DEG } from '../data/cards';
 import { CaretLeft, CaretRight, Eye, EyeSlash, LockKey } from '@phosphor-icons/react';
 
+export interface PlayerWheelPin {
+  id: string;
+  name: string;
+  color: string;
+  angle: number;
+}
+
 interface WavelengthWheelProps {
   targetAngle: number;
   dialAngle: number;
@@ -9,6 +16,7 @@ interface WavelengthWheelProps {
   canMoveDial: boolean;
   onDialChange: (newAngle: number, isFinal?: boolean) => void;
   otherTeamGuess?: 'left' | 'right' | null;
+  playerPins?: PlayerWheelPin[];
   lang: 'ar' | 'en';
 }
 
@@ -48,6 +56,7 @@ export const WavelengthWheel: React.FC<WavelengthWheelProps> = ({
   canMoveDial,
   onDialChange,
   otherTeamGuess,
+  playerPins,
   lang,
 }) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -439,6 +448,58 @@ export const WavelengthWheel: React.FC<WavelengthWheelProps> = ({
                   ? 'تخمين الخصم ➡️'
                   : 'Team B Guess ➡️'}
               </text>
+            </g>
+          )}
+
+          {/* 5.5 Individual Player Guess Pins (Shown on Reveal!) */}
+          {showTarget && playerPins && playerPins.length > 0 && (
+            <g>
+              {playerPins.map((pin, idx) => {
+                // Stagger radius slightly if multiple players guessed similar angles
+                const pinRadius = R_FACE - 62 - (idx % 3) * 26;
+                const tipPos = polarToCartesian(CX, CY, R_FACE - 12, pin.angle);
+                const badgePos = polarToCartesian(CX, CY, pinRadius, pin.angle);
+                return (
+                  <g key={pin.id}>
+                    <line
+                      x1={CX}
+                      y1={CY}
+                      x2={tipPos.x}
+                      y2={tipPos.y}
+                      stroke={pin.color}
+                      strokeWidth="4.5"
+                      strokeDasharray="6 4"
+                    />
+                    <circle
+                      cx={tipPos.x}
+                      cy={tipPos.y}
+                      r="6"
+                      fill={pin.color}
+                      stroke="#161426"
+                      strokeWidth="2.5"
+                    />
+                    <circle
+                      cx={badgePos.x}
+                      cy={badgePos.y}
+                      r="15"
+                      fill={pin.color}
+                      stroke="#161426"
+                      strokeWidth="3"
+                    />
+                    <text
+                      x={badgePos.x}
+                      y={badgePos.y + 1}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fill="#161426"
+                      fontSize="12"
+                      fontWeight="800"
+                    >
+                      {pin.name.slice(0, 2)}
+                    </text>
+                  </g>
+                );
+              })}
             </g>
           )}
 
