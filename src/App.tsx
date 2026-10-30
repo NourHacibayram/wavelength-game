@@ -72,16 +72,11 @@ import {
 } from './components/CockroachGame';
 import {
   PartyGameSvgIcon,
-  AnimatedBombSvg,
   CartoonAvatarSvg,
   ReactionSvgIcon,
   ReactionType,
 } from './components/CartoonIcons';
-import {
-  DixitArtCardSvg,
-  MonsterWitnessSvg,
-  CritterCardSvg,
-} from './components/ExtraGameArt';
+import { GameTutorialPlayer } from './components/tutorials/GameTutorialPlayer';
 import {
   Globe,
   Question,
@@ -109,6 +104,7 @@ import {
   Sword,
   CheckCircle,
   Hourglass,
+  FilmStrip,
 } from '@phosphor-icons/react';
 
 interface RoomState {
@@ -190,8 +186,14 @@ export function App() {
 
   // Modals
   const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
+  const [howToPlayTargetGame, setHowToPlayTargetGame] = useState<PartyGameId | null>(null);
   const [showCustomCardModal, setShowCustomCardModal] = useState<boolean>(false);
   const [showGamePickerModal, setShowGamePickerModal] = useState<boolean>(false);
+
+  const openHowToPlayFor = (gid?: PartyGameId) => {
+    setHowToPlayTargetGame(gid || null);
+    setShowHowToPlay(true);
+  };
 
   // Home Page Catalog Filters
   const [homeSelectedGame, setHomeSelectedGame] = useState<PartyGameId>('wavelength');
@@ -202,7 +204,6 @@ export function App() {
   const [clueInput, setClueInput] = useState<string>('');
   const [localNewPlayerName, setLocalNewPlayerName] = useState<string>('');
   const [liveDialAngle, setLiveDialAngle] = useState<number>(0);
-  const [demoDialAngle, setDemoDialAngle] = useState<number>(14);
   const [reactions, setReactions] = useState<FloatingReaction[]>([]);
 
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
@@ -1412,7 +1413,7 @@ export function App() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setShowHowToPlay(true)}
+            onClick={() => openHowToPlayFor(room ? activeGameId : homeSelectedGame)}
             className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
           >
             <Question weight="fill" className="w-5 h-5" />
@@ -1474,7 +1475,7 @@ export function App() {
 
                   <button
                     type="button"
-                    onClick={() => setShowHowToPlay(true)}
+                    onClick={() => openHowToPlayFor(homeSelectedGame)}
                     title={t.howToPlay}
                     className="cartoon-btn bg-[#ffca3a] text-[#161426] p-2 shrink-0"
                   >
@@ -1589,11 +1590,11 @@ export function App() {
 
             {/* CATEGORIZED 14-GAME ARCADE SHELF (8 Cols on Desktop) */}
             <div className="lg:col-span-8 space-y-5 order-2 lg:order-1">
-              {/* Featured Selected Game Spotlight Banner */}
-              <div className="cartoon-panel-dark p-5 sm:p-6 relative overflow-hidden">
+              {/* Featured Selected Game Spotlight Banner + Live SVG Tutorial Stage */}
+              <div className="cartoon-panel-dark p-4 sm:p-6 relative overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                   {/* Spotlight Text */}
-                  <div className="md:col-span-7 space-y-2.5">
+                  <div className="md:col-span-6 space-y-2.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
                         style={{ backgroundColor: homeSelectedMeta.accent }}
@@ -1623,11 +1624,13 @@ export function App() {
                     <div className="flex flex-wrap gap-2 pt-1">
                       <button
                         type="button"
-                        onClick={() => setShowHowToPlay(true)}
-                        className="cartoon-btn bg-[#fff9ec] text-[#161426] px-4 py-2 text-xs sm:text-sm flex items-center gap-1.5"
+                        onClick={() => openHowToPlayFor(homeSelectedGame)}
+                        className="cartoon-btn bg-[#ffca3a] text-[#161426] px-4 py-2 text-xs sm:text-sm flex items-center gap-1.5"
                       >
-                        <Question weight="fill" className="w-4 h-4 text-[#1982c4]" />
-                        <span>{lang === 'ar' ? 'شرح طريقة اللعب' : 'How It Works'}</span>
+                        <FilmStrip weight="fill" className="w-4 h-4 text-[#161426]" />
+                        <span>
+                          {lang === 'ar' ? 'تكبير الشرح المتحرك' : 'Full Animated Guide'}
+                        </span>
                       </button>
 
                       <button
@@ -1641,57 +1644,14 @@ export function App() {
                     </div>
                   </div>
 
-                  {/* Interactive / Illustrated Mini Stage */}
-                  <div className="md:col-span-5 flex items-center justify-center">
-                    {homeSelectedGame === 'wavelength' ? (
-                      <div className="w-full max-w-[260px]">
-                        <WavelengthWheel
-                          targetAngle={18}
-                          dialAngle={demoDialAngle}
-                          showTarget={true}
-                          canMoveDial={true}
-                          onDialChange={(a) => setDemoDialAngle(a)}
-                          lang={lang}
-                        />
-                      </div>
-                    ) : homeSelectedGame === 'dixit' ? (
-                      <div className="flex items-center justify-center -space-x-5 rtl:space-x-reverse py-2">
-                        {[1, 3, 11].map((cid, i) => (
-                          <div
-                            key={cid}
-                            style={{ transform: `rotate(${(i - 1) * 9}deg)` }}
-                            className="w-24 rounded-2xl overflow-hidden border-3 border-[#161426] shadow-[0_6px_0_#161426]"
-                          >
-                            <DixitArtCardSvg cardId={cid} />
-                          </div>
-                        ))}
-                      </div>
-                    ) : homeSelectedGame === 'witness' ? (
-                      <div className="flex items-center justify-center gap-2">
-                        <MonsterWitnessSvg monsterId={1} className="w-28 h-28" />
-                        <MonsterWitnessSvg monsterId={2} className="w-28 h-28" />
-                      </div>
-                    ) : homeSelectedGame === 'cockroach' ? (
-                      <div className="flex items-center justify-center -space-x-3 rtl:space-x-reverse">
-                        <CritterCardSvg critter="scorpion" lang={lang} className="w-20 h-28 -rotate-6" />
-                        <CritterCardSvg faceDown={true} className="w-20 h-28 z-10" />
-                        <CritterCardSvg critter="frog" lang={lang} className="w-20 h-28 rotate-6" />
-                      </div>
-                    ) : homeSelectedGame === 'wordbomb' ? (
-                      <AnimatedBombSvg
-                        secondsLeft={8}
-                        maxSeconds={12}
-                        letters={lang === 'ar' ? 'ب ر' : 'B R'}
-                        className="w-32 h-32"
-                      />
-                    ) : (
-                      <div
-                        style={{ backgroundColor: homeSelectedMeta.bgTint }}
-                        className="w-32 h-32 rounded-3xl border-4 border-[#161426] shadow-[0_7px_0_#161426] flex items-center justify-center animate-cartoon-float"
-                      >
-                        <PartyGameSvgIcon gameId={homeSelectedGame} className="w-20 h-20" />
-                      </div>
-                    )}
+                  {/* Live 4-Step Animated SVG Tutorial Preview for ANY Selected Game! */}
+                  <div className="md:col-span-6">
+                    <GameTutorialPlayer
+                      gameId={homeSelectedGame}
+                      lang={lang}
+                      compact={true}
+                      onExpandModal={() => openHowToPlayFor(homeSelectedGame)}
+                    />
                   </div>
                 </div>
               </div>
@@ -1738,10 +1698,17 @@ export function App() {
                 {filteredHomeGames.map((g) => {
                   const isPicked = homeSelectedGame === g.id;
                   return (
-                    <button
+                    <div
                       key={g.id}
-                      type="button"
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setHomeSelectedGame(g.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setHomeSelectedGame(g.id);
+                        }
+                      }}
                       className={`p-4 rounded-3xl border-4 border-[#161426] text-start transition-all cursor-pointer flex flex-col justify-between gap-3 ${
                         isPicked
                           ? 'bg-[#ffca3a] text-[#161426] shadow-[0_7px_0_#161426] -translate-y-1'
@@ -1757,8 +1724,21 @@ export function App() {
                         </div>
 
                         <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setHomeSelectedGame(g.id);
+                              openHowToPlayFor(g.id);
+                            }}
+                            title={lang === 'ar' ? 'شاهد الشرح المتحرك' : 'Watch Animated Guide'}
+                            className="cartoon-badge bg-[#e0f2fe] hover:bg-[#bae6fd] text-[#161426] px-2.5 py-0.5 text-[10px] flex items-center gap-1 cursor-pointer"
+                          >
+                            <FilmStrip weight="fill" className="w-3 h-3 text-[#1982c4]" />
+                            <span>{lang === 'ar' ? 'شرح' : 'Guide'}</span>
+                          </button>
                           {g.isNew && (
-                            <span className="cartoon-badge bg-[#ff595e] text-white px-2.5 py-0.5 text-[10px] flex items-center gap-1">
+                            <span className="cartoon-badge bg-[#ff595e] text-white px-2 py-0.5 text-[10px] flex items-center gap-0.5">
                               <Sparkle weight="fill" className="w-3 h-3 text-[#ffca3a]" />
                               <span>{lang === 'ar' ? 'جديد' : 'NEW'}</span>
                             </span>
@@ -1792,7 +1772,7 @@ export function App() {
                           {lang === 'ar' ? g.tag_ar : g.tag_en}
                         </span>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -1956,6 +1936,19 @@ export function App() {
                         </div>
                       </div>
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => openHowToPlayFor(activeGameId)}
+                      className="cartoon-btn bg-[#e0f2fe] text-[#161426] w-full py-2 px-4 text-xs sm:text-sm flex items-center justify-center gap-1.5"
+                    >
+                      <FilmStrip weight="fill" className="w-4 h-4 text-[#1982c4]" />
+                      <span>
+                        {lang === 'ar'
+                          ? 'شاهد الشرح المتحرك لهذه اللعبة'
+                          : 'Watch Animated Tutorial'}
+                      </span>
+                    </button>
 
                     {isHost && (
                       <button
@@ -2131,6 +2124,16 @@ export function App() {
                     {lang === 'ar' ? activeGameMeta.name_ar : activeGameMeta.name_en}
                   </span>
                 </div>
+
+                {/* Quick Animated Guide Button in Active Room */}
+                <button
+                  type="button"
+                  onClick={() => openHowToPlayFor(activeGameId)}
+                  className="cartoon-btn bg-[#00bbf9] text-[#161426] px-3 py-1.5 text-xs sm:text-sm flex items-center gap-1.5"
+                >
+                  <FilmStrip weight="fill" className="w-4 h-4" />
+                  <span>{lang === 'ar' ? 'شرح متحرك' : 'Guide'}</span>
+                </button>
 
                 {/* Switch Game Modal Button (For Host / Pass & Play) */}
                 {(isHost || isPassAndPlay) && (
@@ -2902,15 +2905,19 @@ export function App() {
       {/* Modals */}
       <HowToPlayModal
         isOpen={showHowToPlay}
-        onClose={() => setShowHowToPlay(false)}
+        onClose={() => {
+          setShowHowToPlay(false);
+          setHowToPlayTargetGame(null);
+        }}
         lang={lang}
-        activeGameId={room ? activeGameId : homeSelectedGame}
+        activeGameId={howToPlayTargetGame || (room ? activeGameId : homeSelectedGame)}
       />
       <GamePickerModal
         isOpen={showGamePickerModal}
         onClose={() => setShowGamePickerModal(false)}
         activeGameId={activeGameId}
         onSelectGame={(gid) => handleSelectPartyGame(gid)}
+        onLearnGame={(gid) => openHowToPlayFor(gid)}
         lang={lang}
       />
       <CustomCardModal
