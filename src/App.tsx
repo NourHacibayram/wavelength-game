@@ -51,6 +51,7 @@ import {
   ArrowCounterClockwise,
   Eye,
   EyeSlash,
+  UserMinus,
 } from '@phosphor-icons/react';
 
 interface RoomState {
@@ -126,6 +127,7 @@ export function App() {
   const [showCustomCardModal, setShowCustomCardModal] = useState<boolean>(false);
 
   // Gameplay local inputs
+  const [homeSelectedGame, setHomeSelectedGame] = useState<PartyGameId>('wavelength');
   const [clueInput, setClueInput] = useState<string>('');
   const [localNewPlayerName, setLocalNewPlayerName] = useState<string>('');
   const [liveDialAngle, setLiveDialAngle] = useState<number>(0);
@@ -227,9 +229,34 @@ export function App() {
             .select('*')
             .eq('room_id', currentRoomId)
             .order('joined_at', { ascending: true });
-          if (data) setPlayers(data as PlayerItem[]);
+          if (data) {
+            const list = data as PlayerItem[];
+            setPlayers(list);
+            if (list.length > 0 && !list.some((p) => p.id === playerId)) {
+              setRoom(null);
+              setPlayers([]);
+              setErrorMsg(
+                lang === 'ar'
+                  ? 'تم إخراجك من الغرفة من قِبل صاحب الغرفة.'
+                  : 'You were kicked from the room by the host.'
+              );
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          }
         }
       )
+      .on('broadcast', { event: 'kick_player' }, ({ payload }) => {
+        if (payload?.kickedId === playerId) {
+          setRoom(null);
+          setPlayers([]);
+          setErrorMsg(
+            lang === 'ar'
+              ? 'تم إخراجك من الغرفة من قِبل صاحب الغرفة.'
+              : 'You were kicked from the room by the host.'
+          );
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      })
       .on('broadcast', { event: 'dial_move' }, ({ payload }) => {
         // Only sync live dial in Teams mode; in Co-op/Individual mode each player controls their own needle!
         if (
@@ -303,6 +330,8 @@ export function App() {
           card_category: firstCard.category,
           used_card_indices: [firstCard.id],
           custom_cards: [],
+          selected_game: homeSelectedGame,
+          game_data: {},
         })
         .select('*')
         .single();
@@ -434,10 +463,11 @@ export function App() {
         is_host: false,
       },
     ];
+    const initGameData = buildInitialGameData(homeSelectedGame, initialLocalPlayers);
     setIsPassAndPlay(true);
     setPlayers(initialLocalPlayers);
     setLocalPeekTarget(false);
-    setPsychicCurtainOpen(true);
+    setPsychicCurtainOpen(homeSelectedGame === 'wavelength');
     setClueInput('');
     setLiveDialAngle(0);
     setRoom({
@@ -446,7 +476,7 @@ export function App() {
       host_id: playerId,
       mode: 'coop',
       language: lang,
-      status: 'psychic_clue',
+      status: homeSelectedGame === 'wavelength' ? 'psychic_clue' : 'guessing',
       round_number: 1,
       max_rounds: 7,
       psychic_id: initialLocalPlayers[0].id,
@@ -467,8 +497,8 @@ export function App() {
       last_bonus_points: 0,
       used_card_indices: [firstCard.id],
       custom_cards: [],
-      selected_game: 'wavelength',
-      game_data: {},
+      selected_game: homeSelectedGame,
+      game_data: initGameData,
     });
   };
 
@@ -504,6 +534,33 @@ export function App() {
     setPlayers([]);
     setIsPassAndPlay(false);
     window.history.replaceState({}, '', window.location.pathname);
+  };
+
+  // Host Kick Player
+  const handleKickPlayer = async (targetPlayerId: string) => {
+    if (!room || !isHost || targetPlayerId === room.host_id) return;
+    const remaining = players.filter((p) => p.id !== targetPlayerId);
+    setPlayers(remaining);
+
+    if (!isPassAndPlay) {
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'kick_player',
+          payload: { kickedId: targetPlayerId },
+        });
+      }
+      await supabase
+        .from('wavelength_players')
+        .delete()
+        .eq('room_id', room.id)
+        .eq('id', targetPlayerId);
+    }
+
+    // If kicked player was the active Wavelength psychic, rotate to another player
+    if (room.psychic_id === targetPlayerId && remaining.length > 0) {
+      await updateRoomState({ psychic_id: remaining[0].id });
+    }
   };
 
   // Update Room helper (works for both Online & Pass-and-Play)
@@ -882,12 +939,14 @@ export function App() {
       const secretWordIndex = Math.floor(Math.random() * 16);
       const randomCham = validPlayers[Math.floor(Math.random() * validPlayers.length)];
       const state: ChameleonGameState = {
-        phase: 'clues',
+        phase: 'qa',
         topicId: topic.id,
         secretWordIndex,
         chameleonId: randomCham.id,
-        clues: {},
+        turnIndex: 0,
+        qaHistory: [],
         votes: {},
+        chameleonChosenWordIndex: null,
       };
       return state;
     }
@@ -1213,31 +1272,118 @@ export function App() {
       <main className="w-full max-w-6xl mx-auto px-4 flex-1 flex flex-col justify-center my-2">
         {!room ? (
           /* ================= HOME SCREEN / LANDING ================= */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto py-4">
-            {/* Left / Hero Preview Column */}
-            <div className="lg:col-span-7 flex flex-col items-center text-center">
-              <div className="w-full max-w-[470px]">
-                <WavelengthWheel
-                  targetAngle={18}
-                  dialAngle={demoDialAngle}
-                  showTarget={true}
-                  canMoveDial={true}
-                  onDialChange={(a) => setDemoDialAngle(a)}
-                  lang={lang}
-                />
+          <div className="space-y-5 my-auto py-3">
+            {/* Top 5-Party-Games Selector Strip on Home Screen */}
+            <div className="cartoon-panel-dark p-3.5 md:p-4">
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <div className="flex items-center gap-2">
+                  <Sparkle weight="fill" className="w-5 h-5 text-[#ffca3a]" />
+                  <span className="text-sm md:text-base font-extrabold text-[#ffca3a]">
+                    {lang === 'ar'
+                      ? 'اختار لعبة السهرة اللي بدكم تبدأوا فيها (بتقدروا تبدلوا بين الألعاب جوا الغرفة كمان!):'
+                      : 'Choose Your Starting Party Game (You can switch games anytime inside the room!):'}
+                  </span>
+                </div>
+                <span className="cartoon-badge bg-[#8ac926] text-[#161426] px-3 py-0.5 text-xs">
+                  {lang === 'ar' ? '5 ألعاب جماعية بغرفة وحدة!' : '5 Party Games in 1 Room!'}
+                </span>
               </div>
 
-              <div className="mt-3 max-w-lg">
-                <h2 className="text-2xl md:text-4xl font-extrabold text-[#ffca3a] drop-shadow-[0_4px_0_#161426]">
-                  {t.appSubtitle}
-                </h2>
-                <p className="text-sm md:text-base text-[#d9d4f7] font-semibold mt-1">
-                  {lang === 'ar'
-                    ? 'افتح غرفة مجانية بثانية، ابعت الرابط لأصحابك، واختبروا لو عقولكم على نفس الموجة!'
-                    : 'Create a free room in one click, share the link with friends, and test if your minds are on the same wavelength!'}
-                </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                {partyGamesCatalog.map((g) => {
+                  const isPicked = homeSelectedGame === g.id;
+                  return (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setHomeSelectedGame(g.id)}
+                      className={`cartoon-btn p-3 text-right flex flex-col justify-between transition-all cursor-pointer ${
+                        isPicked
+                          ? 'bg-[#ffca3a] text-[#161426] ring-4 ring-white scale-[1.02]'
+                          : 'bg-[#231f42] hover:bg-[#2d2854] text-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full gap-1 mb-1">
+                        <span className="text-2xl">{g.emoji}</span>
+                        {isPicked && (
+                          <span className="px-2 py-0.5 rounded-full bg-[#161426] text-[#ffca3a] text-[10px] font-extrabold">
+                            {lang === 'ar' ? 'مختارة ✓' : 'Selected ✓'}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-extrabold text-sm md:text-base leading-tight">
+                          {lang === 'ar' ? g.name_ar : g.name_en}
+                        </div>
+                        <div
+                          className={`text-[11px] font-bold mt-0.5 leading-snug ${
+                            isPicked ? 'text-[#161426]/80' : 'text-[#d9d4f7]/75'
+                          }`}
+                        >
+                          {lang === 'ar' ? g.desc_ar : g.desc_en}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Left / Hero Preview Column */}
+              <div className="lg:col-span-7 flex flex-col items-center text-center">
+                {homeSelectedGame === 'wavelength' ? (
+                  <div className="w-full max-w-[460px]">
+                    <WavelengthWheel
+                      targetAngle={18}
+                      dialAngle={demoDialAngle}
+                      showTarget={true}
+                      canMoveDial={true}
+                      onDialChange={(a) => setDemoDialAngle(a)}
+                      lang={lang}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full max-w-[460px] cartoon-card p-6 md:p-8 text-center space-y-4">
+                    <div className="w-24 h-24 mx-auto rounded-3xl bg-[#ffca3a] border-4 border-[#161426] shadow-[0_6px_0_#161426] flex items-center justify-center text-5xl">
+                      {partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.emoji}
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-extrabold text-[#161426]">
+                      {lang === 'ar'
+                        ? partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_ar
+                        : partyGamesCatalog.find((g) => g.id === homeSelectedGame)?.name_en}
+                    </h3>
+                    <p className="text-sm md:text-base font-bold text-[#3f3b5c]">
+                      {homeSelectedGame === 'chameleon'
+                        ? lang === 'ar'
+                          ? 'كل اللاعبين بيعرفوا الكلمة السرية إلا شخص واحد "برّا السالفة"! اسألوا بعض بالترتيب واكشفوا الجاسوس قبل ما يحزر الكلمة!'
+                          : 'Everyone knows the secret word except one player who is Out of the Loop! Ask each other questions and catch the impostor!'
+                        : homeSelectedGame === 'ito'
+                        ? lang === 'ar'
+                          ? 'كل لاعب بيطلعله رقم سري من 1 لـ 100! أوصف رقمك بتلميح ذكي بدون ما تقوله، ورتبوا بطاقاتكم من الأصغر للأكبر!'
+                          : 'Each player gets a secret number from 1 to 100! Give themed clues and sort everyone from lowest to highest!'
+                        : homeSelectedGame === 'fibbage'
+                        ? lang === 'ar'
+                          ? 'سؤال غريب وإجابته الحقيقية مستحيل تخطر عالبال! ألّف كذبة مقنعة لتخدع أصحابك وحاول تكتشف الجواب الحقيقي!'
+                          : 'A wild trivia question! Write a convincing lie to trick your friends and spot the real truth!'
+                        : lang === 'ar'
+                        ? 'قنبلة موقوتة بتنتقل بينكم! لازم تكتب كلمة فيها الحروف المطلوبة بسرعة قبل ما تنفجر القنبلة بوجهك!'
+                        : 'A ticking bomb passes from player to player! Type a valid word containing the target letters before it explodes!'}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-3 max-w-lg">
+                  <h2 className="text-2xl md:text-4xl font-extrabold text-[#ffca3a] drop-shadow-[0_4px_0_#161426]">
+                    {t.appSubtitle}
+                  </h2>
+                  <p className="text-sm md:text-base text-[#d9d4f7] font-semibold mt-1">
+                    {lang === 'ar'
+                      ? 'افتح غرفة مجانية بثانية، ابعت الرابط لأصحابك، والعبوا 5 ألعاب جماعية بنفس الغرفة ونفس لوحة الصدارة!'
+                      : 'Create a free room in one click, share the link with friends, and play 5 party games with a shared leaderboard!'}
+                  </p>
+                </div>
+              </div>
 
             {/* Right / Cartoon Action Card */}
             <div className="lg:col-span-5">
@@ -1339,6 +1485,7 @@ export function App() {
               </div>
             </div>
           </div>
+          </div>
         ) : room.status === 'lobby' ? (
           /* ================= ONLINE ROOM LOBBY ================= */
           <div className="max-w-3xl mx-auto w-full space-y-5 my-auto">
@@ -1429,18 +1576,18 @@ export function App() {
                       key={p.id}
                       className="flex items-center justify-between p-3 rounded-2xl bg-[#191636] border-3 border-[#120f29] shadow-[0_4px_0_#120f29]"
                     >
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
                         <div
                           style={{ backgroundColor: p.avatar_color }}
                           className="w-10 h-10 rounded-full border-3 border-[#161426] flex items-center justify-center font-extrabold text-[#161426] text-lg shrink-0"
                         >
                           {p.name.slice(0, 1).toUpperCase()}
                         </div>
-                        <div>
-                          <div className="font-extrabold text-base flex items-center gap-1.5">
-                            <span>{p.name}</span>
+                        <div className="min-w-0">
+                          <div className="font-extrabold text-base flex items-center gap-1.5 truncate">
+                            <span className="truncate">{p.name}</span>
                             {p.id === room.host_id && (
-                              <Crown weight="fill" className="w-4 h-4 text-[#ffca3a]" />
+                              <Crown weight="fill" className="w-4 h-4 text-[#ffca3a] shrink-0" />
                             )}
                           </div>
                           {room.mode === 'teams' && (
@@ -1454,6 +1601,18 @@ export function App() {
                           )}
                         </div>
                       </div>
+
+                      {isHost && p.id !== room.host_id && (
+                        <button
+                          type="button"
+                          onClick={() => handleKickPlayer(p.id)}
+                          title={lang === 'ar' ? 'طرد اللاعب (Kick)' : 'Kick Player'}
+                          className="cartoon-btn bg-[#ff595e] text-white p-2 text-xs flex items-center gap-1 shrink-0"
+                        >
+                          <UserMinus weight="bold" className="w-4 h-4" />
+                          <span>{lang === 'ar' ? 'طرد' : 'Kick'}</span>
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -2200,8 +2359,20 @@ export function App() {
                             </div>
                           </div>
 
-                          <div className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3 py-1 text-xs md:text-sm shrink-0">
-                            {p.score || 0} {t.pointsUnit}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="cartoon-badge bg-[#ffca3a] text-[#161426] px-3 py-1 text-xs md:text-sm">
+                              {p.score || 0} {t.pointsUnit}
+                            </div>
+                            {isHost && p.id !== room.host_id && (
+                              <button
+                                type="button"
+                                onClick={() => handleKickPlayer(p.id)}
+                                title={lang === 'ar' ? 'طرد اللاعب (Kick)' : 'Kick Player'}
+                                className="cartoon-btn bg-[#ff595e] text-white p-1.5 rounded-xl flex items-center justify-center"
+                              >
+                                <UserMinus weight="bold" className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
