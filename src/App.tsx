@@ -76,6 +76,21 @@ import {
   buildInitialTheMindState,
 } from './components/TheMindGame';
 import {
+  TrixGame,
+  TrixGameState,
+  buildInitialTrixState,
+} from './components/TrixGame';
+import {
+  MonopolyGame,
+  MonopolyGameState,
+  buildInitialMonopolyState,
+} from './components/MonopolyGame';
+import {
+  SnakesAndLaddersGame,
+  SnakesGameState,
+  buildInitialSnakesState,
+} from './components/SnakesAndLaddersGame';
+import {
   PartyGameSvgIcon,
   CartoonAvatarSvg,
   ReactionSvgIcon,
@@ -562,6 +577,18 @@ export function App() {
 
       case 'themind': {
         return buildInitialTheMindState(pIds);
+      }
+
+      case 'trix': {
+        return buildInitialTrixState(pIds);
+      }
+
+      case 'monopoly': {
+        return buildInitialMonopolyState(pIds);
+      }
+
+      case 'snakes': {
+        return buildInitialSnakesState(pIds);
       }
 
       case 'wavelength':
@@ -1356,6 +1383,7 @@ export function App() {
   // Filtered Home Catalog
   const homeCategories: { id: PartyGameCategory; ar: string; en: string }[] = [
     { id: 'all', ar: `الكل (${PARTY_GAMES_CATALOG.length})`, en: `All (${PARTY_GAMES_CATALOG.length})` },
+    { id: 'board', ar: 'طاولة وشدّة (3)', en: 'Board & Cards (3)' },
     { id: 'telepathy', ar: 'تخاطر وخيال (6)', en: 'Mind & Art (6)' },
     { id: 'bluff', ar: 'خداع وجواسيس (4)', en: 'Bluff & Spies (4)' },
     { id: 'drawing', ar: 'رسم وإبداع (2)', en: 'Drawing (2)' },
@@ -1597,8 +1625,8 @@ export function App() {
 
                 <p className="text-[11px] font-bold text-[#3f3b5c] text-center leading-relaxed">
                   {lang === 'ar'
-                    ? 'غرفة واحدة تجمع كل الـ 15 لعبة! فيكم تبدلوا اللعبة بأي وقت مع نفس الأصحاب ونفس لوحة النقاط.'
-                    : 'One room, 15 games! Switch games anytime with the same group & shared Leaderboard.'}
+                    ? `غرفة واحدة تجمع كل الـ ${PARTY_GAMES_CATALOG.length} لعبة! فيكم تبدلوا اللعبة بأي وقت مع نفس الأصحاب ونفس لوحة النقاط.`
+                    : `One room, ${PARTY_GAMES_CATALOG.length} games! Switch games anytime with the same group & shared Leaderboard.`}
                 </p>
               </div>
             </div>
@@ -1702,7 +1730,11 @@ export function App() {
                     type="text"
                     value={homeSearch}
                     onChange={(e) => setHomeSearch(e.target.value)}
-                    placeholder={lang === 'ar' ? 'ابحث في الـ 15 لعبة...' : 'Search 15 games...'}
+                    placeholder={
+                      lang === 'ar'
+                        ? `ابحث في الـ ${PARTY_GAMES_CATALOG.length} لعبة...`
+                        : `Search ${PARTY_GAMES_CATALOG.length} games...`
+                    }
                     className="cartoon-input w-full ps-9 pe-3 py-2 bg-[#fff9ec] text-[#161426] text-xs sm:text-sm"
                   />
                 </div>
@@ -2421,6 +2453,51 @@ export function App() {
                     lang={lang}
                     onUpdateGameData={handleUpdateMiniGameData}
                     onStartNewRound={() => handleSelectPartyGame('themind')}
+                  />
+                ) : activeGameId === 'trix' ? (
+                  <TrixGame
+                    gameData={
+                      Array.isArray(room.game_data?.seats)
+                        ? room.game_data
+                        : (buildInitialGameData('trix', players) as TrixGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('trix')}
+                  />
+                ) : activeGameId === 'monopoly' ? (
+                  <MonopolyGame
+                    gameData={
+                      room.game_data?.cash && Array.isArray(room.game_data?.playerOrder)
+                        ? room.game_data
+                        : (buildInitialGameData('monopoly', players) as MonopolyGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('monopoly')}
+                  />
+                ) : activeGameId === 'snakes' ? (
+                  <SnakesAndLaddersGame
+                    gameData={
+                      room.game_data?.boardType === 'snakes'
+                        ? room.game_data
+                        : (buildInitialGameData('snakes', players) as SnakesGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('snakes')}
                   />
                 ) : (
                   /* WAVELENGTH GAME BOARD */

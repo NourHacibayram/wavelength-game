@@ -13,9 +13,18 @@ export type PartyGameId =
   | 'insider'
   | 'decrypto'
   | 'cockroach'
-  | 'themind';
+  | 'themind'
+  | 'trix'
+  | 'monopoly'
+  | 'snakes';
 
-export type PartyGameCategory = 'all' | 'telepathy' | 'bluff' | 'drawing' | 'speed';
+export type PartyGameCategory =
+  | 'all'
+  | 'board'
+  | 'telepathy'
+  | 'bluff'
+  | 'drawing'
+  | 'speed';
 
 export interface ChameleonTopic {
   id: string;

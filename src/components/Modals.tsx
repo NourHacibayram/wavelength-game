@@ -183,6 +183,7 @@ export const GamePickerModal: React.FC<GamePickerModalProps> = ({
 
   const categories: { id: PartyGameCategory; ar: string; en: string }[] = [
     { id: 'all', ar: `الكل (${PARTY_GAMES_CATALOG.length})`, en: `All (${PARTY_GAMES_CATALOG.length})` },
+    { id: 'board', ar: 'طاولة وشدّة', en: 'Board & Cards' },
     { id: 'telepathy', ar: 'تخاطر وخيال', en: 'Mind & Imagination' },
     { id: 'bluff', ar: 'خداع وجواسيس', en: 'Bluff & Spies' },
     { id: 'drawing', ar: 'رسم وإبداع', en: 'Drawing' },

@@ -27,6 +27,11 @@ import {
   WordBombTutorialScene,
   TheMindTutorialScene,
 } from './GameTutorialScenesB';
+import {
+  TrixTutorialScene,
+  MonopolyTutorialScene,
+  SnakesTutorialScene,
+} from './GameTutorialScenesC';
 
 interface GameTutorialPlayerProps {
   gameId: PartyGameId;
@@ -79,6 +84,12 @@ export const GameTutorialSvgScene: React.FC<{
       return <WordBombTutorialScene {...props} />;
     case 'themind':
       return <TheMindTutorialScene {...props} />;
+    case 'trix':
+      return <TrixTutorialScene {...props} />;
+    case 'monopoly':
+      return <MonopolyTutorialScene {...props} />;
+    case 'snakes':
+      return <SnakesTutorialScene {...props} />;
     default:
       return <WavelengthTutorialScene {...props} />;
   }
