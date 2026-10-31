@@ -326,7 +326,7 @@ export const BOOM_CARD_META: Record<
     symbol: '2×',
   },
   combo_falcon: {
-    name_ar: 'الصقر الذهبي',
+    name_ar: 'الصقر',
     name_en: 'Falcon',
     short_ar: 'اجمع 2 أو 3 للسرقة',
     short_en: 'Collect 2 or 3 to steal',
@@ -786,41 +786,136 @@ export const BoomCardIllustrationSvg: React.FC<{
         >
           <defs>
             <radialGradient id={`scAtkBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#fef9c3" />
-              <stop offset="50%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#7c2d12" />
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="60%" stopColor="#7c2d12" />
+              <stop offset="100%" stopColor="#2a0a04" />
             </radialGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scAtkBg_${uid})`} />
-          {/* Comic Impact Starburst */}
-          <polygon
-            points="70,6 82,24 106,12 98,34 126,34 106,52 128,72 100,74 108,98 82,86 70,104 58,86 32,98 40,74 12,72 34,52 14,34 42,34 34,12 58,24"
-            fill="#fde047"
-            stroke="#161426"
-            strokeWidth="2.8"
-            strokeLinejoin="round"
+
+          {/* Subtle Golden Arena Ring */}
+          <circle
+            cx="70"
+            cy="54"
+            r="38"
+            fill="#451a03"
+            stroke="#f59e0b"
+            strokeWidth="2.5"
+            opacity="0.7"
           />
-          {/* Left Lightning Bolt */}
-          <polygon
-            points="56,12 28,54 48,54 38,94 74,46 54,46"
-            fill="#ffca3a"
-            stroke="#161426"
-            strokeWidth="3.8"
-            strokeLinejoin="round"
-          />
-          {/* Right Lightning Bolt */}
-          <polygon
-            points="92,14 66,52 84,52 75,90 108,44 89,44"
-            fill="#f97316"
-            stroke="#161426"
-            strokeWidth="3.8"
-            strokeLinejoin="round"
-          />
-          {/* Bold ×2 Medallion */}
-          <g transform="translate(102, 76)">
-            <circle cx="0" cy="0" r="20" fill="#e11d48" stroke="#161426" strokeWidth="3.8" />
-            <circle cx="0" cy="0" r="15.5" fill="none" stroke="#fecdd3" strokeWidth="1.5" />
-            <text x="0" y="6" textAnchor="middle" fill="#ffffff" fontSize="18" fontWeight="900">
+
+          {/* Sword 1 (Tilted -42 deg) */}
+          <g transform="rotate(-42 70 52)">
+            {/* Blade */}
+            <polygon
+              points="70,8 78,22 76,66 64,66 62,22"
+              fill="#f8fafc"
+              stroke="#161426"
+              strokeWidth="3.4"
+              strokeLinejoin="round"
+            />
+            <polygon points="70,11 75,22 74,64 70,64" fill="#bae6fd" />
+            {/* Golden Crossguard */}
+            <rect
+              x="53"
+              y="64"
+              width="34"
+              height="8"
+              rx="4"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="3.2"
+            />
+            {/* Handle & Pommel */}
+            <rect
+              x="66"
+              y="72"
+              width="8"
+              height="16"
+              rx="2"
+              fill="#e11d48"
+              stroke="#161426"
+              strokeWidth="3"
+            />
+            <circle
+              cx="70"
+              cy="91"
+              r="5.5"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="3"
+            />
+          </g>
+
+          {/* Sword 2 (Tilted +42 deg) */}
+          <g transform="rotate(42 70 52)">
+            {/* Blade */}
+            <polygon
+              points="70,8 78,22 76,66 64,66 62,22"
+              fill="#f8fafc"
+              stroke="#161426"
+              strokeWidth="3.4"
+              strokeLinejoin="round"
+            />
+            <polygon points="70,11 75,22 74,64 70,64" fill="#bae6fd" />
+            {/* Golden Crossguard */}
+            <rect
+              x="53"
+              y="64"
+              width="34"
+              height="8"
+              rx="4"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="3.2"
+            />
+            {/* Handle & Pommel */}
+            <rect
+              x="66"
+              y="72"
+              width="8"
+              height="16"
+              rx="2"
+              fill="#e11d48"
+              stroke="#161426"
+              strokeWidth="3"
+            />
+            <circle
+              cx="70"
+              cy="91"
+              r="5.5"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="3"
+            />
+          </g>
+
+          {/* Central Bold ×2 Power Shield */}
+          <g transform="translate(70, 56)">
+            <circle
+              cx="0"
+              cy="0"
+              r="20"
+              fill="#e11d48"
+              stroke="#161426"
+              strokeWidth="3.8"
+            />
+            <circle
+              cx="0"
+              cy="0"
+              r="15.5"
+              fill="none"
+              stroke="#ffca3a"
+              strokeWidth="2.2"
+            />
+            <text
+              x="0"
+              y="6"
+              textAnchor="middle"
+              fill="#ffffff"
+              fontSize="17"
+              fontWeight="900"
+            >
               ×2
             </text>
           </g>
@@ -884,24 +979,48 @@ export const BoomCardIllustrationSvg: React.FC<{
         >
           <defs>
             <radialGradient id={`scRevBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#f3e8ff" />
-              <stop offset="50%" stopColor="#9333ea" />
-              <stop offset="100%" stopColor="#3b0764" />
+              <stop offset="0%" stopColor="#9333ea" />
+              <stop offset="60%" stopColor="#581c87" />
+              <stop offset="100%" stopColor="#2e1065" />
             </radialGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scRevBg_${uid})`} />
-          <circle cx="70" cy="54" r="42" fill="none" stroke="#e9d5ff" strokeWidth="1.5" strokeDasharray="6 5" opacity="0.45" />
-          <circle cx="70" cy="54" r="16" fill="#161426" stroke="#ffca3a" strokeWidth="3" />
-          {/* Upper 3D Curved Arrow */}
-          <path d="M 34 46 A 36 32 0 0 1 104 40" fill="none" stroke="#161426" strokeWidth="14" strokeLinecap="round" />
-          <path d="M 34 46 A 36 32 0 0 1 104 40" fill="none" stroke="#a855f7" strokeWidth="8.5" strokeLinecap="round" />
-          <polygon points="105,22 120,45 93,45" fill="#ffca3a" stroke="#161426" strokeWidth="3.4" strokeLinejoin="round" />
-          {/* Lower 3D Curved Arrow */}
-          <path d="M 106 62 A 36 32 0 0 1 36 68" fill="none" stroke="#161426" strokeWidth="14" strokeLinecap="round" />
-          <path d="M 106 62 A 36 32 0 0 1 36 68" fill="none" stroke="#f15bb5" strokeWidth="8.5" strokeLinecap="round" />
-          <polygon points="35,86 20,63 47,63" fill="#00f5d4" stroke="#161426" strokeWidth="3.4" strokeLinejoin="round" />
-          {/* Center Compass Star */}
-          <polygon points="70,43 73,51 81,54 73,57 70,65 67,57 59,54 67,51" fill="#ffca3a" />
+
+          {/* Clean Tilted Medallion Backdrop */}
+          <ellipse
+            cx="70"
+            cy="54"
+            rx="44"
+            ry="34"
+            transform="rotate(-18 70 54)"
+            fill="#3b0764"
+            stroke="#c084fc"
+            strokeWidth="2.5"
+            opacity="0.75"
+          />
+
+          {/* Symmetrical UNO-Style Interlocking Curved Arrows */}
+          <g transform="rotate(-18 70 54)">
+            {/* Top Arrow (Golden Yellow — Single Seamless Vector Path) */}
+            <path
+              d="M 38 52 C 38 28, 76 22, 90 36 L 98 27 L 106 52 L 80 48 L 88 40 C 76 31, 52 35, 52 52 Z"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="3.5"
+              strokeLinejoin="round"
+            />
+
+            {/* Bottom Arrow (Crisp White — Exact 180-Degree Symmetry!) */}
+            <g transform="rotate(180 70 54)">
+              <path
+                d="M 38 52 C 38 28, 76 22, 90 36 L 98 27 L 106 52 L 80 48 L 88 40 C 76 31, 52 35, 52 52 Z"
+                fill="#ffffff"
+                stroke="#161426"
+                strokeWidth="3.5"
+                strokeLinejoin="round"
+              />
+            </g>
+          </g>
         </svg>
       );
 
