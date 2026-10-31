@@ -130,39 +130,39 @@ export const SFX_CATALOG: Record<SfxId, SfxMeta> = {
   },
   wire_snip: {
     id: 'wire_snip',
-    urls: ['/audio/sfx/wire-snip.ogg'],
-    label_ar: 'قصّ الفتيل بمقص الإنقاذ',
-    label_en: 'Wire Cutters Snip',
+    urls: ['/audio/sfx/wire-snip.ogg?v=2'],
+    label_ar: 'قصّ الفتيل + رنّة النجاة الكرتونية',
+    label_en: 'Cartoon Wire Snip & Rescue Chime',
     baseVolume: 1.0,
   },
   clock_tick: {
     id: 'clock_tick',
-    urls: ['/audio/sfx/clock-tick.ogg'],
-    label_ar: 'تكتكة عدّاد القنبلة (00:01)',
-    label_en: 'Bomb Timer Ticking',
+    urls: ['/audio/sfx/clock-tick.ogg?v=2'],
+    label_ar: 'تكتكة عدّاد القنبلة الكرتوني',
+    label_en: 'Cartoon Bomb Countdown',
     maxDurationMs: 950,
-    baseVolume: 0.9,
+    baseVolume: 0.95,
   },
   explosion: {
     id: 'explosion',
-    urls: ['/audio/sfx/explosion.ogg'],
-    label_ar: 'انفجار القنبلة (بوووم!)',
-    label_en: 'Bomb Explosion',
+    urls: ['/audio/sfx/explosion.ogg?v=2'],
+    label_ar: 'انفجار كرتوني كوميدي (كابووم!)',
+    label_en: 'Cartoon KABOOM!',
     baseVolume: 1.0,
   },
   heavy_slam: {
     id: 'heavy_slam',
-    urls: ['/audio/sfx/heavy-slam.ogg'],
-    label_ar: 'ضربة بلوك! / مطرقة المزاد',
-    label_en: 'Block Slam / Gavel',
+    urls: ['/audio/sfx/heavy-slam.ogg?v=2'],
+    label_ar: 'ضربة بلوك! كرتونية',
+    label_en: 'Cartoon Block Slam',
     baseVolume: 0.95,
   },
   metal_click: {
     id: 'metal_click',
-    urls: ['/audio/sfx/metal-click.ogg'],
-    label_ar: 'كاشف الرادار / زناد المسدس',
-    label_en: 'Radar Lock / Trigger Click',
-    baseVolume: 0.85,
+    urls: ['/audio/sfx/metal-click.ogg?v=2'],
+    label_ar: 'نبضة رادار الكومة الكرتوني',
+    label_en: 'Cartoon Radar Sonar Ping',
+    baseVolume: 0.9,
   },
   dice_shake: {
     id: 'dice_shake',
@@ -201,11 +201,10 @@ export const SFX_CATALOG: Record<SfxId, SfxMeta> = {
   },
   applause_win: {
     id: 'applause_win',
-    urls: ['/audio/sfx/applause-win.ogg'],
-    label_ar: 'تصفيق وهتاف الفوز بالجولة',
-    label_en: 'Victory Applause & Cheer',
-    maxDurationMs: 3600,
-    baseVolume: 0.85,
+    urls: ['/audio/sfx/applause-win.ogg?v=2'],
+    label_ar: 'فانفير الفوز الكرتوني الاحتفالي',
+    label_en: 'Cartoon Victory Fanfare',
+    baseVolume: 0.95,
   },
   book_flip: {
     id: 'book_flip',
@@ -525,7 +524,6 @@ class SoundManager {
     setTimeout(() => {
       if (!this.sfxEnabled) return;
       this.playSfx('wire_snip');
-      this.playSfx('metal_click');
     }, 910);
   }
 
