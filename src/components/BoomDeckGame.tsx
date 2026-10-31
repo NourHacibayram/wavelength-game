@@ -146,7 +146,7 @@ export const BOOM_CARD_META: Record<
   }
 > = {
   bomb: {
-    name_ar: 'قنبلة مشتعلة',
+    name_ar: 'قنبلة!',
     name_en: 'Lit Bomb',
     short_ar: 'تنفجر إلا بمقص الإنقاذ!',
     short_en: 'Explodes unless Defused!',
@@ -2910,25 +2910,137 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
       setLocalDrawPreview(null);
 
       if (topCard.type === 'bomb') {
+        const drawerHand = [...(gameData.hands[drawerId] || [])];
+        const defuseIdx = drawerHand.findIndex((c) => c.type === 'defuse');
+
+        // Case A: Player holds a Defuse ("مقص الإنقاذ") card!
+        // Immediately animate the Defuse card flying from their hand to the center Discard Pile (520ms), then open the Bomb Planting selector directly!
+        if (defuseIdx !== -1) {
+          const [usedDefuse] = drawerHand.splice(defuseIdx, 1);
+          setLocalPlayPreview({
+            card: usedDefuse,
+            actorId: drawerId,
+          });
+
+          setTimeout(() => {
+            setLocalPlayPreview(null);
+            onUpdateGameData({
+              ...gameData,
+              phase: 'planting_bomb',
+              deck: currentDeck,
+              crisisPlayerId: drawerId,
+              radarPeekPlayerId: null,
+              radarCards: [],
+              hands: {
+                ...gameData.hands,
+                [drawerId]: drawerHand,
+              },
+              discardPile: [...(gameData.discardPile || []), usedDefuse],
+              lastCinematic: {
+                id: `cin_defuse_${Date.now()}`,
+                type: 'defuse',
+                actorId: drawerId,
+                subtitle_ar: `${drawerName} سحب قنبلة وقصّ السلك بمقص الإنقاذ تلقائياً!`,
+                subtitle_en: `${drawerName} drew a Bomb and auto-defused it with Wire Cutters!`,
+                timestamp: Date.now(),
+              },
+              actionLog: [
+                {
+                  ar: `${drawerName} سحب قنبلة وفكّكها تلقائياً بمقص الإنقاذ! الآن يزرعها بالكومة...`,
+                  en: `${drawerName} drew a bomb and auto-defused it! Now planting it back in the deck...`,
+                },
+                ...(gameData.actionLog || []).slice(0, 7),
+              ],
+            });
+          }, 520);
+          return;
+        }
+
+        // Case B: Player has NO Defuse card -> Automatic Explosion!
+        const nextAlive = (gameData.alivePlayerIds || []).filter(
+          (id) => id !== drawerId
+        );
+        const nextEliminated = [
+          ...(gameData.eliminatedPlayerIds || []),
+          drawerId,
+        ];
+
+        if (nextAlive.length <= 1) {
+          const champId = nextAlive[0] || drawerId;
+          const awards: Record<string, number> = { [champId]: 4 };
+          nextEliminated.slice(-1).forEach((runnerUpId) => {
+            if (runnerUpId !== champId) awards[runnerUpId] = 1;
+          });
+
+          onUpdateGameData(
+            {
+              ...gameData,
+              phase: 'round_over',
+              deck: currentDeck,
+              alivePlayerIds: nextAlive,
+              eliminatedPlayerIds: nextEliminated,
+              crisisPlayerId: null,
+              radarPeekPlayerId: null,
+              radarCards: [],
+              winnerId: champId,
+              lastCinematic: {
+                id: `cin_win_${Date.now()}`,
+                type: 'exploded',
+                actorId: drawerId,
+                subtitle_ar: `انفجرت القنبلة بـ ${drawerName}! الفائز الناجي الأخير هو ${getPlayerName(
+                  champId
+                )}!`,
+                subtitle_en: `${drawerName} exploded! Last survivor ${getPlayerName(
+                  champId
+                )} wins!`,
+                timestamp: Date.now(),
+              },
+              actionLog: [
+                {
+                  ar: `انفجر ${drawerName} وتُوّج ${getPlayerName(
+                    champId
+                  )} بطلاً للفتيل الملعون (+4 نقاط)!`,
+                  en: `${drawerName} blew up! ${getPlayerName(
+                    champId
+                  )} is the Last Survivor (+4 pts)!`,
+                },
+                ...(gameData.actionLog || []).slice(0, 7),
+              ],
+            },
+            awards
+          );
+          return;
+        }
+
+        const nextTurnAfterBoom = getNextAlivePlayerId(
+          drawerId,
+          nextAlive,
+          gameData.direction
+        );
+
         onUpdateGameData({
           ...gameData,
-          phase: 'bomb_crisis',
+          phase: 'playing',
           deck: currentDeck,
-          crisisPlayerId: drawerId,
+          alivePlayerIds: nextAlive,
+          eliminatedPlayerIds: nextEliminated,
+          crisisPlayerId: null,
           radarPeekPlayerId: null,
           radarCards: [],
+          turnPlayerId: nextTurnAfterBoom,
+          turnsRemaining: 1,
           lastCinematic: {
-            id: `cin_bomb_${Date.now()}`,
-            type: 'bomb',
+            id: `cin_exp_${Date.now()}`,
+            type: 'exploded',
             actorId: drawerId,
-            subtitle_ar: `إنذار أحمر! ${drawerName} سحب كرت «الديناميت المشتعل»!`,
-            subtitle_en: `RED ALERT! ${drawerName} drew a LIT DYNAMITE!`,
+            subtitle_ar: `بوووم! سحب ${drawerName} قنبلة بدون مقص إنقاذ وخرج من الجولة!`,
+            subtitle_en: `KABOOM! ${drawerName} drew a Bomb with no Defuse and blew up!`,
             timestamp: Date.now(),
           },
           actionLog: [
             {
-              ar: `كارثة! ${drawerName} سحب «الديناميت المشتعل» من الكومة!`,
-              en: `DANGER! ${drawerName} drew a LIT DYNAMITE from the pile!`,
+              ar: `انفجر اللغم بوجه ${drawerName} وخرج! باقي ${nextAlive.length} ناجين.`,
+              en: `${drawerName} exploded! ${nextAlive.length} survivors remain.`,
             },
             ...(gameData.actionLog || []).slice(0, 7),
           ],
@@ -3002,42 +3114,6 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
         ],
       });
     }, 680);
-  };
-
-  // Cut the Bomb Fuse using Wire Cutters (Defuse)!
-  const handleDefuseBomb = () => {
-    const crisisId = gameData.crisisPlayerId || gameData.turnPlayerId;
-    const hand = [...(gameData.hands[crisisId] || [])];
-    const defuseIdx = hand.findIndex((c) => c.type === 'defuse');
-    if (defuseIdx === -1) return;
-
-    const [usedDefuse] = hand.splice(defuseIdx, 1);
-    const survivorName = getPlayerName(crisisId);
-
-    onUpdateGameData({
-      ...gameData,
-      phase: 'planting_bomb',
-      hands: {
-        ...gameData.hands,
-        [crisisId]: hand,
-      },
-      discardPile: [...(gameData.discardPile || []), usedDefuse],
-      lastCinematic: {
-        id: `cin_defuse_${Date.now()}`,
-        type: 'defuse',
-        actorId: crisisId,
-        subtitle_ar: `${survivorName} قصّ السلك بمقص الأسلاك ونجا من الانفجار!`,
-        subtitle_en: `${survivorName} snipped the red wire and survived!`,
-        timestamp: Date.now(),
-      },
-      actionLog: [
-        {
-          ar: `${survivorName} فكّك الديناميت بمقص الأسلاك! الآن يزرع اللغم بالكومة بالسر...`,
-          en: `${survivorName} defused the bomb and is secretly planting it back in the deck...`,
-        },
-        ...(gameData.actionLog || []).slice(0, 7),
-      ],
-    });
   };
 
   // Re-plant the defused bomb at ANY exact position (0 .. nextDeck.length) or random in the Draw Pile!
@@ -3120,95 +3196,8 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     });
   };
 
-  // Player has NO Wire Cutters -> BOOM! Eliminated!
-  const handleConfirmExplosion = () => {
-    const victimId = gameData.crisisPlayerId || gameData.turnPlayerId;
-    const victimName = getPlayerName(victimId);
-    const nextAlive = (gameData.alivePlayerIds || []).filter(
-      (id) => id !== victimId
-    );
-    const nextEliminated = [...(gameData.eliminatedPlayerIds || []), victimId];
-
-    if (nextAlive.length <= 1) {
-      const champId = nextAlive[0] || victimId;
-      const awards: Record<string, number> = { [champId]: 4 };
-      nextEliminated.slice(-1).forEach((runnerUpId) => {
-        if (runnerUpId !== champId) awards[runnerUpId] = 1;
-      });
-
-      onUpdateGameData(
-        {
-          ...gameData,
-          phase: 'round_over',
-          alivePlayerIds: nextAlive,
-          eliminatedPlayerIds: nextEliminated,
-          crisisPlayerId: null,
-          winnerId: champId,
-          lastCinematic: {
-            id: `cin_win_${Date.now()}`,
-            type: 'exploded',
-            actorId: victimId,
-            subtitle_ar: `انفجر الديناميت بـ ${victimName}! الفائز الناجي الأخير هو ${getPlayerName(
-              champId
-            )}!`,
-            subtitle_en: `${victimName} exploded! Last survivor ${getPlayerName(
-              champId
-            )} wins!`,
-            timestamp: Date.now(),
-          },
-          actionLog: [
-            {
-              ar: `انفجر ${victimName} وتُوّج ${getPlayerName(
-                champId
-              )} بطلاً للفتيل الملعون (+4 نقاط)!`,
-              en: `${victimName} blew up! ${getPlayerName(
-                champId
-              )} is the Last Survivor (+4 pts)!`,
-            },
-            ...(gameData.actionLog || []).slice(0, 7),
-          ],
-        },
-        awards
-      );
-      return;
-    }
-
-    const nextTurnPlayerId = getNextAlivePlayerId(
-      victimId,
-      nextAlive,
-      gameData.direction
-    );
-
-    onUpdateGameData({
-      ...gameData,
-      phase: 'playing',
-      alivePlayerIds: nextAlive,
-      eliminatedPlayerIds: nextEliminated,
-      crisisPlayerId: null,
-      turnPlayerId: nextTurnPlayerId,
-      turnsRemaining: 1,
-      lastCinematic: {
-        id: `cin_exp_${Date.now()}`,
-        type: 'exploded',
-        actorId: victimId,
-        subtitle_ar: `بوووم! انفجر الديناميت بـ ${victimName} وخرج من الجولة!`,
-        subtitle_en: `KABOOM! ${victimName} had no Wire Cutters and blew up!`,
-        timestamp: Date.now(),
-      },
-      actionLog: [
-        {
-          ar: `انفجر اللغم بوجه ${victimName} وخرج! باقي ${nextAlive.length} ناجين.`,
-          en: `${victimName} exploded! ${nextAlive.length} survivors remain.`,
-        },
-        ...(gameData.actionLog || []).slice(0, 7),
-      ],
-    });
-  };
-
   const selectedCard = myHand.find((c) => c.id === selectedCardId) || null;
   const crisisPlayerId = gameData.crisisPlayerId || gameData.turnPlayerId;
-  const crisisHand = gameData.hands?.[crisisPlayerId] || [];
-  const crisisHasDefuse = crisisHand.some((c) => c.type === 'defuse');
   const isCrisisMine = activeViewerId === crisisPlayerId;
 
   const bottomIdx = Math.max(
@@ -4225,84 +4214,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
               );
             })()}
 
-          {/* ABSOLUTE CENTER OVERLAY 2: BOMB CRISIS ON THE FELT */}
-          {gameData.phase === 'bomb_crisis' && (
-            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fff1f2] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-lg w-full">
-              <div className="flex items-center justify-center gap-4 text-start">
-                <BoomPlayingCard type="bomb" ar={ar} size="sm" />
-                <div className="space-y-1 flex-1">
-                  <span className="cartoon-badge bg-[#e11d48] text-white px-3 py-0.5 text-[11px] inline-flex items-center gap-1">
-                    <WarningOctagon weight="fill" className="w-3.5 h-3.5" />
-                    <span>
-                      {ar ? 'إنذار انفجار عالطاولة!' : 'BOMB ON THE TABLE!'}
-                    </span>
-                  </span>
-                  <h3 className="text-lg sm:text-xl font-black text-[#161426]">
-                    {ar
-                      ? `${getPlayerName(
-                          crisisPlayerId
-                        )} سحب «الديناميت المشتعل»!`
-                      : `${getPlayerName(crisisPlayerId)} drew LIT DYNAMITE!`}
-                  </h3>
-                  <p className="text-xs font-bold text-[#3f3b5c]">
-                    {crisisHasDefuse
-                      ? ar
-                        ? 'يملك «مقص الأسلاك» في يده! قصّ السلك الأحمر الآن لتنجو وتزرع اللغم بالسر!'
-                        : 'Wire Cutters in hand! Snip the red wire now to survive and re-plant the bomb!'
-                      : ar
-                      ? 'لا يملك أي «مقص أسلاك» في يده... الفتيل وصل للنهاية!'
-                      : 'No Wire Cutters left in hand... The fuse has reached the end!'}
-                  </p>
-                </div>
-              </div>
-
-              {(isCrisisMine || isPassAndPlay) && (
-                <div className="flex justify-center">
-                  {crisisHasDefuse ? (
-                    <button
-                      type="button"
-                      onClick={handleDefuseBomb}
-                      className="cartoon-btn bg-[#22c55e] hover:bg-[#16a34a] text-[#161426] px-5 py-2.5 text-sm sm:text-base flex items-center gap-2 cursor-pointer"
-                    >
-                      <Scissors weight="fill" className="w-5 h-5" />
-                      <span>
-                        {ar
-                          ? 'قصّ السلك بمقص الأسلاك وانجُ بنفسك!'
-                          : 'Snip Fuse with Wire Cutters!'}
-                      </span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleConfirmExplosion}
-                      className="cartoon-btn bg-[#e11d48] text-white px-5 py-2.5 text-sm sm:text-base flex items-center gap-2 cursor-pointer"
-                    >
-                      <Flame weight="fill" className="w-5 h-5" />
-                      <span>
-                        {ar
-                          ? 'بوووم! انفجار وخروج من الجولة'
-                          : 'KABOOM! Accept Explosion'}
-                      </span>
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {isHost && !isCrisisMine && !isPassAndPlay && (
-                <button
-                  type="button"
-                  onClick={
-                    crisisHasDefuse ? handleDefuseBomb : handleConfirmExplosion
-                  }
-                  className="cartoon-badge bg-[#191636] text-white px-4 py-1 text-xs cursor-pointer"
-                >
-                  {ar
-                    ? 'متابعة تلقائية (إذا تأخر اللاعب)'
-                    : 'Host Continue (if player AFK)'}
-                </button>
-              )}
-            </div>
-          )}
+          {/* (Bomb Crisis is now 100% automatic: Defuse card flies smoothly to the table and opens the Bomb Planting selector directly!) */}
 
           {/* ABSOLUTE CENTER OVERLAY 3: SECRET BOMB RE-PLANTING VAULT */}
           {gameData.phase === 'planting_bomb' && (
