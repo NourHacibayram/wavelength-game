@@ -804,8 +804,8 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     players_en: '2–10 Players',
     tag_ar: 'تزامن صامت',
     tag_en: 'Silent Sync',
-    name_ar: 'ذا مايند (نبض الصمت)',
-    name_en: 'The Mind',
+    name_ar: 'نبض الصمت',
+    name_en: 'Silent Pulse',
     desc_ar: 'رتّبوا الأرقام (1–100) تصاعدياً بالوسط بدون ولا كلمة أو دور!',
     desc_en: 'Play cards 1–100 ascending in total silence with no turns!',
     longDesc_ar:
