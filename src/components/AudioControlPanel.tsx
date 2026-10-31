@@ -262,8 +262,8 @@ export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
                       </div>
                       <div className="text-[11px] font-bold text-[#3f3b5c]">
                         {ar
-                          ? 'يشغّل Sneaky Snitch بالفتيل الملعون وتفتيش الشريف، وموسيقى مناسبة لكل لعبة تلقائياً!'
-                          : 'Plays Sneaky Snitch in BoomDeck/Sheriff, and matches each game automatically!'}
+                          ? 'يشغّل «خطوة عالساكت» بالفتيل الملعون وتفتيش الشريف، ومقطوعة خاصة لكل لعبة تلقائياً!'
+                          : 'Plays "Silent Tiptoe" in BoomDeck/Sheriff, and matches each game automatically!'}
                       </div>
                     </div>
                   </div>
