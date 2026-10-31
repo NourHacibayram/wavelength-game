@@ -16,7 +16,12 @@ export type PartyGameId =
   | 'themind'
   | 'trix'
   | 'monopoly'
-  | 'snakes';
+  | 'snakes'
+  | 'skull'
+  | 'sheriff'
+  | 'cashnguns'
+  | 'onenight'
+  | 'resistance';
 
 export type PartyGameCategory =
   | 'all'

@@ -91,6 +91,31 @@ import {
   buildInitialSnakesState,
 } from './components/SnakesAndLaddersGame';
 import {
+  SkullGame,
+  SkullGameState,
+  buildInitialSkullState,
+} from './components/SkullGame';
+import {
+  SheriffGame,
+  SheriffGameState,
+  buildInitialSheriffState,
+} from './components/SheriffGame';
+import {
+  CashNGunsGame,
+  CashNGunsGameState,
+  buildInitialCashNGunsState,
+} from './components/CashNGunsGame';
+import {
+  OneNightGame,
+  OneNightGameState,
+  buildInitialOneNightState,
+} from './components/OneNightGame';
+import {
+  ResistanceGame,
+  ResistanceGameState,
+  buildInitialResistanceState,
+} from './components/ResistanceGame';
+import {
   PartyGameSvgIcon,
   CartoonAvatarSvg,
   ReactionSvgIcon,
@@ -589,6 +614,26 @@ export function App() {
 
       case 'snakes': {
         return buildInitialSnakesState(pIds);
+      }
+
+      case 'skull': {
+        return buildInitialSkullState(validPlayers);
+      }
+
+      case 'sheriff': {
+        return buildInitialSheriffState(validPlayers);
+      }
+
+      case 'cashnguns': {
+        return buildInitialCashNGunsState(validPlayers);
+      }
+
+      case 'onenight': {
+        return buildInitialOneNightState(validPlayers);
+      }
+
+      case 'resistance': {
+        return buildInitialResistanceState(validPlayers);
       }
 
       case 'wavelength':
@@ -1383,10 +1428,10 @@ export function App() {
   // Filtered Home Catalog
   const homeCategories: { id: PartyGameCategory; ar: string; en: string }[] = [
     { id: 'all', ar: `الكل (${PARTY_GAMES_CATALOG.length})`, en: `All (${PARTY_GAMES_CATALOG.length})` },
+    { id: 'bluff', ar: 'خداع وجواسيس (8)', en: 'Bluff & Spies (8)' },
     { id: 'telepathy', ar: 'تخاطر وخيال (6)', en: 'Mind & Art (6)' },
-    { id: 'bluff', ar: 'خداع وجواسيس (4)', en: 'Bluff & Spies (4)' },
+    { id: 'speed', ar: 'سرعة ومواجهة (4)', en: 'Speed & Action (4)' },
     { id: 'drawing', ar: 'رسم وإبداع (2)', en: 'Drawing (2)' },
-    { id: 'speed', ar: 'سرعة وتحدي (3)', en: 'Speed & Wagers (3)' },
   ];
 
   const filteredHomeGames = PARTY_GAMES_CATALOG.filter((g) => {
@@ -2550,6 +2595,81 @@ export function App() {
                     lang={lang}
                     onUpdateGameData={handleUpdateMiniGameData}
                     onStartNewRound={() => handleSelectPartyGame('snakes')}
+                  />
+                ) : activeGameId === 'skull' ? (
+                  <SkullGame
+                    gameData={
+                      room.game_data?.ownedDiscs && room.game_data?.playerStacks
+                        ? room.game_data
+                        : (buildInitialGameData('skull', players) as SkullGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('skull')}
+                  />
+                ) : activeGameId === 'sheriff' ? (
+                  <SheriffGame
+                    gameData={
+                      room.game_data?.sheriffId && Array.isArray(room.game_data?.merchantIds)
+                        ? room.game_data
+                        : (buildInitialGameData('sheriff', players) as SheriffGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('sheriff')}
+                  />
+                ) : activeGameId === 'cashnguns' ? (
+                  <CashNGunsGame
+                    gameData={
+                      room.game_data?.playerStates && Array.isArray(room.game_data?.roundLoot)
+                        ? room.game_data
+                        : (buildInitialGameData('cashnguns', players) as CashNGunsGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('cashnguns')}
+                  />
+                ) : activeGameId === 'onenight' ? (
+                  <OneNightGame
+                    gameData={
+                      room.game_data?.initialRoles && Array.isArray(room.game_data?.centerRoles)
+                        ? room.game_data
+                        : (buildInitialGameData('onenight', players) as OneNightGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('onenight')}
+                  />
+                ) : activeGameId === 'resistance' ? (
+                  <ResistanceGame
+                    gameData={
+                      room.game_data?.roles && Array.isArray(room.game_data?.missions)
+                        ? room.game_data
+                        : (buildInitialGameData('resistance', players) as ResistanceGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('resistance')}
                   />
                 ) : (
                   /* WAVELENGTH GAME BOARD */

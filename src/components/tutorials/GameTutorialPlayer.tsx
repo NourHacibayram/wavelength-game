@@ -32,6 +32,13 @@ import {
   MonopolyTutorialScene,
   SnakesTutorialScene,
 } from './GameTutorialScenesC';
+import {
+  SkullTutorialScene,
+  SheriffTutorialScene,
+  CashNGunsTutorialScene,
+  OneNightTutorialScene,
+  ResistanceTutorialScene,
+} from './GameTutorialScenesD';
 
 interface GameTutorialPlayerProps {
   gameId: PartyGameId;
@@ -90,6 +97,16 @@ export const GameTutorialSvgScene: React.FC<{
       return <MonopolyTutorialScene {...props} />;
     case 'snakes':
       return <SnakesTutorialScene {...props} />;
+    case 'skull':
+      return <SkullTutorialScene {...props} />;
+    case 'sheriff':
+      return <SheriffTutorialScene {...props} />;
+    case 'cashnguns':
+      return <CashNGunsTutorialScene {...props} />;
+    case 'onenight':
+      return <OneNightTutorialScene {...props} />;
+    case 'resistance':
+      return <ResistanceTutorialScene {...props} />;
     default:
       return <WavelengthTutorialScene {...props} />;
   }

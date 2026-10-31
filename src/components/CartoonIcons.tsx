@@ -788,6 +788,190 @@ export const PartyGameSvgIcon: React.FC<{
         </svg>
       );
 
+    case 'skull':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Back Rose Disc */}
+          <circle
+            cx="23"
+            cy="35"
+            r="17"
+            fill="#ffe4e6"
+            stroke="#161426"
+            strokeWidth="3.5"
+          />
+          <circle cx="20" cy="35" r="9" fill="#e11d48" stroke="#161426" strokeWidth="2.8" />
+          <path
+            d="M 16 33 Q 20 28 24 33 Q 20 38 16 33 Z"
+            fill="#fda4af"
+          />
+          {/* Front Ornate Skull Coaster */}
+          <circle
+            cx="40"
+            cy="31"
+            r="19"
+            fill="#191636"
+            stroke="#161426"
+            strokeWidth="3.8"
+          />
+          <circle
+            cx="40"
+            cy="31"
+            r="15"
+            fill="none"
+            stroke="#ffca3a"
+            strokeWidth="1.8"
+            strokeDasharray="3 3"
+          />
+          {/* Cartoon Calavera Skull */}
+          <path
+            d="M 31 28 C 31 20 49 20 49 28 C 49 32 47 34 45 35 L 45 40 L 35 40 L 35 35 C 33 34 31 32 31 28 Z"
+            fill="#fff9ec"
+            stroke="#161426"
+            strokeWidth="2.8"
+            strokeLinejoin="round"
+          />
+          <circle cx="36.5" cy="28.5" r="2.8" fill="#e11d48" />
+          <circle cx="43.5" cy="28.5" r="2.8" fill="#e11d48" />
+          <line x1="38" y1="36" x2="38" y2="40" stroke="#161426" strokeWidth="2.2" />
+          <line x1="42" y1="36" x2="42" y2="40" stroke="#161426" strokeWidth="2.2" />
+        </svg>
+      );
+
+    case 'sheriff':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Smuggler Leather Suitcase */}
+          <rect
+            x="8"
+            y="22"
+            width="48"
+            height="34"
+            rx="7"
+            fill="#b45309"
+            stroke="#161426"
+            strokeWidth="3.8"
+          />
+          {/* Suitcase Handle */}
+          <path
+            d="M 24 22 V 15 A 4 4 0 0 1 28 11 H 36 A 4 4 0 0 1 40 15 V 22"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="4"
+          />
+          {/* Straps */}
+          <rect x="17" y="22" width="6" height="34" fill="#fbbf24" stroke="#161426" strokeWidth="2.5" />
+          <rect x="41" y="22" width="6" height="34" fill="#fbbf24" stroke="#161426" strokeWidth="2.5" />
+          {/* Peeking Blue Diamond + Gold Sheriff Star */}
+          <polygon
+            points="32,27 35,34 43,34 36.5,39 39,46 32,41.5 25,46 27.5,39 21,34 29,34"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="2.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+
+    case 'cashnguns':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Green Cash Stack Behind */}
+          <g transform="rotate(-10, 26, 40)">
+            <rect
+              x="8"
+              y="30"
+              width="36"
+              height="22"
+              rx="4"
+              fill="#22c55e"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <rect x="21" y="30" width="10" height="22" fill="#fde047" stroke="#161426" strokeWidth="2.5" />
+          </g>
+          {/* Bright Orange Cartoon Foam Blaster + BANG Flag */}
+          <path
+            d="M 18 18 H 46 A 4 4 0 0 1 50 22 V 28 A 4 4 0 0 1 46 32 H 31 L 27 46 H 17 L 20 32 H 18 A 4 4 0 0 1 14 28 V 22 A 4 4 0 0 1 18 18 Z"
+            fill="#f97316"
+            stroke="#161426"
+            strokeWidth="3.8"
+            strokeLinejoin="round"
+          />
+          <rect x="49" y="21" width="7" height="8" rx="2" fill="#ef4444" stroke="#161426" strokeWidth="3" />
+          <circle cx="28" cy="25" r="3.5" fill="#fde047" stroke="#161426" strokeWidth="2.2" />
+        </svg>
+      );
+
+    case 'onenight':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Night Moon Disc */}
+          <circle
+            cx="32"
+            cy="32"
+            r="25"
+            fill="#2e1065"
+            stroke="#161426"
+            strokeWidth="4"
+          />
+          {/* Golden Crescent Moon */}
+          <path
+            d="M 40 14 A 16 16 0 1 0 48 42 A 13 13 0 1 1 40 14 Z"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="2.8"
+            strokeLinejoin="round"
+          />
+          {/* Wolf Silhouette Ears + Glowing Eyes + Swap Arrows */}
+          <polygon
+            points="16,44 20,24 27,31 32,29 37,31 43,24 47,44"
+            fill="#7c3aed"
+            stroke="#161426"
+            strokeWidth="3.2"
+            strokeLinejoin="round"
+          />
+          <circle cx="26" cy="36" r="2.6" fill="#ffca3a" />
+          <circle cx="37" cy="36" r="2.6" fill="#ffca3a" />
+          <path
+            d="M 18 50 Q 32 56 46 50"
+            fill="none"
+            stroke="#00f5d4"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+
+    case 'resistance':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Tactical Shield Split Blue (Agent) / Red (Spy) */}
+          <path
+            d="M 32 7 L 54 16 V 33 C 54 46 43 54 32 58 C 21 54 10 46 10 33 V 16 Z"
+            fill="#0284c7"
+            stroke="#161426"
+            strokeWidth="4"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 32 7 L 54 16 V 33 C 54 46 43 54 32 58 Z"
+            fill="#e11d48"
+            stroke="#161426"
+            strokeWidth="3.5"
+            strokeLinejoin="round"
+          />
+          {/* Raised Fist / Star Emblem */}
+          <polygon
+            points="32,17 35.5,26 45,26 37.5,31.5 40.5,41 32,35.5 23.5,41 26.5,31.5 19,26 28.5,26"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="2.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+
     case 'wordbomb':
     default:
       return (
