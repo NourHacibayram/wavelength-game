@@ -4187,121 +4187,23 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
 
           {/* ABSOLUTE CENTER OVERLAY 3: SECRET BOMB RE-PLANTING VAULT */}
           {gameData.phase === 'planting_bomb' && (
-            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-xl w-full">
+            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-md w-full">
               {isCrisisMine || isPassAndPlay ? (
                 <>
-                  <span className="cartoon-badge bg-[#22c55e] text-[#161426] px-3 py-0.5 text-xs">
-                    {ar
-                      ? 'سري للغاية — اختر مكان الفخ داخل الكومة!'
-                      : 'TOP SECRET — Hide Bomb in the Pile!'}
-                  </span>
                   <h3 className="text-base sm:text-lg font-black text-[#161426]">
                     {ar
                       ? `يا ${getPlayerName(
                           crisisPlayerId
-                        )}، وين بدك تزرع الديناميت وسط الـ ${totalDeckCount} كرت؟`
+                        )}، وين بدك تزرع الديناميت؟`
                       : `${getPlayerName(
                           crisisPlayerId
                         )}, where do you want to hide the Dynamite?`}
                   </h3>
 
-                  {/* 6 Clean Tactile Cartoon Preset Buttons */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handlePlantBombAt(0)}
-                      className="cartoon-btn bg-[#e11d48] text-white py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
-                    >
-                      <span className="font-black flex items-center gap-1">
-                        <Flame weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />
-                        {ar ? '1. أول كرت عالوجه!' : '1. Right on TOP!'}
-                      </span>
-                      <span className="text-[10px] opacity-90">
-                        {ar ? 'فخ فوري للي بعدك!' : 'Next draw explodes!'}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handlePlantBombAt(1)}
-                      className="cartoon-btn bg-[#f97316] text-white py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
-                    >
-                      <span className="font-black flex items-center gap-1">
-                        <Lightning weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />
-                        {ar ? '2. تاني كرت من فوق' : '2. Second Card'}
-                      </span>
-                      <span className="text-[10px] opacity-90">
-                        {ar ? 'ينفجر بعد سحبة واحدة!' : '1 safe draw then BOOM!'}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handlePlantBombAt(2)}
-                      className="cartoon-btn bg-[#ffca3a] text-[#161426] py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
-                    >
-                      <span className="font-black flex items-center gap-1">
-                        <WarningOctagon weight="fill" className="w-3.5 h-3.5 text-[#e11d48]" />
-                        {ar ? '3. تالت كرت من فوق' : '3. Third Card'}
-                      </span>
-                      <span className="text-[10px] opacity-80">
-                        {ar ? 'كمين بعد سحبتين' : '2 draws deep'}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handlePlantBombAt(Math.floor(totalDeckCount / 2))
-                      }
-                      className="cartoon-btn bg-[#00bbf9] text-[#161426] py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
-                    >
-                      <span className="font-black flex items-center gap-1">
-                        <FastForward weight="fill" className="w-3.5 h-3.5" />
-                        {ar ? '4. بنص الكومة' : '4. In the Middle'}
-                      </span>
-                      <span className="text-[10px] opacity-80">
-                        {ar
-                          ? `الكرت رقم #${Math.floor(totalDeckCount / 2) + 1}`
-                          : `Card #${Math.floor(totalDeckCount / 2) + 1}`}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handlePlantBombAt(totalDeckCount)}
-                      className="cartoon-btn bg-[#8ac926] text-[#161426] py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
-                    >
-                      <span className="font-black flex items-center gap-1">
-                        <ShieldCheck weight="fill" className="w-3.5 h-3.5" />
-                        {ar ? '5. بآخر الكومة تحت' : '5. Very Bottom'}
-                      </span>
-                      <span className="text-[10px] opacity-80">
-                        {ar
-                          ? `الكرت الأخير (#${totalDeckCount + 1})`
-                          : `Last Card (#${totalDeckCount + 1})`}
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handlePlantBombAt('random')}
-                      className="cartoon-btn bg-[#9b5de5] text-white py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
-                    >
-                      <span className="font-black flex items-center gap-1">
-                        <Shuffle weight="bold" className="w-3.5 h-3.5 text-[#ffca3a]" />
-                        {ar ? '6. مكان عشوائي' : '6. Random Spot'}
-                      </span>
-                      <span className="text-[10px] opacity-90">
-                        {ar ? 'مفاجأة للجميع!' : 'Total mystery!'}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* Custom Tactile Cartoon Number Stepper (Pick ANY Exact Card #1 .. #N+1 without any browser slider!) */}
-                  <div className="px-3 py-2 rounded-2xl bg-[#191636] border-3 border-[#161426] shadow-[0_4px_0_#161426] flex items-center justify-between gap-2 text-white">
+                  {/* Clean Tactile Cartoon Number Stepper (Pick ANY Exact Card #1 .. #N+1) */}
+                  <div className="px-3.5 py-2.5 rounded-2xl bg-[#191636] border-3 border-[#161426] shadow-[0_4px_0_#161426] flex items-center justify-between gap-2 text-white">
                     <span className="text-xs font-extrabold text-white/90">
-                      {ar ? 'أو اختر رقم الكرت بالضبط:' : 'Or pick exact card #:'}
+                      {ar ? 'اختر رقم الكرت:' : 'Pick card #:'}
                     </span>
 
                     <div className="flex items-center gap-1.5">
@@ -4310,12 +4212,12 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                         onClick={() =>
                           setCustomBombSlot((prev) => Math.max(1, prev - 1))
                         }
-                        className="w-7 h-7 rounded-xl bg-[#2d2852] hover:bg-[#ffca3a] hover:text-[#161426] border-2 border-[#161426] font-black text-sm flex items-center justify-center cursor-pointer transition-colors"
+                        className="w-8 h-8 rounded-xl bg-[#2d2852] hover:bg-[#ffca3a] hover:text-[#161426] border-2 border-[#161426] font-black text-base flex items-center justify-center cursor-pointer transition-colors"
                       >
                         -
                       </button>
 
-                      <span className="min-w-[74px] px-2.5 py-1 rounded-xl bg-[#110e24] border-2 border-[#ffca3a] text-[#ffca3a] font-black text-xs text-center">
+                      <span className="min-w-[82px] px-3 py-1 rounded-xl bg-[#110e24] border-2 border-[#ffca3a] text-[#ffca3a] font-black text-xs text-center">
                         {ar
                           ? `كرت #${Math.min(
                               customBombSlot,
@@ -4334,7 +4236,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                             Math.min(totalDeckCount + 1, prev + 1)
                           )
                         }
-                        className="w-7 h-7 rounded-xl bg-[#2d2852] hover:bg-[#ffca3a] hover:text-[#161426] border-2 border-[#161426] font-black text-sm flex items-center justify-center cursor-pointer transition-colors"
+                        className="w-8 h-8 rounded-xl bg-[#2d2852] hover:bg-[#ffca3a] hover:text-[#161426] border-2 border-[#161426] font-black text-base flex items-center justify-center cursor-pointer transition-colors"
                       >
                         +
                       </button>
@@ -4347,7 +4249,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                           Math.min(customBombSlot, totalDeckCount + 1) - 1
                         )
                       }
-                      className="cartoon-btn bg-[#ffca3a] hover:bg-[#fde047] text-[#161426] px-3.5 py-1 text-xs font-black shrink-0 cursor-pointer"
+                      className="cartoon-btn bg-[#ffca3a] hover:bg-[#fde047] text-[#161426] px-4 py-1.5 text-xs font-black shrink-0 cursor-pointer"
                     >
                       {ar
                         ? `ازرع في #${Math.min(
