@@ -41,6 +41,7 @@ import {
   ArtAuctionTutorialScene,
   AlibiTutorialScene,
   SplitStealTutorialScene,
+  BoomDeckTutorialScene,
 } from './GameTutorialScenesD';
 
 interface GameTutorialPlayerProps {
@@ -116,6 +117,8 @@ export const GameTutorialSvgScene: React.FC<{
       return <AlibiTutorialScene {...props} />;
     case 'splitsteal':
       return <SplitStealTutorialScene {...props} />;
+    case 'boomdeck':
+      return <BoomDeckTutorialScene {...props} />;
     default:
       return <WavelengthTutorialScene {...props} />;
   }

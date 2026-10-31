@@ -148,6 +148,37 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     ],
   },
   {
+    id: 'boomdeck',
+    category: 'bluff',
+    accent: '#e11d48',
+    bgTint: '#ffe4e6',
+    players_ar: '2–10 لاعبين',
+    players_en: '2–10 Players',
+    tag_ar: 'قدرات وألغام',
+    tag_en: 'Fuse Roulette',
+    name_ar: 'الفتيل الملعون',
+    name_en: 'Boom Deck',
+    desc_ar: 'اسحب كرت بدون ما تنفجر! العب الرادار وتدبيل ×2، وقصّ سلك القنبلة لتزرعها بوجه صاحبك!',
+    desc_en: 'Play X-Ray Radar, Double Attack & Turbo Skip, or snip the bomb wire and plant it on top for your friend!',
+    longDesc_ar:
+      'كومة ملغومة بالديناميت وقدرات سينمائية مجنونة! افحص أول 3 كروت بـ«رادار الكومة»، اسرق كروت أصحابك بـ«مغناطيس السرقة»، اهرب بـ«تزحليقة» أو ورّط اللي بعدك بـ«تدبيل المصيبة ×2» — وإذا سحبت الديناميت، قصّ السلك بـ«مقص الأسلاك» وازرع القنبلة بأي مكان بالكومة بالسر!',
+    longDesc_en:
+      'A high-voltage deck rigged with Lit Dynamite and cinematic abilities! Scan the top 3 cards with X-Ray Radar, yank cards with Heist Magnet, dodge with Turbo Skip, or stack Double Trouble ×2 on your friend — and when you draw a bomb, snip the wire and secretly plant it anywhere in the pile!',
+    rules_ar: [
+      'يبدأ كل لاعب وبيده 6 كروت مضمونة تضم «مقص الأسلاك» لحمايته، بينما تُزرع قنابل الديناميت داخل كومة السحب.',
+      'في دورك: يمكنك لعب أي عدد من كروت القدرات (رادار الكومة، مغناطيس السرقة، خلط الأوراق، تزحليقة، عكس السير، أو تدبيل ×2).',
+      'لإنهاء دورك يجب أن تسحب كرتاً واحداً من الكومة (إلا إذا لعبت تزحليقة، عكس السير، أو تدبيل ×2 لتهرب من السحب!).',
+      'إذا سحبت «الديناميت المشتعل»: يشتغل مقص الأسلاك لينقذك ويفتح لك خزنة سرية لتزرع القنبلة بأي مكان بالكومة (حتى أول كرت بوجه صاحبك!)، ومن لا يملك مقصاً ينفجر ويخرج حتى يفوز الناجي الأخير!',
+    ],
+    rules_en: [
+      'Every player starts with 6 cards including 1 guaranteed Wire Cutters (Defuse), while Lit Dynamite bombs are shuffled into the pile.',
+      'On your turn: play as many Ability Cards as you like (X-Ray Radar, Heist Magnet, Shuffle, Turbo Skip, Reverse, or Double Trouble ×2).',
+      'End your turn by drawing 1 card from the pile (unless you played Skip, Reverse, or Double Trouble ×2 to dodge drawing!).',
+      'Draw Lit Dynamite? Snip the wire with Wire Cutters and secretly re-plant the bomb anywhere in the deck — last survivor standing wins!',
+    ],
+    isNew: true,
+  },
+  {
     id: 'skull',
     category: 'bluff',
     accent: '#e11d48',

@@ -131,6 +131,11 @@ import {
   buildInitialSplitStealState,
 } from './components/SplitStealGame';
 import {
+  BoomDeckGame,
+  BoomDeckGameState,
+  buildInitialBoomDeckState,
+} from './components/BoomDeckGame';
+import {
   PartyGameSvgIcon,
   CartoonAvatarSvg,
   ReactionSvgIcon,
@@ -661,6 +666,10 @@ export function App() {
 
       case 'splitsteal': {
         return buildInitialSplitStealState(validPlayers);
+      }
+
+      case 'boomdeck': {
+        return buildInitialBoomDeckState(validPlayers);
       }
 
       case 'wavelength':
@@ -1511,7 +1520,8 @@ export function App() {
         room.status !== 'finished' &&
         (activeGameId === 'trix' ||
           activeGameId === 'monopoly' ||
-          activeGameId === 'snakes')
+          activeGameId === 'snakes' ||
+          activeGameId === 'boomdeck')
       ) && (
         <header className="w-full max-w-7xl mx-auto px-4 pt-4 pb-2 flex items-center justify-between gap-2">
           <div
@@ -1575,7 +1585,8 @@ export function App() {
           room.status !== 'finished' &&
           (activeGameId === 'trix' ||
             activeGameId === 'monopoly' ||
-            activeGameId === 'snakes')
+            activeGameId === 'snakes' ||
+            activeGameId === 'boomdeck')
             ? 'max-w-[1680px] px-2 sm:px-4 my-1.5'
             : 'max-w-7xl px-4 my-3'
         } mx-auto flex-1 flex flex-col ${
@@ -2350,7 +2361,8 @@ export function App() {
 
                 {(activeGameId === 'trix' ||
                   activeGameId === 'monopoly' ||
-                  activeGameId === 'snakes') && (
+                  activeGameId === 'snakes' ||
+                  activeGameId === 'boomdeck') && (
                   <>
                     <button
                       type="button"
@@ -2381,7 +2393,8 @@ export function App() {
                 className={`${
                   activeGameId === 'trix' ||
                   activeGameId === 'monopoly' ||
-                  activeGameId === 'snakes'
+                  activeGameId === 'snakes' ||
+                  activeGameId === 'boomdeck'
                     ? 'lg:col-span-12'
                     : 'lg:col-span-8'
                 } space-y-3`}
@@ -2762,6 +2775,22 @@ export function App() {
                     onUpdateGameData={handleUpdateMiniGameData}
                     onStartNewRound={() => handleSelectPartyGame('splitsteal')}
                   />
+                ) : activeGameId === 'boomdeck' ? (
+                  <BoomDeckGame
+                    gameData={
+                      Array.isArray(room.game_data?.deck) &&
+                      Array.isArray(room.game_data?.alivePlayerIds)
+                        ? room.game_data
+                        : (buildInitialGameData('boomdeck', players) as BoomDeckGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('boomdeck')}
+                  />
                 ) : (
                   /* WAVELENGTH GAME BOARD */
                   <>
@@ -3089,7 +3118,8 @@ export function App() {
                 className={`${
                   activeGameId === 'trix' ||
                   activeGameId === 'monopoly' ||
-                  activeGameId === 'snakes'
+                  activeGameId === 'snakes' ||
+                  activeGameId === 'boomdeck'
                     ? 'lg:col-span-12'
                     : 'lg:col-span-4 lg:sticky lg:top-4'
                 } cartoon-panel-dark p-4 sm:p-5 space-y-3.5`}

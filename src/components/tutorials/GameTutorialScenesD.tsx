@@ -1909,3 +1909,178 @@ export const SplitStealTutorialScene: React.FC<TutorialSceneProps> = ({
   );
 };
 
+/* ============================================================================
+ * 9. BOOM DECK ("الفتيل الملعون") — 4-STEP ANIMATED TUTORIAL SCENE
+ * ========================================================================== */
+export const BoomDeckTutorialScene: React.FC<TutorialSceneProps> = ({
+  step,
+  animT,
+  clock,
+  lang,
+}) => {
+  const ar = lang === 'ar';
+  const b = easeOutBack(animT);
+  const pulse = 1 + Math.sin(clock * 0.008) * 0.045;
+  const floatY = Math.sin(clock * 0.006) * 4;
+
+  return (
+    <StageBackdrop accent="#e11d48">
+      {step === 0 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#ffca3a"
+            text={
+              ar
+                ? 'معك 6 كروت قدرات ومقص أسلاك — والقنابل مزروعة بالكومة!'
+                : 'Start with 6 Ability Cards + Wire Cutters — Dynamite lurks in the deck!'
+            }
+          />
+          {/* Center Draw Pile with Bomb Risk */}
+          <g transform={`translate(260, ${118 + floatY}) scale(${b})`}>
+            <rect x="-42" y="-50" width="84" height="100" rx="14" fill="#e11d48" stroke="#161426" strokeWidth="4" />
+            <rect x="-32" y="-38" width="64" height="76" rx="10" fill="#fff9ec" stroke="#161426" strokeWidth="3" />
+            <circle cx="0" cy="0" r="18" fill="#161426" />
+            <circle cx="0" cy="0" r="7" fill="#ffca3a" />
+          </g>
+          <SvgPill x={125} y={118} w={135} h={34} bg="#dcfce7" scale={b * pulse} text={ar ? 'مقص الأسلاك' : 'Wire Cutters'} />
+          <SvgPill x={395} y={118} w={135} h={34} bg="#fce7f3" scale={b} text={ar ? 'رادار الكومة' : 'X-Ray Radar'} />
+          <SvgPill
+            x={260}
+            y={212}
+            w={425}
+            h={27}
+            bg="#191636"
+            fg="#fff9ec"
+            text={
+              ar
+                ? 'في دورك: العب قدراتك أولاً، أو اسحب كرتاً لإنهاء دورك!'
+                : 'On your turn: play ability cards first, or draw 1 card to finish!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 1 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={440}
+            h={27}
+            bg="#00bbf9"
+            text={
+              ar
+                ? 'العب قدرات سينمائية: اكشف أول 3 كروت، اسرق، أو دبل المصيبة ×2!'
+                : 'Unleash Cinema Abilities: Scan top 3 cards, steal, or Attack ×2!'
+            }
+          />
+          <SvgPill x={130} y={96} w={150} h={36} bg="#fef9c3" scale={b * pulse} text={ar ? 'تدبيل المصيبة ×2' : 'Double Attack ×2'} />
+          <SvgPill x={390} y={96} w={150} h={36} bg="#e0f2fe" scale={b} text={ar ? 'تزحليقة! (بدون سحب)' : 'Turbo Skip!'} />
+          <SvgPill x={130} y={150} w={150} h={36} bg="#ffedd5" scale={b} text={ar ? 'مغناطيس السرقة' : 'Heist Magnet'} />
+          <SvgPill x={390} y={150} w={150} h={36} bg="#fee2e2" scale={b * pulse} text={ar ? 'بلوك! (إبطال)' : 'BLOCK! Stamp'} />
+          <SvgPill
+            x={260}
+            y={212}
+            w={425}
+            h={27}
+            bg="#191636"
+            fg="#ffca3a"
+            text={
+              ar
+                ? 'أي لاعب يملك كرت «بلوك!» يمكنه إبطال حركتك خلال 4 ثوانٍ!'
+                : 'Anyone holding a BLOCK card can cancel your move in 4 seconds!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 2 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={440}
+            h={27}
+            bg="#e11d48"
+            fg="#fff9ec"
+            text={
+              ar
+                ? 'سحبت الديناميت؟ قصّ السلك وازرع القنبلة بأي مكان بالكومة بالسر!'
+                : 'Drew Lit Dynamite? Snip the wire & secretly plant it anywhere!'
+            }
+          />
+          <SvgPill x={155} y={115} w={175} h={42} bg="#dcfce7" scale={b * pulse} text={ar ? 'قصّ السلك ونجاة!' : 'Snip Wire & Survive!'} />
+          <SvgDoubleArrow x={260} y={115} color="#ffca3a" />
+          <SvgPill x={365} y={115} w={175} h={42} bg="#ffe4e6" scale={b} text={ar ? 'ازرعها أول كرت عالوجه!' : 'Plant Right on Top!'} />
+          <SvgPill
+            x={260}
+            y={212}
+            w={425}
+            h={27}
+            bg="#191636"
+            fg="#fff9ec"
+            text={
+              ar
+                ? 'أنت وحدك تختار أين تزرع القنبلة لتنفجر باللاعب القادم!'
+                : 'Only YOU choose where to hide the bomb for the next victim!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 3 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={430}
+            h={27}
+            bg="#8ac926"
+            text={
+              ar
+                ? 'من يسحب قنبلة بلا مقص ينفجر — والناجي الأخير يتوّج بطلاً!'
+                : 'Draw a bomb with no Wire Cutters and BOOM — Last Survivor wins!'
+            }
+          />
+          <SvgScoreBadge
+            x={165}
+            y={122}
+            w={185}
+            text={ar ? 'انفجار بلا مقص أسلاك!' : 'No Wire Cutters = BOOM!'}
+            bg="#ff595e"
+            fg="#fff9ec"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgScoreBadge
+            x={355}
+            y={122}
+            w={185}
+            text={ar ? 'الناجي الأخير (+4 نقاط)!' : 'Last Survivor (+4 pts)!'}
+            bg="#8ac926"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={415}
+            h={27}
+            bg="#8ac926"
+            text={
+              ar
+                ? 'صفر كتابة، سرعة جنونية، وفخاخ لا ترحم!'
+                : 'Zero typing, lightning pace, and ruthless traps!'
+            }
+          />
+        </g>
+      )}
+    </StageBackdrop>
+  );
+};
+
+

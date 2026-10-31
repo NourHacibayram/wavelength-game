@@ -1105,6 +1105,115 @@ export const PartyGameSvgIcon: React.FC<{
         </svg>
       );
 
+    case 'boomdeck':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          <defs>
+            <linearGradient id="bdCardGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+            <linearGradient id="bdStickGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#fb7185" />
+              <stop offset="45%" stopColor="#e11d48" />
+              <stop offset="100%" stopColor="#9f1239" />
+            </linearGradient>
+          </defs>
+          {/* Back Ability Card (Tilted Left with Lightning Emblem) */}
+          <g transform="rotate(-16 22 34)">
+            <rect
+              x="7"
+              y="12"
+              width="28"
+              height="40"
+              rx="6"
+              fill="url(#bdCardGrad)"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <rect
+              x="10.5"
+              y="15.5"
+              width="21"
+              height="33"
+              rx="3.5"
+              fill="none"
+              stroke="#fff9ec"
+              strokeWidth="1.6"
+              strokeDasharray="4 3"
+            />
+            <polygon
+              points="21,21 15,32 21,32 18,43 27,30 21,30"
+              fill="#e11d48"
+              stroke="#161426"
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+          </g>
+          {/* Second Fanned Card (Tilted Right - Cyan Skip Card) */}
+          <g transform="rotate(14 42 34)">
+            <rect
+              x="29"
+              y="12"
+              width="26"
+              height="38"
+              rx="6"
+              fill="#00bbf9"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <rect
+              x="32.5"
+              y="15.5"
+              width="19"
+              height="31"
+              rx="3.5"
+              fill="#e0f2fe"
+            />
+          </g>
+          {/* Foreground 3-Stick C4 Dynamite Bundle */}
+          <g>
+            {/* Left Stick */}
+            <rect x="21" y="22" width="10" height="34" rx="4" fill="url(#bdStickGrad)" stroke="#161426" strokeWidth="3" />
+            <line x1="24" y1="25" x2="24" y2="52" stroke="#fecdd3" strokeWidth="1.8" strokeLinecap="round" opacity="0.7" />
+            {/* Right Stick */}
+            <rect x="43" y="22" width="10" height="34" rx="4" fill="url(#bdStickGrad)" stroke="#161426" strokeWidth="3" />
+            <line x1="46" y1="25" x2="46" y2="52" stroke="#fecdd3" strokeWidth="1.8" strokeLinecap="round" opacity="0.7" />
+            {/* Center Tall Stick */}
+            <rect x="31" y="19" width="12" height="38" rx="4.5" fill="#f43f5e" stroke="#161426" strokeWidth="3.2" />
+            <line x1="34.5" y1="22" x2="34.5" y2="53" stroke="#ffe4e6" strokeWidth="2.2" strokeLinecap="round" opacity="0.85" />
+            {/* Tactical Steel & Carbon Straps */}
+            <rect x="19" y="29" width="36" height="5" rx="2" fill="#161426" />
+            <rect x="19" y="45" width="36" height="5" rx="2" fill="#161426" />
+            {/* Digital Countdown Screen */}
+            <rect x="24" y="32" width="26" height="14" rx="3.5" fill="#161426" stroke="#ffca3a" strokeWidth="2.2" />
+            <rect x="26.5" y="34.5" width="21" height="9" rx="1.8" fill="#090d16" />
+            <text x="37" y="41.5" textAnchor="middle" fill="#ff595e" fontSize="8.5" fontWeight="900" fontFamily="monospace">
+              00:01
+            </text>
+            {/* Braided Fuse & Multi-Layer Spark */}
+            <path d="M 37 19 C 37 11, 46 11, 51 8" fill="none" stroke="#d97706" strokeWidth="4" strokeLinecap="round" />
+            <path d="M 37 19 C 37 11, 46 11, 51 8" fill="none" stroke="#161426" strokeWidth="1.8" strokeDasharray="3 3" strokeLinecap="round" />
+            <polygon
+              points="52,1 54.5,6.5 60.5,6 56,10 58.5,15.5 52.5,12.5 47,16 49,10 44,6.5 50,6.5"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="2.2"
+              strokeLinejoin="round"
+            />
+            <circle cx="52.5" cy="9" r="3" fill="#ffffff" />
+          </g>
+          {/* Wire Cutters Snipping Badge in Bottom-Left */}
+          <g transform="translate(15, 48)">
+            <circle cx="0" cy="0" r="10.5" fill="#22c55e" stroke="#161426" strokeWidth="3.2" />
+            <circle cx="0" cy="0" r="7.5" fill="#bbf7d0" />
+            <path d="M -4 4 L 3 -3 M -4 -3 L 3 4" stroke="#161426" strokeWidth="2.8" strokeLinecap="round" />
+            <circle cx="-4" cy="4" r="2.2" fill="#e11d48" stroke="#161426" strokeWidth="1.5" />
+            <circle cx="-4" cy="-3" r="2.2" fill="#e11d48" stroke="#161426" strokeWidth="1.5" />
+          </g>
+        </svg>
+      );
+
     case 'wordbomb':
     default:
       return (

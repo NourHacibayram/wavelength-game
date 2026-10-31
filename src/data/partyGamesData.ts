@@ -24,7 +24,8 @@ export type PartyGameId =
   | 'resistance'
   | 'artauction'
   | 'alibi'
-  | 'splitsteal';
+  | 'splitsteal'
+  | 'boomdeck';
 
 export type PartyGameCategory =
   | 'all'
