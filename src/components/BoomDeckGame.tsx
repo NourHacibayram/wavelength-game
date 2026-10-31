@@ -58,7 +58,7 @@ export interface BoomCard {
 export interface BoomPendingAction {
   id: string;
   actorId: string;
-  cardType: Exclude<BoomCardType, 'bomb' | 'defuse' | 'block'>;
+  cardType: Exclude<BoomCardType, 'bomb' | 'defuse'>;
   comboCount?: 1 | 2 | 3; // 1 = normal action, 2 = Pair (steal random), 3 = Triple (demand named card!)
   demandedCardType?: BoomCardType; // Used when comboCount === 3
   targetPlayerId?: string;
@@ -146,198 +146,198 @@ export const BOOM_CARD_META: Record<
   }
 > = {
   bomb: {
-    name_ar: 'الديناميت المشتعل',
-    name_en: 'Lit Dynamite',
-    short_ar: 'ينفجر فوراً إلا بمقص أسلاك!',
+    name_ar: 'قنبلة مشتعلة',
+    name_en: 'Lit Bomb',
+    short_ar: 'تنفجر إلا بمقص الإنقاذ!',
     short_en: 'Explodes unless Defused!',
-    desc_ar: 'إذا سحبته ينفجر فيك فوراً وتخرج من الجولة إلا إذا معك «مقص الأسلاك»!',
+    desc_ar: 'إذا سحبته ينفجر فيك فوراً وتخرج من الجولة إلا إذا معك «مقص الإنقاذ»!',
     desc_en: 'If drawn, it explodes and eliminates you unless you hold Wire Cutters!',
-    bg: '#fff1f2',
+    bg: '#ffe4e6',
     frameBg: '#881337',
     badgeBg: '#e11d48',
     accent: '#e11d48',
-    tag_ar: 'لغم قاتل',
-    tag_en: 'LETHAL',
+    tag_ar: 'لغم',
+    tag_en: 'BOMB',
     symbol: '!',
   },
   defuse: {
-    name_ar: 'مقص الأسلاك',
-    name_en: 'Wire Cutters',
-    short_ar: 'ينقذك تلقائياً ويزرع اللغم بالسر',
-    short_en: 'Auto-saves you & re-plants bomb',
-    desc_ar: 'يشتغل تلقائياً عند سحب الديناميت! ينقذك ويخليك تزرع القنبلة بأي مكان بالكومة بالسر!',
+    name_ar: 'مقص الإنقاذ',
+    name_en: 'Defuse',
+    short_ar: 'ينقذك من القنبلة تلقائياً',
+    short_en: 'Saves you from a Bomb',
+    desc_ar: 'يشتغل تلقائياً عند سحب القنبلة! ينقذك ويخليك تزرعها بأي مكان بالكومة بالسر!',
     desc_en: 'Cuts the fuse when you draw a bomb and lets you secretly hide it anywhere in the deck!',
-    bg: '#f0fdf4',
+    bg: '#dcfce7',
     frameBg: '#064e3b',
     badgeBg: '#16a34a',
     accent: '#22c55e',
-    tag_ar: 'إنقاذ تلقائي',
+    tag_ar: 'إنقاذ',
     tag_en: 'DEFUSE',
     symbol: '+',
   },
   attack: {
-    name_ar: 'تدبيل المصيبة ×2',
-    name_en: 'Double Trouble ×2',
-    short_ar: 'أنهِ دورك وأجبر التالي يسحب ×2',
-    short_en: 'End turn + next player draws 2x',
-    desc_ar: 'ينهي دورك فوراً بدون ما تسحب كرت، ويجبر اللاعب اللي بعدك يسحب مرتين متتاليتين!',
+    name_ar: 'هجوم ×2',
+    name_en: 'Attack ×2',
+    short_ar: 'اللي بعدك يسحب مرتين!',
+    short_en: 'Next player draws 2x!',
+    desc_ar: 'ينهي دورك فوراً بدون سحب، ويجبر اللاعب اللي بعدك يسحب مرتين!',
     desc_en: 'Immediately ends your turn without drawing and forces the next player to take 2 turns!',
-    bg: '#fefce8',
+    bg: '#fef3c7',
     frameBg: '#78350f',
     badgeBg: '#d97706',
     accent: '#f59e0b',
-    tag_ar: 'هجوم ×2',
+    tag_ar: 'هجوم',
     tag_en: 'ATTACK',
     symbol: '×2',
   },
   skip: {
-    name_ar: 'تزحليقة نيترو',
-    name_en: 'Nitro Skip',
-    short_ar: 'أنهِ دورك بسلام بدون سحب كرت',
-    short_en: 'End turn safely without drawing',
-    desc_ar: 'تزحلق واهرب من دورك الحالي بسلام بدون ما تسحب كرت من الكومة!',
+    name_ar: 'تخطي الدور',
+    name_en: 'Skip Turn',
+    short_ar: 'أنهِ دورك بدون سحب كرت',
+    short_en: 'End turn without drawing',
+    desc_ar: 'أنهِ دورك الحالي بسلام بدون ما تسحب كرت من الكومة!',
     desc_en: 'Dash safely out of your current turn without drawing a card from the pile!',
-    bg: '#f0f9ff',
+    bg: '#e0f2fe',
     frameBg: '#0c4a6e',
     badgeBg: '#0284c7',
     accent: '#00bbf9',
-    tag_ar: 'تخطي الدور',
+    tag_ar: 'تخطي',
     tag_en: 'SKIP',
     symbol: '>>',
   },
   reverse: {
-    name_ar: 'عكس السير',
-    name_en: 'U-Turn Reverse',
-    short_ar: 'اعكس اتجاه الطاولة بدون سحب',
-    short_en: 'Flip table direction & skip draw',
+    name_ar: 'عكس الدور',
+    name_en: 'Reverse',
+    short_ar: 'اعكس الاتجاه بدون سحب',
+    short_en: 'Reverse & skip draw',
     desc_ar: 'يعكس اتجاه الدوران حول الطاولة وينهي دورك الحالي بدون سحب كرت!',
     desc_en: 'Flips the turn direction around the table and ends your current turn without drawing!',
-    bg: '#faf5ff',
+    bg: '#f3e8ff',
     frameBg: '#4c1d95',
     badgeBg: '#7c3aed',
     accent: '#9b5de5',
-    tag_ar: 'قلب الاتجاه',
+    tag_ar: 'عكس',
     tag_en: 'REVERSE',
     symbol: '⇄',
   },
   radar: {
     name_ar: 'رادار الكومة',
-    name_en: 'X-Ray Radar',
-    short_ar: 'اكشف أول 3 كروت بالكومة سراً',
-    short_en: 'Secretly peek top 3 deck cards',
-    desc_ar: 'يكشف لك وحدك بالأشعة السينية أول 3 كروت بأعلى الكومة لتعرف إذا القنبلة عالوجه!',
+    name_en: 'Radar',
+    short_ar: 'اكشف أول 3 كروت سراً',
+    short_en: 'Peek top 3 cards',
+    desc_ar: 'يكشف لك وحدك أول 3 كروت بأعلى الكومة لتعرف مكان القنبلة!',
     desc_en: 'Secretly scans the top 3 cards of the Draw Pile so only you see if a bomb is next!',
-    bg: '#fdf2f8',
+    bg: '#fce7f3',
     frameBg: '#831843',
     badgeBg: '#db2777',
     accent: '#f15bb5',
-    tag_ar: 'كشف 3 كروت',
+    tag_ar: 'رادار',
     tag_en: 'RADAR',
     symbol: '3x',
   },
   shuffle: {
-    name_ar: 'خلط الأوراق',
-    name_en: 'Deck Shuffle',
-    short_ar: 'اخلط كومة السحب بالكامل فوراً',
-    short_en: 'Shuffle the entire draw pile',
-    desc_ar: 'يخلط كومة السحب بالكامل بلمح البصر ليبعد القنبلة عن الوجه أو يخرّب خطط الرادار!',
+    name_ar: 'خلط الكومة',
+    name_en: 'Shuffle',
+    short_ar: 'اخلط كومة السحب بالكامل',
+    short_en: 'Shuffle the draw pile',
+    desc_ar: 'يخلط كومة السحب بالكامل ليبعد القنبلة عن الوجه!',
     desc_en: 'Shuffles the entire Draw Pile to dodge a top-decked bomb!',
-    bg: '#f0fdfa',
+    bg: '#ccfbf1',
     frameBg: '#134e4a',
     badgeBg: '#0d9488',
     accent: '#14b8a6',
-    tag_ar: 'خلط الكومة',
+    tag_ar: 'خلط',
     tag_en: 'SHUFFLE',
     symbol: '~',
   },
   magnet: {
-    name_ar: 'مغناطيس السرقة',
-    name_en: 'Heist Magnet',
-    short_ar: 'اسحب كرتاً عشوائياً من يد خصمك',
-    short_en: 'Steal 1 random card from a rival',
-    desc_ar: 'اختر أي لاعب عالطاولة واسحب بالمغناطيس كرتاً عشوائياً من يده إلى يدك!',
+    name_ar: 'مغناطيس',
+    name_en: 'Magnet',
+    short_ar: 'اسرق كرتاً من يد خصمك',
+    short_en: 'Steal 1 card from rival',
+    desc_ar: 'اختر أي لاعب عالطاولة واسحب كرتاً عشوائياً من يده إلى يدك!',
     desc_en: 'Target any rival player and yank 1 random card straight from their hand into yours!',
-    bg: '#fff7ed',
+    bg: '#ffedd5',
     frameBg: '#7c2d12',
     badgeBg: '#ea580c',
     accent: '#f97316',
-    tag_ar: 'سرقة كرت',
+    tag_ar: 'سرقة',
     tag_en: 'STEAL',
     symbol: 'U',
   },
   block: {
-    name_ar: 'ختم الإبطال (بلوك)',
-    name_en: 'Block Stamp',
-    short_ar: 'يُكبس لإلغاء قدرة خصمك فوراً',
-    short_en: 'Cancel any rival ability card',
-    desc_ar: 'اكبسه بأي لحظة لما يلعب خصمك كرت قدرة (هجوم، تزحليقة، سرقة...) لإبطال حركته فوراً!',
+    name_ar: 'بلوك!',
+    name_en: 'Block!',
+    short_ar: 'يلغي حركة خصمك فوراً',
+    short_en: 'Cancel rival action',
+    desc_ar: 'اكبسه بأي لحظة لما يلعب خصمك كرت قدرة لإلغاء حركته فوراً!',
     desc_en: 'Slam this during the Counter Window to cancel any action card played by a rival!',
-    bg: '#fef2f2',
+    bg: '#fee2e2',
     frameBg: '#7f1d1d',
     badgeBg: '#dc2626',
     accent: '#ef4444',
-    tag_ar: 'اعتراض فوري',
+    tag_ar: 'إلغاء',
     tag_en: 'BLOCK',
     symbol: '✕',
   },
   combo_shawarma: {
-    name_ar: 'سيخ الشاورما',
-    name_en: 'Shawarma Spit',
-    short_ar: 'بلا قيمة منفرداً • اجمع 2 أو 3 للسرقة!',
-    short_en: 'No solo value • Collect 2 or 3 to steal!',
-    desc_ar: 'كرت غنيمة لا يعمل وحده! اجمع 2 منه لسرقة كرت عشوائي، أو 3 منه لطلب أي كرت بالاسم من خصمك!',
+    name_ar: 'شاورما',
+    name_en: 'Shawarma',
+    short_ar: 'اجمع 2 أو 3 للسرقة',
+    short_en: 'Collect 2 or 3 to steal',
+    desc_ar: 'لا يعمل وحده! اجمع 2 لسرقة كرت عشوائي، أو 3 لطلب أي كرت بالاسم من خصمك!',
     desc_en: 'Powerless alone! Play 2 of a kind to steal a random card, or 3 of a kind to demand any card by name!',
-    bg: '#fffbeb',
+    bg: '#fef3c7',
     frameBg: '#78350f',
     badgeBg: '#d97706',
     accent: '#f59e0b',
-    tag_ar: 'تجميع 2×/3×',
-    tag_en: 'COMBO 2×/3×',
+    tag_ar: 'كومبو',
+    tag_en: 'COMBO',
     symbol: '2×',
   },
   combo_kabsa: {
-    name_ar: 'وليمة الكبسة',
-    name_en: 'Royal Kabsa Feast',
-    short_ar: 'بلا قيمة منفرداً • اجمع 2 أو 3 للسرقة!',
-    short_en: 'No solo value • Collect 2 or 3 to steal!',
-    desc_ar: 'كرت غنيمة لا يعمل وحده! اجمع 2 منه لسرقة كرت عشوائي، أو 3 منه لطلب أي كرت بالاسم من خصمك!',
+    name_ar: 'كبسة',
+    name_en: 'Kabsa',
+    short_ar: 'اجمع 2 أو 3 للسرقة',
+    short_en: 'Collect 2 or 3 to steal',
+    desc_ar: 'لا يعمل وحده! اجمع 2 لسرقة كرت عشوائي، أو 3 لطلب أي كرت بالاسم من خصمك!',
     desc_en: 'Powerless alone! Play 2 of a kind to steal a random card, or 3 of a kind to demand any card by name!',
-    bg: '#fff7ed',
+    bg: '#ffedd5',
     frameBg: '#7c2d12',
     badgeBg: '#c2410c',
     accent: '#ea580c',
-    tag_ar: 'تجميع 2×/3×',
-    tag_en: 'COMBO 2×/3×',
+    tag_ar: 'كومبو',
+    tag_en: 'COMBO',
     symbol: '2×',
   },
   combo_karak: {
     name_ar: 'دلة الكرك',
-    name_en: 'Golden Karak Flask',
-    short_ar: 'بلا قيمة منفرداً • اجمع 2 أو 3 للسرقة!',
-    short_en: 'No solo value • Collect 2 or 3 to steal!',
-    desc_ar: 'كرت غنيمة لا يعمل وحده! اجمع 2 منه لسرقة كرت عشوائي، أو 3 منه لطلب أي كرت بالاسم من خصمك!',
+    name_en: 'Karak',
+    short_ar: 'اجمع 2 أو 3 للسرقة',
+    short_en: 'Collect 2 or 3 to steal',
+    desc_ar: 'لا يعمل وحده! اجمع 2 لسرقة كرت عشوائي، أو 3 لطلب أي كرت بالاسم من خصمك!',
     desc_en: 'Powerless alone! Play 2 of a kind to steal a random card, or 3 of a kind to demand any card by name!',
-    bg: '#fdf4ff',
+    bg: '#f3e8ff',
     frameBg: '#581c87',
     badgeBg: '#9333ea',
     accent: '#a855f7',
-    tag_ar: 'تجميع 2×/3×',
-    tag_en: 'COMBO 2×/3×',
+    tag_ar: 'كومبو',
+    tag_en: 'COMBO',
     symbol: '2×',
   },
   combo_falcon: {
     name_ar: 'الصقر الذهبي',
-    name_en: 'Golden Falcon',
-    short_ar: 'بلا قيمة منفرداً • اجمع 2 أو 3 للسرقة!',
-    short_en: 'No solo value • Collect 2 or 3 to steal!',
-    desc_ar: 'كرت غنيمة لا يعمل وحده! اجمع 2 منه لسرقة كرت عشوائي، أو 3 منه لطلب أي كرت بالاسم من خصمك!',
+    name_en: 'Falcon',
+    short_ar: 'اجمع 2 أو 3 للسرقة',
+    short_en: 'Collect 2 or 3 to steal',
+    desc_ar: 'لا يعمل وحده! اجمع 2 لسرقة كرت عشوائي، أو 3 لطلب أي كرت بالاسم من خصمك!',
     desc_en: 'Powerless alone! Play 2 of a kind to steal a random card, or 3 of a kind to demand any card by name!',
-    bg: '#f7fee7',
+    bg: '#ecfccb',
     frameBg: '#365314',
     badgeBg: '#4d7c0f',
     accent: '#65a30d',
-    tag_ar: 'تجميع 2×/3×',
-    tag_en: 'COMBO 2×/3×',
+    tag_ar: 'كومبو',
+    tag_en: 'COMBO',
     symbol: '2×',
   },
 };
@@ -1237,10 +1237,10 @@ export const BoomPlayingCard: React.FC<{
       onClick={onClick}
       className={`group relative bg-[#fffdf7] border-[3.5px] border-[#161426] p-1.5 rounded-[22px] select-none transition-all duration-200 ease-out shrink-0 ${
         isSelected
-          ? 'z-30 ring-4 ring-[#f97316] shadow-[0_8px_0_#161426]'
+          ? 'z-40 ring-4 ring-[#f97316] shadow-[0_8px_0_#161426]'
           : canPlay
-          ? 'hover:-translate-y-1.5 hover:z-30 shadow-[0_7px_0_#161426] hover:shadow-[0_10px_0_#161426] cursor-pointer'
-          : 'shadow-[0_6px_0_#161426]'
+          ? 'hover:-translate-y-2.5 hover:z-50 shadow-[0_7px_0_#161426] hover:shadow-[0_12px_0_#161426] cursor-pointer'
+          : 'hover:-translate-y-1.5 hover:z-50 shadow-[0_6px_0_#161426]'
       } ${className}`}
     >
       {/* Inner Colored Card Face (CSS Grid guarantees 100% height fill and identical row alignment across all cards!) */}
@@ -1268,7 +1268,7 @@ export const BoomPlayingCard: React.FC<{
           </div>
         </div>
 
-        {/* 2. LARGE DOMINANT FULL-SCENE ILLUSTRATION WINDOW (Fills 1fr middle track!) */}
+        {/* 2. LARGE DOMINANT FULL-SCENE ILLUSTRATION WINDOW (100% Clean — Zero Floating Badges Covering Art!) */}
         <div
           style={{ backgroundColor: meta.frameBg }}
           className="w-full h-full min-h-0 rounded-xl border-[2.5px] border-[#161426] overflow-hidden relative shadow-inner"
@@ -1277,13 +1277,6 @@ export const BoomPlayingCard: React.FC<{
             type={type}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          {/* Subtle Category Tag Pill Inside Top-Left of Art */}
-          <span
-            style={{ backgroundColor: meta.badgeBg }}
-            className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md border border-[#161426] text-white font-black text-[8.5px] leading-none shadow-[0_1px_0_#161426]"
-          >
-            {comboBadge || (ar ? meta.tag_ar : meta.tag_en)}
-          </span>
         </div>
 
         {/* 3. UNIFIED BOTTOM EFFECT & ACTION FOOTER (Fixed 2-line height so every card aligns to the exact pixel!) */}
@@ -1572,7 +1565,10 @@ export const ArenaSpatialFXLayer: React.FC<{
 
         {/* ==================== MAGNET OR 2x/3x COMBO HEIST: SINGLE SMOOTH PULL OF 1 CARD FROM RIVAL -> ACTOR ==================== */}
         {(cinematic.type === 'magnet' ||
-          isComboSetCard(cinematic.type as BoomCardType)) && (
+          isComboSetCard(cinematic.type as BoomCardType) ||
+          (cinematic.targetId &&
+            cinematic.type !== 'attack' &&
+            cinematic.type !== 'block')) && (
           <g filter={`url(#cardDropShadow_${uid})`}>
             {/* Subtle Magnetic Tether Line (Fades out cleanly after pull) */}
             <line
@@ -2383,7 +2379,63 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     let logAr = '';
     let logEn = '';
 
-    if (cType === 'skip') {
+    // IMPORTANT: Check 2x / 3x Combo Heist FIRST (because ANY 2 or 3 identical cards — even Skip, Attack, Radar, etc. — can be played as a 2x/3x Combo to steal from a rival!)
+    if (
+      (pending.comboCount && pending.comboCount >= 2) ||
+      cType === 'magnet' ||
+      isComboSetCard(cType)
+    ) {
+      const victimId =
+        pending.targetPlayerId ||
+        baseState.alivePlayerIds.find((id) => id !== pending.actorId);
+      const victimHand = victimId ? [...(nextHands[victimId] || [])] : [];
+      const victimName = getPlayerName(victimId);
+      const playedMeta = BOOM_CARD_META[cType];
+
+      if (pending.comboCount === 3 && pending.demandedCardType) {
+        const demandedMeta = BOOM_CARD_META[pending.demandedCardType];
+        const foundIdx = victimHand.findIndex(
+          (c) => c.type === pending.demandedCardType
+        );
+        if (victimId && foundIdx !== -1) {
+          const [stolenCard] = victimHand.splice(foundIdx, 1);
+          nextHands = {
+            ...nextHands,
+            [victimId]: victimHand,
+            [pending.actorId]: [
+              ...(nextHands[pending.actorId] || []),
+              stolenCard,
+            ],
+          };
+          logAr = `${actorName} لعب ثلاثية «${playedMeta.name_ar}» (3×) وانتزع كرت «${demandedMeta.name_ar}» بالاسم من يد ${victimName}!`;
+          logEn = `${actorName} played 3× "${playedMeta.name_en}" and claimed "${demandedMeta.name_en}" from ${victimName}!`;
+        } else {
+          logAr = `${actorName} لعب ثلاثية «${playedMeta.name_ar}» (3×) وطلب «${demandedMeta.name_ar}» من ${victimName}، لكن لم يكن بيده!`;
+          logEn = `${actorName} played 3× "${playedMeta.name_en}" demanding "${demandedMeta.name_en}" from ${victimName}, but they didn't have it!`;
+        }
+      } else if (victimId && victimHand.length > 0) {
+        const randIdx = Math.floor(Math.random() * victimHand.length);
+        const [stolenCard] = victimHand.splice(randIdx, 1);
+        nextHands = {
+          ...nextHands,
+          [victimId]: victimHand,
+          [pending.actorId]: [
+            ...(nextHands[pending.actorId] || []),
+            stolenCard,
+          ],
+        };
+        if (pending.comboCount === 2 || isComboSetCard(cType)) {
+          logAr = `${actorName} لعب ثنائية «${playedMeta.name_ar}» (2×) وسرق كرتاً عشوائياً من يد ${victimName}!`;
+          logEn = `${actorName} played 2× "${playedMeta.name_en}" and stole a random card from ${victimName}!`;
+        } else {
+          logAr = `${actorName} سحب كرتاً عشوائياً بالمغناطيس من يد ${victimName}!`;
+          logEn = `${actorName} magnetized a random card from ${victimName}’s hand!`;
+        }
+      } else {
+        logAr = `${actorName} حاول السرقة لكن يد الخصم فارغة!`;
+        logEn = `${actorName} tried to steal a card, but target had no cards!`;
+      }
+    } else if (cType === 'skip') {
       if (nextTurnsRemaining > 1) {
         nextTurnsRemaining -= 1;
         logAr = `${actorName} تزحلق من سحبة واحدة! باقي عليه (${nextTurnsRemaining}) سحبة.`;
@@ -2445,61 +2497,6 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
       nextDeck = shuffleArray(nextDeck);
       logAr = `${actorName} خلط كومة السحب بالكامل!`;
       logEn = `${actorName} shuffled the entire Draw Pile!`;
-    } else if (
-      cType === 'magnet' ||
-      isComboSetCard(cType) ||
-      (pending.comboCount && pending.comboCount >= 2)
-    ) {
-      const victimId =
-        pending.targetPlayerId ||
-        baseState.alivePlayerIds.find((id) => id !== pending.actorId);
-      const victimHand = victimId ? [...(nextHands[victimId] || [])] : [];
-      const victimName = getPlayerName(victimId);
-      const playedMeta = BOOM_CARD_META[cType];
-
-      if (pending.comboCount === 3 && pending.demandedCardType) {
-        const demandedMeta = BOOM_CARD_META[pending.demandedCardType];
-        const foundIdx = victimHand.findIndex(
-          (c) => c.type === pending.demandedCardType
-        );
-        if (victimId && foundIdx !== -1) {
-          const [stolenCard] = victimHand.splice(foundIdx, 1);
-          nextHands = {
-            ...nextHands,
-            [victimId]: victimHand,
-            [pending.actorId]: [
-              ...(nextHands[pending.actorId] || []),
-              stolenCard,
-            ],
-          };
-          logAr = `${actorName} لعب ثلاثية «${playedMeta.name_ar}» (3×) وانتزع كرت «${demandedMeta.name_ar}» بالاسم من يد ${victimName}!`;
-          logEn = `${actorName} played 3× "${playedMeta.name_en}" and claimed "${demandedMeta.name_en}" from ${victimName}!`;
-        } else {
-          logAr = `${actorName} لعب ثلاثية «${playedMeta.name_ar}» (3×) وطلب «${demandedMeta.name_ar}» من ${victimName}، لكن لم يكن بيده!`;
-          logEn = `${actorName} played 3× "${playedMeta.name_en}" demanding "${demandedMeta.name_en}" from ${victimName}, but they didn't have it!`;
-        }
-      } else if (victimId && victimHand.length > 0) {
-        const randIdx = Math.floor(Math.random() * victimHand.length);
-        const [stolenCard] = victimHand.splice(randIdx, 1);
-        nextHands = {
-          ...nextHands,
-          [victimId]: victimHand,
-          [pending.actorId]: [
-            ...(nextHands[pending.actorId] || []),
-            stolenCard,
-          ],
-        };
-        if (pending.comboCount === 2 || isComboSetCard(cType)) {
-          logAr = `${actorName} لعب ثنائية «${playedMeta.name_ar}» (2×) وسرق كرتاً عشوائياً من يد ${victimName}!`;
-          logEn = `${actorName} played 2× "${playedMeta.name_en}" and stole a random card from ${victimName}!`;
-        } else {
-          logAr = `${actorName} سحب كرتاً عشوائياً بالمغناطيس من يد ${victimName}!`;
-          logEn = `${actorName} magnetized a random card from ${victimName}’s hand!`;
-        }
-      } else {
-        logAr = `${actorName} حاول السرقة لكن يد الخصم فارغة!`;
-        logEn = `${actorName} tried to steal a card, but target had no cards!`;
-      }
     }
 
     return {
@@ -2546,7 +2543,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     if (
       card.type === 'bomb' ||
       card.type === 'defuse' ||
-      card.type === 'block'
+      (card.type === 'block' && comboCount < 2)
     )
       return;
 
@@ -2554,10 +2551,13 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     const actorHand = gameData.hands?.[actorId] || [];
     const matchingCopies = actorHand.filter((c) => c.type === card.type);
 
-    // If this is a Combo Set card or Magnet and the player hasn't clicked a rival on the table yet:
-    // Activate direct table-seat targeting (ZERO clutter modal!).
-    if ((isComboSetCard(card.type) || card.type === 'magnet') && !targetPlayerId) {
-      if (isComboSetCard(card.type) && matchingCopies.length < 2) return;
+    // If this is a Combo Set card, Magnet, OR any Special Card where the player is choosing a 2x/3x Combo target:
+    if (
+      (isComboSetCard(card.type) || card.type === 'magnet' || comboCount >= 2) &&
+      !targetPlayerId
+    ) {
+      if ((isComboSetCard(card.type) || comboCount >= 2) && matchingCopies.length < 2)
+        return;
       setSelectedCardId(card.id);
       setPickingMagnetTarget(true);
       return;
@@ -2567,7 +2567,11 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
       ? comboCount >= 3 && matchingCopies.length >= 3
         ? 3
         : 2
-      : comboCount;
+      : comboCount >= 3 && matchingCopies.length >= 3
+      ? 3
+      : comboCount === 2 && matchingCopies.length >= 2
+      ? 2
+      : 1;
 
     const actionCardType = card.type;
     setSelectedCardId(null);
@@ -3319,13 +3323,16 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                 onClick={() => {
                   if (isTargetable && selectedCard) {
                     const copies = handTypeCounts[selectedCard.type] || 1;
-                    if (isComboSetCard(selectedCard.type) && copies >= 3) {
+                    if (copies >= 3) {
                       setPickingMagnetTarget(false);
                       setComboBuilder({
                         card: selectedCard,
                         targetPlayerId: riv.id,
                       });
-                    } else if (isComboSetCard(selectedCard.type)) {
+                    } else if (
+                      isComboSetCard(selectedCard.type) ||
+                      (selectedCard.type !== 'magnet' && copies >= 2)
+                    ) {
                       handleInitiateCardPlay(selectedCard, riv.id, 2);
                     } else {
                       handleInitiateCardPlay(selectedCard, riv.id, 1);
@@ -3747,21 +3754,52 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             }
           `}</style>
 
-          {/* ABSOLUTE FLOATING TARGETING BANNER (Zero Layout Shift!) */}
+          {/* ABSOLUTE FLOATING TARGETING & SPECIAL-COMBO BAR (Zero Layout Shift!) */}
           {pickingMagnetTarget && (
-            <div className="absolute top-1 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-2xl bg-[#f97316] text-white border-3 border-[#161426] shadow-[0_6px_0_#161426] flex items-center gap-3 whitespace-nowrap">
-              <Magnet weight="fill" className="w-5 h-5 text-[#ffca3a]" />
-              <span className="text-xs sm:text-sm font-black">
-                {selectedCard &&
-                isComboSetCard(selectedCard.type) &&
-                (handTypeCounts[selectedCard.type] || 0) >= 3
-                  ? ar
-                    ? 'اضغط على الخصم فوق لطلب أي كرت بالاسم من يده (3×)!'
-                    : 'Tap a rival above to claim a named card from their hand (3×)!'
-                  : ar
-                  ? 'اضغط على أي خصم فوق لسحب كرت عشوائي من يده!'
-                  : 'Tap any rival above to steal a random card!'}
-              </span>
+            <div className="absolute top-1 left-1/2 -translate-x-1/2 z-[60] px-3.5 py-2 rounded-2xl bg-[#f97316] text-white border-3 border-[#161426] shadow-[0_6px_0_#161426] flex flex-wrap items-center justify-center gap-2.5">
+              {/* If this is a Special Ability card (not Combo Set, not Magnet, not Block) that has 2+ copies, let the player either play 1x normal ability OR click a rival for 2x/3x Combo! */}
+              {selectedCard &&
+                !isComboSetCard(selectedCard.type) &&
+                selectedCard.type !== 'magnet' &&
+                selectedCard.type !== 'block' && (
+                  <button
+                    type="button"
+                    onClick={() => handleInitiateCardPlay(selectedCard, undefined, 1)}
+                    className="cartoon-btn bg-[#8ac926] hover:bg-[#9ef01a] text-[#161426] px-3 py-1 text-xs font-black cursor-pointer flex items-center gap-1"
+                  >
+                    <Lightning weight="fill" className="w-3.5 h-3.5" />
+                    <span>
+                      {ar
+                        ? `العب قدرة «${
+                            BOOM_CARD_META[selectedCard.type].name_ar
+                          }» العادية (1×)`
+                        : `Play 1× Normal "${
+                            BOOM_CARD_META[selectedCard.type].name_en
+                          }"`}
+                    </span>
+                  </button>
+                )}
+
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm font-black">
+                <Magnet weight="fill" className="w-4 h-4 text-[#ffca3a] shrink-0" />
+                <span>
+                  {selectedCard &&
+                  (handTypeCounts[selectedCard.type] || 0) >= 3
+                    ? ar
+                      ? 'اضغط على الخصم فوق لكومبو (3× طلب كرت بالاسم)!'
+                      : 'Tap a rival above for 3× Combo (Claim Named Card)!'
+                    : selectedCard &&
+                      (isComboSetCard(selectedCard.type) ||
+                        (handTypeCounts[selectedCard.type] || 0) >= 2)
+                    ? ar
+                      ? 'اضغط على الخصم فوق لكومبو (2× سرقة كرت عشوائي)!'
+                      : 'Tap a rival above for 2× Combo (Steal Random Card)!'
+                    : ar
+                    ? 'اضغط على أي خصم فوق لسحب كرت عشوائي من يده!'
+                    : 'Tap any rival above to steal a random card!'}
+                </span>
+              </div>
+
               <button
                 type="button"
                 onClick={() => {
@@ -3800,8 +3838,8 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                 </button>
               </div>
 
-              {/* Clean 2×4 Grid of the 8 Power Cards — 1 Click Immediately Executes! */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Clean 3×4 Grid of Cards — 1 Click Immediately Executes! */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
                 {(
                   [
                     'defuse',
@@ -3812,6 +3850,10 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     'magnet',
                     'reverse',
                     'shuffle',
+                    'combo_shawarma',
+                    'combo_kabsa',
+                    'combo_karak',
+                    'combo_falcon',
                   ] as BoomCardType[]
                 ).map((cType) => {
                   const cMeta = BOOM_CARD_META[cType];
@@ -3828,15 +3870,15 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                         )
                       }
                       style={{ backgroundColor: cMeta.bg }}
-                      className="p-2 rounded-2xl border-2 border-[#161426] shadow-[0_3px_0_#161426] hover:-translate-y-0.5 transition-transform flex items-center gap-2 text-start cursor-pointer"
+                      className="p-1.5 rounded-xl border-2 border-[#161426] shadow-[0_2px_0_#161426] hover:-translate-y-0.5 transition-transform flex items-center gap-1.5 text-start cursor-pointer"
                     >
                       <span
                         style={{ backgroundColor: cMeta.badgeBg }}
-                        className="w-7 h-7 rounded-lg border-2 border-[#161426] text-white text-xs font-black flex items-center justify-center shrink-0"
+                        className="w-6 h-6 rounded-lg border-2 border-[#161426] text-white text-[10px] font-black flex items-center justify-center shrink-0"
                       >
                         {cMeta.symbol}
                       </span>
-                      <span className="text-xs font-black text-[#161426] truncate">
+                      <span className="text-[11px] font-black text-[#161426] truncate">
                         {ar ? cMeta.name_ar : cMeta.name_en}
                       </span>
                     </button>
@@ -3850,12 +3892,16 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                   handleInitiateCardPlay(
                     comboBuilder.card,
                     comboBuilder.targetPlayerId,
-                    2
+                    comboBuilder.card.type === 'magnet' ? 1 : 2
                   )
                 }
                 className="w-full py-1.5 rounded-xl bg-[#f1f5f9] hover:bg-[#ffca3a] border-2 border-[#161426] text-xs font-extrabold text-[#161426] cursor-pointer transition-colors"
               >
-                {ar
+                {comboBuilder.card.type === 'magnet'
+                  ? ar
+                    ? 'أو العب مغناطيس واحد (1×) فقط لسرقة كرت عشوائي'
+                    : 'Or play 1× Magnet only to steal a random card'
+                  : ar
                   ? 'أو العب ثنائية (2×) فقط واسرق كرتاً عشوائياً'
                   : 'Or play 2× only to steal a random card'}
               </button>
@@ -4139,9 +4185,9 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             </div>
           )}
 
-          {/* ABSOLUTE CENTER OVERLAY 3: SECRET BOMB RE-PLANTING VAULT (Clean 4 Quick Buttons + 1 Smooth Exact-Slot Slider!) */}
+          {/* ABSOLUTE CENTER OVERLAY 3: SECRET BOMB RE-PLANTING VAULT */}
           {gameData.phase === 'planting_bomb' && (
-            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-md w-full">
+            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-xl w-full">
               {isCrisisMine || isPassAndPlay ? (
                 <>
                   <span className="cartoon-badge bg-[#22c55e] text-[#161426] px-3 py-0.5 text-xs">
@@ -4153,75 +4199,147 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     {ar
                       ? `يا ${getPlayerName(
                           crisisPlayerId
-                        )}، وين بدك تزرع الديناميت؟`
+                        )}، وين بدك تزرع الديناميت وسط الـ ${totalDeckCount} كرت؟`
                       : `${getPlayerName(
                           crisisPlayerId
-                        )}, where do you want to hide the bomb?`}
+                        )}, where do you want to hide the Dynamite?`}
                   </h3>
 
-                  {/* 4 Clean Quick Buttons */}
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* 6 Clean Tactile Cartoon Preset Buttons */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => handlePlantBombAt(0)}
-                      className="cartoon-btn bg-[#e11d48] text-white py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="cartoon-btn bg-[#e11d48] text-white py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
                     >
-                      <Flame weight="fill" className="w-4 h-4 text-[#ffca3a]" />
-                      <span>{ar ? '1. أول كرت عالوجه!' : '1. Top Card (#1)'}</span>
+                      <span className="font-black flex items-center gap-1">
+                        <Flame weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />
+                        {ar ? '1. أول كرت عالوجه!' : '1. Right on TOP!'}
+                      </span>
+                      <span className="text-[10px] opacity-90">
+                        {ar ? 'فخ فوري للي بعدك!' : 'Next draw explodes!'}
+                      </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handlePlantBombAt(1)}
-                      className="cartoon-btn bg-[#f97316] text-white py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="cartoon-btn bg-[#f97316] text-white py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
                     >
-                      <Lightning
-                        weight="fill"
-                        className="w-4 h-4 text-[#ffca3a]"
-                      />
-                      <span>
-                        {ar ? '2. تاني كرت من فوق' : '2. Second Card (#2)'}
+                      <span className="font-black flex items-center gap-1">
+                        <Lightning weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />
+                        {ar ? '2. تاني كرت من فوق' : '2. Second Card'}
+                      </span>
+                      <span className="text-[10px] opacity-90">
+                        {ar ? 'ينفجر بعد سحبة واحدة!' : '1 safe draw then BOOM!'}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handlePlantBombAt(2)}
+                      className="cartoon-btn bg-[#ffca3a] text-[#161426] py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
+                    >
+                      <span className="font-black flex items-center gap-1">
+                        <WarningOctagon weight="fill" className="w-3.5 h-3.5 text-[#e11d48]" />
+                        {ar ? '3. تالت كرت من فوق' : '3. Third Card'}
+                      </span>
+                      <span className="text-[10px] opacity-80">
+                        {ar ? 'كمين بعد سحبتين' : '2 draws deep'}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handlePlantBombAt(Math.floor(totalDeckCount / 2))
+                      }
+                      className="cartoon-btn bg-[#00bbf9] text-[#161426] py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
+                    >
+                      <span className="font-black flex items-center gap-1">
+                        <FastForward weight="fill" className="w-3.5 h-3.5" />
+                        {ar ? '4. بنص الكومة' : '4. In the Middle'}
+                      </span>
+                      <span className="text-[10px] opacity-80">
+                        {ar
+                          ? `الكرت رقم #${Math.floor(totalDeckCount / 2) + 1}`
+                          : `Card #${Math.floor(totalDeckCount / 2) + 1}`}
                       </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handlePlantBombAt(totalDeckCount)}
-                      className="cartoon-btn bg-[#8ac926] text-[#161426] py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="cartoon-btn bg-[#8ac926] text-[#161426] py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
                     >
-                      <ShieldCheck weight="fill" className="w-4 h-4" />
-                      <span>
+                      <span className="font-black flex items-center gap-1">
+                        <ShieldCheck weight="fill" className="w-3.5 h-3.5" />
+                        {ar ? '5. بآخر الكومة تحت' : '5. Very Bottom'}
+                      </span>
+                      <span className="text-[10px] opacity-80">
                         {ar
-                          ? `آخر كرت تحت (#${totalDeckCount + 1})`
-                          : `Bottom (#${totalDeckCount + 1})`}
+                          ? `الكرت الأخير (#${totalDeckCount + 1})`
+                          : `Last Card (#${totalDeckCount + 1})`}
                       </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handlePlantBombAt('random')}
-                      className="cartoon-btn bg-[#9b5de5] text-white py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="cartoon-btn bg-[#9b5de5] text-white py-2 px-2.5 text-xs flex flex-col items-center gap-0.5 cursor-pointer"
                     >
-                      <Shuffle
-                        weight="bold"
-                        className="w-4 h-4 text-[#ffca3a]"
-                      />
-                      <span>{ar ? 'مكان عشوائي' : 'Random Spot'}</span>
+                      <span className="font-black flex items-center gap-1">
+                        <Shuffle weight="bold" className="w-3.5 h-3.5 text-[#ffca3a]" />
+                        {ar ? '6. مكان عشوائي' : '6. Random Spot'}
+                      </span>
+                      <span className="text-[10px] opacity-90">
+                        {ar ? 'مفاجأة للجميع!' : 'Total mystery!'}
+                      </span>
                     </button>
                   </div>
 
-                  {/* Single Clean Slider to Pick ANY Exact Card Number (1 .. N+1) */}
-                  <div className="p-2.5 rounded-2xl bg-[#f1f5f9] border-2 border-[#161426] flex items-center gap-2.5">
-                    <input
-                      type="range"
-                      min={1}
-                      max={Math.max(1, totalDeckCount + 1)}
-                      value={Math.min(customBombSlot, totalDeckCount + 1)}
-                      onChange={(e) =>
-                        setCustomBombSlot(Number(e.target.value))
-                      }
-                      className="flex-1 accent-[#e11d48] cursor-pointer"
-                    />
+                  {/* Custom Tactile Cartoon Number Stepper (Pick ANY Exact Card #1 .. #N+1 without any browser slider!) */}
+                  <div className="px-3 py-2 rounded-2xl bg-[#191636] border-3 border-[#161426] shadow-[0_4px_0_#161426] flex items-center justify-between gap-2 text-white">
+                    <span className="text-xs font-extrabold text-white/90">
+                      {ar ? 'أو اختر رقم الكرت بالضبط:' : 'Or pick exact card #:'}
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCustomBombSlot((prev) => Math.max(1, prev - 1))
+                        }
+                        className="w-7 h-7 rounded-xl bg-[#2d2852] hover:bg-[#ffca3a] hover:text-[#161426] border-2 border-[#161426] font-black text-sm flex items-center justify-center cursor-pointer transition-colors"
+                      >
+                        -
+                      </button>
+
+                      <span className="min-w-[74px] px-2.5 py-1 rounded-xl bg-[#110e24] border-2 border-[#ffca3a] text-[#ffca3a] font-black text-xs text-center">
+                        {ar
+                          ? `كرت #${Math.min(
+                              customBombSlot,
+                              totalDeckCount + 1
+                            )} / ${totalDeckCount + 1}`
+                          : `#${Math.min(
+                              customBombSlot,
+                              totalDeckCount + 1
+                            )} / ${totalDeckCount + 1}`}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setCustomBombSlot((prev) =>
+                            Math.min(totalDeckCount + 1, prev + 1)
+                          )
+                        }
+                        className="w-7 h-7 rounded-xl bg-[#2d2852] hover:bg-[#ffca3a] hover:text-[#161426] border-2 border-[#161426] font-black text-sm flex items-center justify-center cursor-pointer transition-colors"
+                      >
+                        +
+                      </button>
+                    </div>
+
                     <button
                       type="button"
                       onClick={() =>
@@ -4229,14 +4347,14 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                           Math.min(customBombSlot, totalDeckCount + 1) - 1
                         )
                       }
-                      className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3 py-1.5 text-xs font-black shrink-0 cursor-pointer"
+                      className="cartoon-btn bg-[#ffca3a] hover:bg-[#fde047] text-[#161426] px-3.5 py-1 text-xs font-black shrink-0 cursor-pointer"
                     >
                       {ar
-                        ? `ازرع بالكرت #${Math.min(
+                        ? `ازرع في #${Math.min(
                             customBombSlot,
                             totalDeckCount + 1
                           )}`
-                        : `Plant at #${Math.min(
+                        : `Plant #${Math.min(
                             customBombSlot,
                             totalDeckCount + 1
                           )}`}
@@ -4346,8 +4464,8 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             )}
           </div>
 
-          {/* FIXED-HEIGHT STRAIGHT HAND SLOT (h-[250px]) */}
-          <div className="relative w-full h-[250px] flex items-end justify-center overflow-x-auto pb-1 pt-4 px-2">
+          {/* FIXED-HEIGHT STRAIGHT HAND SLOT (h-[250px] — Dynamic Overlap Guarantees ALL Cards Fit Inside Table!) */}
+          <div className="relative w-full h-[250px] flex items-end justify-center overflow-hidden pb-1 pt-4 px-3">
             {!isAmAlive ? (
               <div className="my-auto px-6 py-3 rounded-2xl bg-[#ffe4e6] border-3 border-[#161426] text-center font-black text-xs sm:text-sm text-[#e11d48] flex items-center gap-2">
                 <Skull weight="fill" className="w-5 h-5" />
@@ -4359,140 +4477,173 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
               </div>
             ) : isPassAndPlay && !passAndPlayHandUnlocked ? (
               /* Upright Face-Down Cards at Exact Same Height + Centered Reveal Button! */
-              <div className="relative flex items-end justify-center w-full h-full">
-                <div
-                  dir="ltr"
-                  className="inline-flex items-end justify-center gap-2.5 opacity-55 pointer-events-none"
-                >
-                  {myHand.map((card) => (
-                    <div key={card.id}>
-                      <BoomCardBackSvg className="w-[136px] h-[196px] sm:w-[148px] sm:h-[214px]" />
+              (() => {
+                const handCount = myHand.length;
+                const cardW = handCount >= 7 ? 136 : 148;
+                const maxRowW = 920;
+                const step =
+                  handCount <= 1
+                    ? cardW
+                    : Math.min(
+                        cardW + 10,
+                        Math.floor((maxRowW - cardW) / (handCount - 1))
+                      );
+                const overlapPx = step - cardW;
+
+                return (
+                  <div className="relative flex items-end justify-center w-full h-full">
+                    <div
+                      dir="ltr"
+                      className="inline-flex items-end justify-center opacity-55 pointer-events-none"
+                    >
+                      {myHand.map((card, idx) => (
+                        <div
+                          key={card.id}
+                          style={{
+                            marginLeft: idx === 0 ? '0px' : `${overlapPx}px`,
+                          }}
+                        >
+                          <BoomCardBackSvg
+                            className={
+                              handCount >= 7
+                                ? 'w-[136px] h-[192px]'
+                                : 'w-[148px] h-[214px]'
+                            }
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 mx-auto max-w-md px-5 py-3.5 rounded-3xl bg-[#191636]/95 border-3 border-[#ffca3a] text-center space-y-2 shadow-[0_8px_0_#161426]">
-                  <p className="text-xs sm:text-sm font-extrabold text-[#fff9ec]">
-                    {ar
-                      ? `مرّر الجهاز إلى (${getPlayerName(
-                          activeViewerId
-                        )}) ثم اكشف أوراقه السرية:`
-                      : `Pass device to (${getPlayerName(
-                          activeViewerId
-                        )}) and tap to reveal their hand:`}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setPassAndPlayHandUnlocked(true)}
-                    className="cartoon-btn bg-[#ffca3a] text-[#161426] px-6 py-2 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer"
-                  >
-                    <Eye weight="fill" className="w-4 h-4" />
-                    <span>
-                      {ar
-                        ? `اكشف أوراق ${getPlayerName(activeViewerId)} (${
-                            myHand.length
-                          } كروت)`
-                        : `Reveal ${getPlayerName(activeViewerId)}’s Hand (${
-                            myHand.length
-                          })`}
-                    </span>
-                  </button>
-                </div>
-              </div>
+                    <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 mx-auto max-w-md px-5 py-3.5 rounded-3xl bg-[#191636]/95 border-3 border-[#ffca3a] text-center space-y-2 shadow-[0_8px_0_#161426]">
+                      <p className="text-xs sm:text-sm font-extrabold text-[#fff9ec]">
+                        {ar
+                          ? `مرّر الجهاز إلى (${getPlayerName(
+                              activeViewerId
+                            )}) ثم اكشف أوراقه السرية:`
+                          : `Pass device to (${getPlayerName(
+                              activeViewerId
+                            )}) and tap to reveal their hand:`}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setPassAndPlayHandUnlocked(true)}
+                        className="cartoon-btn bg-[#ffca3a] text-[#161426] px-6 py-2 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer"
+                      >
+                        <Eye weight="fill" className="w-4 h-4" />
+                        <span>
+                          {ar
+                            ? `اكشف أوراق ${getPlayerName(activeViewerId)} (${
+                                myHand.length
+                              } كروت)`
+                            : `Reveal ${getPlayerName(activeViewerId)}’s Hand (${
+                                myHand.length
+                              })`}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()
             ) : (
-              /* NEATLY ALIGNED, STRAIGHT UPRIGHT CARDS IN HAND (0deg tilt, sorted by type!) */
-              <div
-                dir="ltr"
-                className="inline-flex items-end justify-center gap-2 sm:gap-3 px-4"
-              >
-                {myHand.map((card) => {
-                  const isPassive =
-                    card.type === 'defuse' || card.type === 'block';
-                  const isComboCard = isComboSetCard(card.type);
-                  const copyCount = handTypeCounts[card.type] || 1;
-                  const canPlayCombo = isComboCard && copyCount >= 2;
+              /* NEATLY ALIGNED, STRAIGHT UPRIGHT CARDS IN HAND (0deg tilt, sorted by type, auto-overlapping when 7+ cards so 100% stay visible!) */
+              (() => {
+                const handCount = myHand.length;
+                const useCompactSize = handCount >= 7;
+                const cardW = useCompactSize ? 136 : 152;
+                const maxRowW = 930;
+                const step =
+                  handCount <= 1
+                    ? cardW
+                    : Math.min(
+                        cardW + 10,
+                        Math.floor((maxRowW - cardW) / (handCount - 1))
+                      );
+                const overlapPx = step - cardW;
 
-                  const canPlayNow =
-                    gameData.phase === 'playing' &&
-                    isMyTurn &&
-                    !isPassive &&
-                    (!isComboCard || canPlayCombo) &&
-                    !localDrawPreview &&
-                    !localPlayPreview;
+                return (
+                  <div
+                    dir="ltr"
+                    className="inline-flex items-end justify-center px-2"
+                  >
+                    {myHand.map((card, idx) => {
+                      const isComboCard = isComboSetCard(card.type);
+                      const copyCount = handTypeCounts[card.type] || 1;
+                      const canPlayCombo = copyCount >= 2 && card.type !== 'defuse';
+                      const isPassiveOnly =
+                        card.type === 'defuse' ||
+                        (card.type === 'block' && copyCount < 2);
 
-                  const isPickedForMagnet =
-                    (pickingMagnetTarget && selectedCardId === card.id) ||
-                    comboBuilder?.card.id === card.id;
-                  const isBeingPlayedNow =
-                    localPlayPreview?.card.id === card.id;
+                      const canPlayNow =
+                        gameData.phase === 'playing' &&
+                        isMyTurn &&
+                        !isPassiveOnly &&
+                        (!isComboCard || canPlayCombo) &&
+                        !localDrawPreview &&
+                        !localPlayPreview;
 
-                  const comboBadge = isComboCard
-                    ? copyCount >= 3
-                      ? ar
-                        ? `كومبو 3× خارق! (${copyCount})`
-                        : `3× COMBO READY (${copyCount})`
-                      : copyCount === 2
-                      ? ar
-                        ? 'كومبو 2× جاهز! (2/2)'
-                        : '2× COMBO READY (2/2)'
-                      : ar
-                      ? '1/2 (اجمع 2 أو 3)'
-                      : '1/2 (Need 2 or 3)'
-                    : undefined;
+                      const isPickedForMagnet =
+                        (pickingMagnetTarget && selectedCardId === card.id) ||
+                        comboBuilder?.card.id === card.id;
+                      const isBeingPlayedNow =
+                        localPlayPreview?.card.id === card.id;
 
-                  const actionLabel = isComboCard
-                    ? copyCount >= 3
-                      ? isMyTurn
+                      const actionLabel = isComboCard
+                        ? copyCount >= 3
+                          ? ar
+                            ? 'العب 3× (اطلب كرت بالاسم)'
+                            : 'Play 3× (Name a Card)'
+                          : copyCount === 2
+                          ? ar
+                            ? 'العب 2× (اسرق كرت عشوائي)'
+                            : 'Play 2× (Steal Random)'
+                          : ar
+                          ? 'اجمع 2 أو 3 للسرقة'
+                          : 'Collect 2 or 3 to steal'
+                        : isPickedForMagnet
                         ? ar
-                          ? 'العب 3× (اطلب كرت بالاسم!)'
-                          : 'Play 3× (Name Any Card!)'
-                        : ar
-                        ? 'كومبو 3× جاهز لدورك!'
-                        : '3× Combo Ready!'
-                      : copyCount === 2
-                      ? isMyTurn
-                        ? ar
-                          ? 'العب 2× (اسرق كرت عشوائي!)'
-                          : 'Play 2× (Steal Random!)'
-                        : ar
-                        ? 'كومبو 2× جاهز لدورك!'
-                        : '2× Combo Ready!'
-                      : ar
-                      ? 'بلا قيمة وحده • اجمع 2 أو 3 منه!'
-                      : 'No solo value • Collect 2 or 3!'
-                    : isPickedForMagnet
-                    ? ar
-                      ? 'اختر خصماً من فوق'
-                      : 'Pick Rival Above'
-                    : undefined;
+                          ? 'اختر خصماً فوق أو العب 1×'
+                          : 'Pick Rival or Play 1×'
+                        : undefined;
 
-                  return (
-                    <BoomPlayingCard
-                      key={card.id}
-                      type={card.type}
-                      ar={ar}
-                      size="md"
-                      canPlay={canPlayNow}
-                      isSelected={isPickedForMagnet}
-                      comboBadge={comboBadge}
-                      actionLabel={actionLabel}
-                      style={{ transform: 'none' }}
-                      onClick={() => {
-                        if (canPlayNow) {
-                          handleInitiateCardPlay(card);
-                        }
-                      }}
-                      className={
-                        isBeingPlayedNow
-                          ? 'opacity-0 pointer-events-none'
-                          : isComboCard && copyCount < 2
-                          ? 'opacity-80'
-                          : ''
-                      }
-                    />
-                  );
-                })}
-              </div>
+                      return (
+                        <BoomPlayingCard
+                          key={card.id}
+                          type={card.type}
+                          ar={ar}
+                          size={useCompactSize ? 'sm' : 'md'}
+                          canPlay={canPlayNow}
+                          isSelected={isPickedForMagnet}
+                          actionLabel={actionLabel}
+                          style={{
+                            transform: 'none',
+                            marginLeft: idx === 0 ? '0px' : `${overlapPx}px`,
+                          }}
+                          onClick={() => {
+                            if (!canPlayNow) return;
+                            // If player holds 2+ copies of ANY playable card (Combo OR Special), open the top targeting bar so they can either click a rival for 2x/3x Combo OR play 1x normal ability!
+                            if (copyCount >= 2 && card.type !== 'defuse') {
+                              handleInitiateCardPlay(
+                                card,
+                                undefined,
+                                copyCount >= 3 ? 3 : 2
+                              );
+                            } else {
+                              handleInitiateCardPlay(card);
+                            }
+                          }}
+                          className={
+                            isBeingPlayedNow
+                              ? 'opacity-0 pointer-events-none'
+                              : isComboCard && copyCount < 2
+                              ? 'opacity-90'
+                              : ''
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                );
+              })()
             )}
           </div>
         </div>
