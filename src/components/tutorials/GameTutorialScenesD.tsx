@@ -1261,3 +1261,651 @@ export const ResistanceTutorialScene: React.FC<TutorialSceneProps> = ({
     </StageBackdrop>
   );
 };
+
+/* ============================================================================
+ * 24. MASTERPIECE TRAP AUCTION (مزاد الخربشات) — Pure Native SVG 4-Step Scene
+ * ========================================================================== */
+export const ArtAuctionTutorialScene: React.FC<TutorialSceneProps> = ({
+  step,
+  animT,
+  clock,
+  lang,
+}) => {
+  const ar = lang === 'ar';
+  const pulse = 1 + Math.sin(clock * 4.5) * 0.04;
+  const bob = Math.sin(clock * 3.5) * 2.5;
+  const b = easeOutBack(animT);
+
+  return (
+    <StageBackdrop accent="#eab308">
+      {step === 0 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#fef9c3"
+            text={
+              ar
+                ? 'ارسم لوحتك وضع خلفها بيدك ختمك السري: تحفة أم فخ؟'
+                : 'Draw your art & secretly stamp it yourself: Masterpiece or Trap?'
+            }
+          />
+          {/* Painting Frame */}
+          <g transform={`translate(145, 118) scale(${b})`}>
+            <rect x="-52" y="-42" width="104" height="84" rx="10" fill="#ffca3a" stroke="#161426" strokeWidth="3.5" />
+            <rect x="-42" y="-32" width="84" height="64" rx="6" fill="#fff9ec" stroke="#161426" strokeWidth="2.5" />
+            <path d="M -28 14 Q -10 -16 8 8 T 28 -12" fill="none" stroke="#e11d48" strokeWidth="3.5" strokeLinecap="round" />
+            <circle cx="-18" cy="-12" r="5" fill="#00bbf9" />
+          </g>
+          <SvgDoubleArrow x={232} y={118} color="#ffca3a" />
+          <SvgPill
+            x={365}
+            y={94}
+            w={195}
+            h={32}
+            bg="#8ac926"
+            scale={b}
+            text={ar ? 'ختم: تحفة ملكية (+$5,000)' : 'Stamp: Masterpiece (+$5k)'}
+          />
+          <SvgPill
+            x={365}
+            y={142}
+            w={195}
+            h={32}
+            bg="#ff595e"
+            fg="#fff9ec"
+            scale={b * pulse}
+            text={ar ? 'ختم: لوحة ملغومة (-$3,000!)' : 'Stamp: Cursed Trap (-$3k!)'}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={425}
+            h={27}
+            bg="#191636"
+            fg="#ffca3a"
+            text={
+              ar
+                ? 'أنت الوحيد الذي يعرف القيمة السرية خلف لوحتك!'
+                : 'Only YOU know the secret stamp hidden behind your painting!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 1 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#ffca3a"
+            text={
+              ar
+                ? 'قاعة المزاد: زايد بالدولارات (والمبلغ يذهب كاش لجيب الرسام!)'
+                : 'Live Auction: Bid cash — winning bid goes straight to the Artist!'
+            }
+          />
+          <SvgPlayerAvatar x={110} y={115} color="#00bbf9" label={ar ? 'الرسام' : 'Artist'} crown clock={clock} />
+          <g transform={`translate(255, ${118 + bob}) scale(${pulse})`}>
+            <rect x="-46" y="-36" width="92" height="72" rx="10" fill="#ffca3a" stroke="#161426" strokeWidth="3.2" />
+            <rect x="-36" y="-26" width="72" height="52" rx="5" fill="#fff9ec" stroke="#161426" strokeWidth="2.2" />
+            <text x="0" y="3" textAnchor="middle" fill="#161426" fontSize="12" fontWeight="900">
+              {ar ? '؟ ختم سري ؟' : '? SECRET ?'}
+            </text>
+          </g>
+          <SvgPlayerAvatar x={405} y={115} color="#9b5de5" label={ar ? 'المشتري' : 'Buyer'} highlight clock={clock} />
+          <SvgPill
+            x={405}
+            y={170}
+            w={135}
+            h={25}
+            bg="#8ac926"
+            fontSize={10}
+            text={ar ? 'أزايد بـ $2,000!' : 'Bid $2,000!'}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={425}
+            h={27}
+            bg="#191636"
+            fg="#fff9ec"
+            text={
+              ar
+                ? 'الرسام يقبض $2,000 فوراً... والمشتري يفتح الختم السري!'
+                : 'Artist pockets $2,000 cash... while Buyer flips the secret stamp!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 2 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#ff924c"
+            text={
+              ar
+                ? 'فخ الطمع: إذا لم يزايد أحد على لوحتك... تبتلعها أنت!'
+                : 'Careful: If NOBODY bids on your painting, YOU keep it!'
+            }
+          />
+          <SvgPlayerAvatar x={165} y={114} color="#ff595e" label={ar ? 'رسام نصّاب' : 'Trap Artist'} suspect clock={clock} />
+          <SvgDoubleArrow x={255} y={114} color="#ff595e" />
+          <SvgScoreBadge
+            x={365}
+            y={114}
+            w={195}
+            text={ar ? 'صفر مزايدة = الفخ ينفجر فيك!' : '0 Bids = Trap Hits Artist!'}
+            bg="#ff595e"
+            fg="#fff9ec"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={425}
+            h={27}
+            bg="#191636"
+            fg="#ffca3a"
+            text={
+              ar
+                ? 'لا تضع فخاً إلا إذا كنت واثقاً أن لوحتك ستُغري أصحابك بالشراء!'
+                : 'Only plant a Trap if your drawing is tempting enough to get bids!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 3 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={430}
+            h={27}
+            bg="#8ac926"
+            text={
+              ar
+                ? 'كشف الأختام السرية وحساب الثروة الكلية (كاش + قيمة اللوحات)!'
+                : 'Unveil all Secret Stamps — Total Cash + Art Value wins!'
+            }
+          />
+          <SvgScoreBadge
+            x={155}
+            y={122}
+            w={190}
+            text={ar ? 'تحفة ملكية: +$5,000!' : 'Royal Masterpiece: +$5,000!'}
+            bg="#8ac926"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgScoreBadge
+            x={365}
+            y={122}
+            w={190}
+            text={ar ? 'لوحة ملغومة: -$3,000!' : 'Cursed Trap: -$3,000!'}
+            bg="#e11d48"
+            fg="#fff9ec"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={415}
+            h={27}
+            bg="#8ac926"
+            text={
+              ar
+                ? 'أذكى جامع تحف ومروّج لوحات يتوّج إمبراطور المزاد!'
+                : 'The sharpest art collector & bluffer wins the auction crown!'
+            }
+          />
+        </g>
+      )}
+    </StageBackdrop>
+  );
+};
+
+/* ============================================================================
+ * 25. DRAW YOUR ALIBI (ارسم حجّتك!) — Pure Native SVG 4-Step Scene
+ * ========================================================================== */
+export const AlibiTutorialScene: React.FC<TutorialSceneProps> = ({
+  step,
+  animT,
+  clock,
+  lang,
+}) => {
+  const ar = lang === 'ar';
+  const pulse = 1 + Math.sin(clock * 4.5) * 0.04;
+  const b = easeOutBack(animT);
+
+  return (
+    <StageBackdrop accent="#06b6d4">
+      {step === 0 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#cffafe"
+            text={
+              ar
+                ? 'الشهود الأبرياء يعرفون «تفصيل الحجّة السري» والمجرم يجهله!'
+                : 'Witnesses see the Secret Alibi Detail — the Culprit is in the dark!'
+            }
+          />
+          <rect x="42" y="60" width="205" height="122" rx="14" fill="#191636" stroke="#06b6d4" strokeWidth="3.2" />
+          <SvgPill x={144} y={92} w={175} h={26} bg="#06b6d4" fg="#161426" fontSize={10} text={ar ? 'شاهد بريء: المتحف' : 'Witness: Museum'} />
+          <SvgPill
+            x={144}
+            y={140}
+            w={185}
+            h={26}
+            bg="#ffca3a"
+            fontSize={9.8}
+            text={ar ? 'السر: قطة فوق التمثال!' : 'Alibi: Cat on Statue!'}
+          />
+
+          <rect x="273" y="60" width="205" height="122" rx="14" fill="#191636" stroke="#ff595e" strokeWidth="3.2" />
+          <SvgPill x={375} y={92} w={175} h={26} bg="#ff595e" fg="#fff9ec" fontSize={10} text={ar ? 'المجرم: المتحف فقط!' : 'Culprit: Museum Only!'} />
+          <SvgPill
+            x={375}
+            y={140}
+            w={185}
+            h={26}
+            bg="#fff9ec"
+            fontSize={9.8}
+            text={ar ? 'تفصيل الحجّة: ؟؟؟ مجهول' : 'Alibi Detail: ??? Unknown'}
+          />
+
+          <SvgPill
+            x={260}
+            y={212}
+            w={420}
+            h={27}
+            bg="#191636"
+            fg="#ffca3a"
+            text={
+              ar
+                ? 'ادمج التفصيل السري في رسمتك بذكاء لتثبت براءتك!'
+                : 'Weave the secret detail into your sketch to prove your innocence!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 1 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={430}
+            h={27}
+            bg="#ffca3a"
+            text={
+              ar
+                ? 'يرسم الجميع مشهد حجّتهم في نفس اللحظة داخل غرفة التحقيق!'
+                : 'Everyone sketches their alibi scene simultaneously!'
+            }
+          />
+          {[
+            { x: 115, name: ar ? 'نور (شاهد)' : 'Noor', hasSecret: true },
+            { x: 260, name: ar ? 'سارة (شاهد)' : 'Sara', hasSecret: true },
+            { x: 405, name: ar ? 'رامي (مجرم!)' : 'Rami (Culprit!)', hasSecret: false },
+          ].map((p, i) => (
+            <g key={i} transform={`translate(${p.x}, 122) scale(${b})`}>
+              <rect
+                x="-54"
+                y="-44"
+                width="108"
+                height="88"
+                rx="12"
+                fill="#fff9ec"
+                stroke={p.hasSecret ? '#06b6d4' : '#ff595e'}
+                strokeWidth="3.2"
+              />
+              <text x="0" y="-20" textAnchor="middle" fill="#161426" fontSize="10" fontWeight="900">
+                {p.name}
+              </text>
+              <text x="0" y="12" textAnchor="middle" fill={p.hasSecret ? '#0284c7' : '#e11d48'} fontSize="9.5" fontWeight="900">
+                {p.hasSecret ? (ar ? 'تمثال + قطة' : 'Statue + Cat') : ar ? 'تمثال فقط!' : 'Statue Only!'}
+              </text>
+            </g>
+          ))}
+          <SvgPill
+            x={260}
+            y={212}
+            w={425}
+            h={27}
+            bg="#191636"
+            fg="#fff9ec"
+            text={
+              ar
+                ? 'لا تجعل التفصيل السري مكشوفاً جداً كي لا يفهمه المجرم!'
+                : 'Keep the detail subtle enough that the Culprit cannot guess it!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 2 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={430}
+            h={27}
+            bg="#06b6d4"
+            text={
+              ar
+                ? 'معرض الاستجواب: قارنوا الرسومات وصوّتوا للقبض على المجرم!'
+                : 'Interrogation Board: Compare sketches & vote to arrest the Culprit!'
+            }
+          />
+          <SvgPlayerAvatar x={130} y={118} color="#00bbf9" label={ar ? 'نور' : 'Noor'} clock={clock} />
+          <SvgPlayerAvatar x={260} y={118} color="#9b5de5" label={ar ? 'سارة' : 'Sara'} clock={clock} />
+          <SvgPlayerAvatar x={390} y={118} color="#ff595e" label={ar ? 'رامي (مشتبه!)' : 'Rami (Suspect!)'} suspect clock={clock} />
+          <SvgPill
+            x={390}
+            y={172}
+            w={140}
+            h={24}
+            bg="#ff595e"
+            fg="#fff9ec"
+            fontSize={9.8}
+            scale={pulse}
+            text={ar ? 'رسمته ناقصة السر!' : 'Missing the Alibi!'}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={415}
+            h={27}
+            bg="#191636"
+            fg="#ffca3a"
+            text={
+              ar
+                ? 'كل شاهد يصوّت للمجرم الحقيقي يحصل على نقاط المحقق!'
+                : 'Every Witness who votes for the real Culprit scores Detective points!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 3 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#8ac926"
+            text={
+              ar
+                ? 'إذا انكشف المجرم: أمامه فرصة أخيرة لتخمين تفصيل الحجّة السري!'
+                : 'If caught, the Culprit gets 1 last shot to guess the Secret Alibi!'
+            }
+          />
+          <SvgScoreBadge
+            x={155}
+            y={122}
+            w={190}
+            text={ar ? 'إخفاء السر = فوز الشهود!' : 'Secret Safe = Witnesses Win!'}
+            bg="#8ac926"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgScoreBadge
+            x={365}
+            y={122}
+            w={190}
+            text={ar ? 'هروب أو تخمين = فوز المجرم!' : 'Escape/Guess = Culprit Wins!'}
+            bg="#ff595e"
+            fg="#fff9ec"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={415}
+            h={27}
+            bg="#8ac926"
+            text={
+              ar
+                ? 'توازن ذكي بين إثبات البراءة للشهود وتمويه المجرم!'
+                : 'Strike the perfect balance between proving innocence & hiding the clue!'
+            }
+          />
+        </g>
+      )}
+    </StageBackdrop>
+  );
+};
+
+/* ============================================================================
+ * 26. SPLIT OR STEAL (شرف اللصوص: شراكة أم غدر؟) — Pure Native SVG 4-Step Scene
+ * ========================================================================== */
+export const SplitStealTutorialScene: React.FC<TutorialSceneProps> = ({
+  step,
+  animT,
+  clock,
+  lang,
+}) => {
+  const ar = lang === 'ar';
+  const pulse = 1 + Math.sin(clock * 4.5) * 0.04;
+  const bob = Math.sin(clock * 3.5) * 2.5;
+  const b = easeOutBack(animT);
+
+  return (
+    <StageBackdrop accent="#eab308">
+      {step === 0 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#fef08a"
+            text={
+              ar
+                ? 'افحص حقيبتك السرية وقدّم وعدك ليختارك الزعيم شريكاً بالخزنة!'
+                : 'Peek at your secret briefcase & pitch the Boss to pick you!'
+            }
+          />
+          <SvgPlayerAvatar x={115} y={118} color="#00bbf9" label={ar ? 'زعيم الخزنة' : 'Vault Boss'} crown clock={clock} />
+          <SvgDoubleArrow x={200} y={118} color="#ffca3a" />
+          <SvgPill
+            x={345}
+            y={94}
+            w={215}
+            h={32}
+            bg="#ffca3a"
+            scale={b}
+            text={ar ? 'سارة: «حقيبتي +$60,000 وسأختار شراكة!»' : 'Sara: "$60k & I swear I’ll Split!"'}
+          />
+          <SvgPill
+            x={345}
+            y={142}
+            w={215}
+            h={32}
+            bg="#fff9ec"
+            scale={b}
+            text={ar ? 'رامي: «عندي ألماس مضاعف، اخترني!»' : 'Rami: "Double Diamonds, pick me!"'}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={420}
+            h={27}
+            bg="#191636"
+            fg="#ffca3a"
+            text={
+              ar
+                ? 'قد تكون الحقيبة مليانة ذهب... أو فخ ضريبي ملغوم!'
+                : 'A briefcase might hold $60,000 Gold... or a Tax Trap!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 1 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#ffca3a"
+            text={
+              ar
+                ? 'المواجهة الكبرى: كل طرف يختار بالسر «شراكة» أو «غدر»!'
+                : 'Final Showdown: Each duelist secretly locks SPLIT or STEAL!'
+            }
+          />
+          {/* Left Orb: SPLIT */}
+          <g transform={`translate(160, ${118 + bob}) scale(${b})`}>
+            <circle cx="0" cy="0" r="34" fill="#8ac926" stroke="#161426" strokeWidth="3.8" />
+            <text x="0" y="-3" textAnchor="middle" fill="#161426" fontSize="13" fontWeight="900">
+              {ar ? 'شراكة' : 'SPLIT'}
+            </text>
+            <text x="0" y="13" textAnchor="middle" fill="#161426" fontSize="9.5" fontWeight="900">
+              50% / 50%
+            </text>
+          </g>
+
+          <SvgDoubleArrow x={260} y={118} color="#ffca3a" />
+
+          {/* Right Orb: STEAL */}
+          <g transform={`translate(360, ${118 - bob}) scale(${b * pulse})`}>
+            <circle cx="0" cy="0" r="34" fill="#e11d48" stroke="#161426" strokeWidth="3.8" />
+            <text x="0" y="-3" textAnchor="middle" fill="#fff9ec" fontSize="13" fontWeight="900">
+              {ar ? 'غدر!' : 'STEAL!'}
+            </text>
+            <text x="0" y="13" textAnchor="middle" fill="#ffca3a" fontSize="9.5" fontWeight="900">
+              100% / 0%
+            </text>
+          </g>
+
+          <SvgPill
+            x={260}
+            y={212}
+            w={425}
+            h={27}
+            bg="#191636"
+            fg="#fff9ec"
+            text={
+              ar
+                ? 'بينما يتعرق الشريكان، يراهن باقي اللاعبين على النتيجة!'
+                : 'While duelists sweat, spectators bet on whether they Split or Betray!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 2 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={435}
+            h={27}
+            bg="#ff924c"
+            text={
+              ar
+                ? 'قوانين الكرات الذهبية الثلاثة عند فتح الخزنة:'
+                : 'The 3 Golden Rules when both Orbs are revealed:'
+            }
+          />
+          {[
+            { x: 105, title: ar ? 'شراكة + شراكة' : 'SPLIT + SPLIT', res: ar ? 'تقاسم بالنص!' : '50/50 Split!', col: '#8ac926' },
+            { x: 260, title: ar ? 'غدر + شراكة' : 'STEAL + SPLIT', res: ar ? 'الغادر يأخذ 100%!' : 'Stealer takes 100%!', col: '#ffca3a' },
+            { x: 415, title: ar ? 'غدر + غدر' : 'STEAL + STEAL', res: ar ? 'انفجار! $0 للاثنين!' : 'BOOM! $0 for Both!', col: '#ff595e' },
+          ].map((c, i) => (
+            <g key={i} transform={`translate(${c.x}, 122) scale(${b})`}>
+              <rect x="-66" y="-40" width="132" height="80" rx="14" fill="#191636" stroke={c.col} strokeWidth="3.2" />
+              <text x="0" y="-8" textAnchor="middle" fill={c.col} fontSize="11.5" fontWeight="900">
+                {c.title}
+              </text>
+              <text x="0" y="16" textAnchor="middle" fill="#fff9ec" fontSize="10.2" fontWeight="900">
+                {c.res}
+              </text>
+            </g>
+          ))}
+          <SvgPill
+            x={260}
+            y={212}
+            w={420}
+            h={27}
+            bg="#191636"
+            fg="#ffca3a"
+            text={
+              ar
+                ? 'الطمع المزدوج يحرق الخزنة ويمنح الجائزة للمراهنين من الجمهور!'
+                : 'Double greed burns the vault and pays out Spectator bets!'
+            }
+          />
+        </g>
+      )}
+
+      {step === 3 && (
+        <g>
+          <SvgPill
+            x={260}
+            y={25}
+            w={430}
+            h={27}
+            bg="#8ac926"
+            text={
+              ar
+                ? 'يتناوب الجميع على زعامة الخزنة — وأغنى لص في النهاية يفوز!'
+                : 'Everyone takes a turn as Vault Boss — richest mastermind wins!'
+            }
+          />
+          <SvgScoreBadge
+            x={155}
+            y={122}
+            w={190}
+            text={ar ? 'ثقة متبادلة أو خيانة قاضية!' : 'Mutual Trust or Cold Betrayal!'}
+            bg="#ffca3a"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgScoreBadge
+            x={365}
+            y={122}
+            w={190}
+            text={ar ? 'رهان الجمهور الصحيح: +$15,000!' : 'Correct Crowd Bet: +$15,000!'}
+            bg="#8ac926"
+            animT={animT}
+            clock={clock}
+          />
+          <SvgPill
+            x={260}
+            y={212}
+            w={415}
+            h={27}
+            bg="#8ac926"
+            text={
+              ar
+                ? 'وعود صادقة أم خديعة العمر؟ القرار بيدك!'
+                : 'Honest alliance or betrayal of the century? You decide!'
+            }
+          />
+        </g>
+      )}
+    </StageBackdrop>
+  );
+};
+

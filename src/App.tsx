@@ -116,6 +116,21 @@ import {
   buildInitialResistanceState,
 } from './components/ResistanceGame';
 import {
+  ArtAuctionGame,
+  ArtAuctionGameState,
+  buildInitialArtAuctionState,
+} from './components/ArtAuctionGame';
+import {
+  AlibiGame,
+  AlibiGameState,
+  buildInitialAlibiState,
+} from './components/AlibiGame';
+import {
+  SplitStealGame,
+  SplitStealGameState,
+  buildInitialSplitStealState,
+} from './components/SplitStealGame';
+import {
   PartyGameSvgIcon,
   CartoonAvatarSvg,
   ReactionSvgIcon,
@@ -634,6 +649,18 @@ export function App() {
 
       case 'resistance': {
         return buildInitialResistanceState(validPlayers);
+      }
+
+      case 'artauction': {
+        return buildInitialArtAuctionState(validPlayers);
+      }
+
+      case 'alibi': {
+        return buildInitialAlibiState(validPlayers);
+      }
+
+      case 'splitsteal': {
+        return buildInitialSplitStealState(validPlayers);
       }
 
       case 'wavelength':
@@ -1428,10 +1455,10 @@ export function App() {
   // Filtered Home Catalog
   const homeCategories: { id: PartyGameCategory; ar: string; en: string }[] = [
     { id: 'all', ar: `الكل (${PARTY_GAMES_CATALOG.length})`, en: `All (${PARTY_GAMES_CATALOG.length})` },
-    { id: 'bluff', ar: 'خداع وجواسيس (8)', en: 'Bluff & Spies (8)' },
+    { id: 'bluff', ar: 'خداع وجواسيس (9)', en: 'Bluff & Spies (9)' },
     { id: 'telepathy', ar: 'تخاطر وخيال (6)', en: 'Mind & Art (6)' },
+    { id: 'drawing', ar: 'رسم وإبداع (4)', en: 'Drawing (4)' },
     { id: 'speed', ar: 'سرعة ومواجهة (4)', en: 'Speed & Action (4)' },
-    { id: 'drawing', ar: 'رسم وإبداع (2)', en: 'Drawing (2)' },
   ];
 
   const filteredHomeGames = PARTY_GAMES_CATALOG.filter((g) => {
@@ -2670,6 +2697,51 @@ export function App() {
                     lang={lang}
                     onUpdateGameData={handleUpdateMiniGameData}
                     onStartNewRound={() => handleSelectPartyGame('resistance')}
+                  />
+                ) : activeGameId === 'artauction' ? (
+                  <ArtAuctionGame
+                    gameData={
+                      room.game_data?.cash && room.game_data?.collectedArtValue
+                        ? room.game_data
+                        : (buildInitialGameData('artauction', players) as ArtAuctionGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('artauction')}
+                  />
+                ) : activeGameId === 'alibi' ? (
+                  <AlibiGame
+                    gameData={
+                      typeof room.game_data?.caseId === 'number' && room.game_data?.culpritId
+                        ? room.game_data
+                        : (buildInitialGameData('alibi', players) as AlibiGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('alibi')}
+                  />
+                ) : activeGameId === 'splitsteal' ? (
+                  <SplitStealGame
+                    gameData={
+                      room.game_data?.bossId && room.game_data?.briefcases
+                        ? room.game_data
+                        : (buildInitialGameData('splitsteal', players) as SplitStealGameState)
+                    }
+                    players={players}
+                    myPlayerId={playerId}
+                    isHost={isHost}
+                    isPassAndPlay={isPassAndPlay}
+                    lang={lang}
+                    onUpdateGameData={handleUpdateMiniGameData}
+                    onStartNewRound={() => handleSelectPartyGame('splitsteal')}
                   />
                 ) : (
                   /* WAVELENGTH GAME BOARD */

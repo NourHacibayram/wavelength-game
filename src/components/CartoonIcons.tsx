@@ -972,6 +972,139 @@ export const PartyGameSvgIcon: React.FC<{
         </svg>
       );
 
+    case 'artauction':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Ornate Golden Painting Frame */}
+          <rect
+            x="8"
+            y="10"
+            width="40"
+            height="44"
+            rx="6"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="3.8"
+          />
+          <rect
+            x="14"
+            y="16"
+            width="28"
+            height="32"
+            rx="3"
+            fill="#fff9ec"
+            stroke="#161426"
+            strokeWidth="2.8"
+          />
+          {/* Abstract Doodle Inside Frame */}
+          <path
+            d="M 19 38 Q 25 22 31 34 T 38 24"
+            fill="none"
+            stroke="#e11d48"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+          />
+          <circle cx="23" cy="24" r="3" fill="#00bbf9" />
+          {/* Auction Gavel Overlapping Corner */}
+          <g transform="translate(44, 42) rotate(-30)">
+            <rect x="-5" y="-12" width="10" height="22" rx="3" fill="#b45309" stroke="#161426" strokeWidth="3" />
+            <rect x="-14" y="-16" width="28" height="10" rx="3" fill="#d97706" stroke="#161426" strokeWidth="3" />
+          </g>
+        </svg>
+      );
+
+    case 'alibi':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Sketchpad Clipboard */}
+          <rect
+            x="10"
+            y="12"
+            width="38"
+            height="44"
+            rx="6"
+            fill="#fff9ec"
+            stroke="#161426"
+            strokeWidth="3.8"
+          />
+          <rect
+            x="21"
+            y="7"
+            width="16"
+            height="8"
+            rx="3"
+            fill="#06b6d4"
+            stroke="#161426"
+            strokeWidth="3"
+          />
+          {/* Sketched Clue Lines */}
+          <path
+            d="M 18 28 Q 28 20 38 28"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <circle cx="28" cy="36" r="5" fill="#ffca3a" stroke="#161426" strokeWidth="2.5" />
+          {/* Detective Magnifying Glass */}
+          <circle
+            cx="43"
+            cy="41"
+            r="11"
+            fill="#cffafe"
+            fillOpacity="0.85"
+            stroke="#161426"
+            strokeWidth="3.8"
+          />
+          <line
+            x1="51"
+            y1="49"
+            x2="58"
+            y2="56"
+            stroke="#e11d48"
+            strokeWidth="5"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+
+    case 'splitsteal':
+      return (
+        <svg viewBox="0 0 64 64" className={className}>
+          {/* Left Golden Orb: SPLIT */}
+          <circle
+            cx="23"
+            cy="33"
+            r="17"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="3.8"
+          />
+          <path
+            d="M 16 33 H 30 M 23 26 V 40"
+            stroke="#161426"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+          />
+          {/* Right Crimson/Gold Orb: STEAL */}
+          <circle
+            cx="42"
+            cy="31"
+            r="17"
+            fill="#e11d48"
+            stroke="#161426"
+            strokeWidth="3.8"
+          />
+          <polygon
+            points="42,19 46,29 53,29 47,34 49,43 42,38 35,43 37,34 31,29 38,29"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="2.2"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+
     case 'wordbomb':
     default:
       return (

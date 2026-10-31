@@ -21,7 +21,10 @@ export type PartyGameId =
   | 'sheriff'
   | 'cashnguns'
   | 'onenight'
-  | 'resistance';
+  | 'resistance'
+  | 'artauction'
+  | 'alibi'
+  | 'splitsteal';
 
 export type PartyGameCategory =
   | 'all'

@@ -38,6 +38,9 @@ import {
   CashNGunsTutorialScene,
   OneNightTutorialScene,
   ResistanceTutorialScene,
+  ArtAuctionTutorialScene,
+  AlibiTutorialScene,
+  SplitStealTutorialScene,
 } from './GameTutorialScenesD';
 
 interface GameTutorialPlayerProps {
@@ -107,6 +110,12 @@ export const GameTutorialSvgScene: React.FC<{
       return <OneNightTutorialScene {...props} />;
     case 'resistance':
       return <ResistanceTutorialScene {...props} />;
+    case 'artauction':
+      return <ArtAuctionTutorialScene {...props} />;
+    case 'alibi':
+      return <AlibiTutorialScene {...props} />;
+    case 'splitsteal':
+      return <SplitStealTutorialScene {...props} />;
     default:
       return <WavelengthTutorialScene {...props} />;
   }
