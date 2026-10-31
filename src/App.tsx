@@ -1373,7 +1373,14 @@ export function App() {
 
   const copyInviteLink = () => {
     if (!room) return;
-    const url = `${window.location.origin}${window.location.pathname}?room=${room.code}`;
+    const isLocalHost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.startsWith('192.168.');
+    const baseOrigin = isLocalHost
+      ? 'https://wavelength-game-ecru.vercel.app'
+      : `${window.location.origin}${window.location.pathname.replace(/\/$/, '')}`;
+    const url = `${baseOrigin}/?room=${room.code}`;
     navigator.clipboard.writeText(url);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
