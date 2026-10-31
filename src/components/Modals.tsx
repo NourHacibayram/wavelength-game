@@ -267,8 +267,8 @@ export const GamePickerModal: React.FC<GamePickerModalProps> = ({
           </div>
         </div>
 
-        {/* Games Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto pr-1 flex-1">
+        {/* Games Grid (Arcade Poster Stage Style) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 overflow-y-auto pr-1 flex-1">
           {filtered.map((g) => {
             const isCurrent = g.id === activeGameId;
             return (
@@ -278,62 +278,78 @@ export const GamePickerModal: React.FC<GamePickerModalProps> = ({
                   onSelectGame(g.id);
                   onClose();
                 }}
-                className={`p-3.5 rounded-2xl border-4 border-[#161426] text-start transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${
+                className={`group rounded-3xl border-4 border-[#161426] overflow-hidden transition-all cursor-pointer flex flex-col ${
                   isCurrent
-                    ? 'bg-[#ffca3a] shadow-[0_5px_0_#161426] -translate-y-0.5'
+                    ? 'bg-[#ffca3a] shadow-[0_6px_0_#161426] -translate-y-0.5'
                     : 'bg-white hover:bg-[#fffdf5] shadow-[0_4px_0_#161426] hover:-translate-y-0.5'
                 }`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2.5">
-                    <div
-                      style={{ backgroundColor: g.bgTint }}
-                      className="w-12 h-12 rounded-2xl border-3 border-[#161426] flex items-center justify-center shrink-0"
-                    >
-                      <PartyGameSvgIcon gameId={g.id} className="w-8 h-8" />
-                    </div>
-                    <div>
-                      <div className="font-extrabold text-base text-[#161426] leading-tight flex items-center gap-1.5">
-                        <span>{lang === 'ar' ? g.name_ar : g.name_en}</span>
-                      </div>
-                      <span className="text-[11px] font-extrabold text-[#3f3b5c] flex items-center gap-1 mt-0.5">
-                        <Users weight="fill" className="w-3.5 h-3.5" />
-                        <span>{lang === 'ar' ? g.players_ar : g.players_en}</span>
+                {/* Big Illustrated Art Stage */}
+                <div
+                  style={{ backgroundColor: g.bgTint }}
+                  className="relative h-28 w-full border-b-4 border-[#161426] flex items-center justify-center overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(#161426_1.2px,transparent_1.2px)] [background-size:12px_12px] opacity-15 pointer-events-none" />
+
+                  <div className="absolute top-2 start-2 z-10">
+                    {isCurrent ? (
+                      <span className="w-6 h-6 rounded-full bg-[#8ac926] text-[#161426] border-2 border-[#161426] shadow-[0_2px_0_#161426] flex items-center justify-center">
+                        <Check weight="bold" className="w-3.5 h-3.5" />
                       </span>
-                    </div>
+                    ) : g.isNew ? (
+                      <span className="cartoon-badge bg-[#ff595e] text-white px-2 py-0.5 text-[10px] flex items-center gap-0.5 shadow-[0_2px_0_#161426]">
+                        <Sparkle weight="fill" className="w-3 h-3 text-[#ffca3a]" />
+                        <span>{lang === 'ar' ? 'جديد' : 'NEW'}</span>
+                      </span>
+                    ) : null}
                   </div>
 
-                  {isCurrent ? (
-                    <span className="cartoon-badge bg-[#8ac926] text-[#161426] p-1">
-                      <Check weight="bold" className="w-4 h-4" />
-                    </span>
-                  ) : g.isNew ? (
-                    <span className="cartoon-badge bg-[#ff595e] text-white px-2 py-0.5 text-[10px] flex items-center gap-0.5">
-                      <Sparkle weight="fill" className="w-3 h-3 text-[#ffca3a]" />
-                      <span>{lang === 'ar' ? 'جديد' : 'NEW'}</span>
-                    </span>
-                  ) : null}
+                  {onLearnGame && (
+                    <div className="absolute top-2 end-2 z-10">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onLearnGame(g.id);
+                        }}
+                        className="cartoon-badge bg-white/95 hover:bg-white text-[#161426] px-2.5 py-0.5 text-[10px] flex items-center gap-1 cursor-pointer shadow-[0_2px_0_#161426]"
+                      >
+                        <FilmStrip weight="fill" className="w-3 h-3 text-[#1982c4]" />
+                        <span>{lang === 'ar' ? 'شرح' : 'Guide'}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="relative z-0 transform transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3 drop-shadow-[0_4px_0_rgba(22,20,38,0.18)]">
+                    <PartyGameSvgIcon gameId={g.id} className="w-20 h-20" />
+                  </div>
                 </div>
 
-                <p className="text-xs font-bold text-[#3f3b5c] leading-snug">
-                  {lang === 'ar' ? g.desc_ar : g.desc_en}
-                </p>
-
-                {onLearnGame && (
-                  <div className="flex justify-end pt-0.5">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onLearnGame(g.id);
-                      }}
-                      className="cartoon-badge bg-[#e0f2fe] hover:bg-[#bae6fd] text-[#161426] px-2.5 py-1 text-[11px] flex items-center gap-1 cursor-pointer"
-                    >
-                      <FilmStrip weight="fill" className="w-3.5 h-3.5 text-[#1982c4]" />
-                      <span>{lang === 'ar' ? 'شرح متحرك' : 'Watch Guide'}</span>
-                    </button>
+                {/* Clean Poster Footer */}
+                <div className="p-3 flex flex-col items-center justify-center text-center gap-1.5 flex-1">
+                  <div className="font-extrabold text-base sm:text-lg text-[#161426] leading-tight">
+                    {lang === 'ar' ? g.name_ar : g.name_en}
                   </div>
-                )}
+
+                  <div
+                    className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full border-2 border-[#161426] shadow-[0_2px_0_#161426] text-[11px] font-extrabold text-[#161426] ${
+                      isCurrent ? 'bg-white' : 'bg-[#fef3c7]'
+                    }`}
+                  >
+                    <span className="inline-flex items-center -space-x-1.5 rtl:space-x-reverse">
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#ff595e] border-2 border-[#161426] flex items-center justify-center">
+                        <span className="w-1 h-1 rounded-full bg-white" />
+                      </span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#00bbf9] border-2 border-[#161426] flex items-center justify-center">
+                        <span className="w-1 h-1 rounded-full bg-white" />
+                      </span>
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#8ac926] border-2 border-[#161426] flex items-center justify-center">
+                        <span className="w-1 h-1 rounded-full bg-white" />
+                      </span>
+                    </span>
+                    <span>{lang === 'ar' ? g.players_ar : g.players_en}</span>
+                  </div>
+                </div>
               </div>
             );
           })}
