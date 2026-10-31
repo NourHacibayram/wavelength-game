@@ -626,10 +626,10 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scBombBg_${uid}`} cx="50%" cy="55%" r="65%">
+            <radialGradient id={`scBombBg_${uid}`} cx="50%" cy="48%" r="68%">
               <stop offset="0%" stopColor="#fef08a" />
-              <stop offset="45%" stopColor="#f43f5e" />
-              <stop offset="100%" stopColor="#4c0519" />
+              <stop offset="48%" stopColor="#fb7185" />
+              <stop offset="100%" stopColor="#9f1239" />
             </radialGradient>
             <linearGradient
               id={`scC4Cylinder_${uid}`}
@@ -639,60 +639,230 @@ export const BoomCardIllustrationSvg: React.FC<{
               y2="0"
             >
               <stop offset="0%" stopColor="#fb7185" />
-              <stop offset="35%" stopColor="#e11d48" />
-              <stop offset="85%" stopColor="#9f1239" />
-              <stop offset="100%" stopColor="#881337" />
+              <stop offset="42%" stopColor="#e11d48" />
+              <stop offset="100%" stopColor="#9f1239" />
+            </linearGradient>
+            <linearGradient
+              id={`scC4Center_${uid}`}
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="0"
+            >
+              <stop offset="0%" stopColor="#fda4af" />
+              <stop offset="38%" stopColor="#f43f5e" />
+              <stop offset="100%" stopColor="#be123c" />
+            </linearGradient>
+            <linearGradient id={`scGoldCard_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="100%" stopColor="#f59e0b" />
             </linearGradient>
           </defs>
-          {/* Full-Bleed Scene Background */}
+          {/* Vibrant Comic Stage Background */}
           <rect width="140" height="108" rx="12" fill={`url(#scBombBg_${uid})`} />
-          {/* Comic Sunburst Rays */}
-          <g opacity="0.22" fill="#fef08a">
-            <polygon points="70,58 0,0 25,0" />
-            <polygon points="70,58 55,0 85,0" />
-            <polygon points="70,58 115,0 140,0" />
-            <polygon points="70,58 140,35 140,65" />
-            <polygon points="70,58 140,90 115,108" />
-            <polygon points="70,58 25,108 0,90" />
-            <polygon points="70,58 0,65 0,35" />
+          {/* Dynamic Sunburst Rays */}
+          <g opacity="0.28" fill="#fef08a">
+            <polygon points="70,56 0,0 26,0" />
+            <polygon points="70,56 54,0 86,0" />
+            <polygon points="70,56 114,0 140,0" />
+            <polygon points="70,56 140,34 140,64" />
+            <polygon points="70,56 140,88 114,108" />
+            <polygon points="70,56 26,108 0,88" />
+            <polygon points="70,56 0,64 0,34" />
           </g>
-          {/* Bunker Hazard Stripe Floor */}
-          <rect x="0" y="88" width="140" height="20" fill="#161426" opacity="0.55" />
-          {/* 3-Stick Heavy C4 Dynamite Bundle */}
-          <g transform="translate(0, 4)">
+          {/* Hazard Bunker Floor & Ground Shadow */}
+          <rect x="0" y="88" width="140" height="20" fill="#161426" opacity="0.35" />
+          <g opacity="0.35" fill="#ffca3a">
+            <polygon points="8,108 20,88 32,88 20,108" />
+            <polygon points="40,108 52,88 64,88 52,108" />
+            <polygon points="72,108 84,88 96,88 84,108" />
+            <polygon points="104,108 116,88 128,88 116,108" />
+          </g>
+          <ellipse cx="70" cy="95" rx="46" ry="7" fill="#161426" opacity="0.38" />
+
+          {/* Back Plane: Fanned Ability Cards (Direct Homage to boomdeck Icon!) */}
+          <g transform="rotate(-16 42 56)">
+            <rect
+              x="18"
+              y="26"
+              width="34"
+              height="48"
+              rx="6"
+              fill={`url(#scGoldCard_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.2"
+            />
+            <rect
+              x="22"
+              y="30"
+              width="26"
+              height="40"
+              rx="3.5"
+              fill="none"
+              stroke="#fff9ec"
+              strokeWidth="1.5"
+              strokeDasharray="4 3"
+            />
+          </g>
+          <g transform="rotate(15 98 56)">
+            <rect
+              x="88"
+              y="26"
+              width="34"
+              height="48"
+              rx="6"
+              fill="#00bbf9"
+              stroke="#161426"
+              strokeWidth="3.2"
+            />
+            <rect
+              x="92"
+              y="30"
+              width="26"
+              height="40"
+              rx="3.5"
+              fill="#e0f2fe"
+            />
+          </g>
+
+          {/* Middle & Foreground Plane: 3-Stick Heavy C4 Dynamite Bundle */}
+          <g transform="translate(0, 5)">
             {/* Left Cylinder */}
-            <rect x="33" y="28" width="22" height="62" rx="7" fill={`url(#scC4Cylinder_${uid})`} stroke="#161426" strokeWidth="3.5" />
-            <line x1="39" y1="34" x2="39" y2="83" stroke="#ffe4e6" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+            <rect
+              x="35"
+              y="28"
+              width="22"
+              height="60"
+              rx="7"
+              fill={`url(#scC4Cylinder_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <line
+              x1="41"
+              y1="34"
+              x2="41"
+              y2="82"
+              stroke="#fecdd3"
+              strokeWidth="2.8"
+              strokeLinecap="round"
+              opacity="0.85"
+            />
             {/* Right Cylinder */}
-            <rect x="85" y="28" width="22" height="62" rx="7" fill={`url(#scC4Cylinder_${uid})`} stroke="#161426" strokeWidth="3.5" />
-            <line x1="91" y1="34" x2="91" y2="83" stroke="#ffe4e6" strokeWidth="2.5" strokeLinecap="round" opacity="0.7" />
+            <rect
+              x="83"
+              y="28"
+              width="22"
+              height="60"
+              rx="7"
+              fill={`url(#scC4Cylinder_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <line
+              x1="89"
+              y1="34"
+              x2="89"
+              y2="82"
+              stroke="#fecdd3"
+              strokeWidth="2.8"
+              strokeLinecap="round"
+              opacity="0.85"
+            />
             {/* Center Tall Cylinder */}
-            <rect x="56" y="22" width="28" height="70" rx="8" fill={`url(#scC4Cylinder_${uid})`} stroke="#161426" strokeWidth="3.8" />
-            <line x1="63" y1="28" x2="63" y2="85" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
-            {/* Heavy Steel Clamps */}
-            <rect x="29" y="40" width="82" height="8" rx="3" fill="#161426" />
-            <rect x="29" y="70" width="82" height="8" rx="3" fill="#161426" />
+            <rect
+              x="56"
+              y="22"
+              width="28"
+              height="68"
+              rx="8"
+              fill={`url(#scC4Center_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.8"
+            />
+            <line
+              x1="63"
+              y1="28"
+              x2="63"
+              y2="84"
+              stroke="#ffffff"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+              opacity="0.9"
+            />
+            {/* Tactical Carbon Straps */}
+            <rect x="31" y="39" width="78" height="8" rx="3" fill="#161426" />
+            <rect x="31" y="69" width="78" height="8" rx="3" fill="#161426" />
             {/* Coiled Detonator Wires */}
-            <path d="M 42 40 C 36 28, 52 28, 60 46" fill="none" stroke="#38bdf8" strokeWidth="3" strokeLinecap="round" />
-            <path d="M 98 40 C 104 28, 88 28, 80 46" fill="none" stroke="#facc15" strokeWidth="3" strokeLinecap="round" />
+            <path
+              d="M 43 39 C 37 28, 52 28, 60 45"
+              fill="none"
+              stroke="#00bbf9"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 97 39 C 103 28, 88 28, 80 45"
+              fill="none"
+              stroke="#ffca3a"
+              strokeWidth="3.2"
+              strokeLinecap="round"
+            />
             {/* Digital Timer Console */}
-            <rect x="43" y="44" width="54" height="26" rx="6" fill="#1e293b" stroke="#161426" strokeWidth="3.5" />
-            <rect x="48" y="49" width="44" height="16" rx="3" fill="#090d16" stroke="#ffca3a" strokeWidth="1.5" />
-            <text x="70" y="61" textAnchor="middle" fill="#ff595e" fontSize="13.5" fontWeight="900" fontFamily="monospace">
+            <rect
+              x="44"
+              y="43"
+              width="52"
+              height="26"
+              rx="6"
+              fill="#161426"
+              stroke="#ffca3a"
+              strokeWidth="3.2"
+            />
+            <rect
+              x="48.5"
+              y="47.5"
+              width="43"
+              height="17"
+              rx="3"
+              fill="#090d16"
+            />
+            <text
+              x="70"
+              y="60"
+              textAnchor="middle"
+              fill="#ff595e"
+              fontSize="13.5"
+              fontWeight="900"
+              fontFamily="monospace"
+            >
               00:01
             </text>
-            {/* Braided Fuse & Spark */}
-            <path d="M 70 22 C 70 9, 88 12, 98 6" fill="none" stroke="#d97706" strokeWidth="5" strokeLinecap="round" />
-            <path d="M 70 22 C 70 9, 88 12, 98 6" fill="none" stroke="#161426" strokeWidth="2.5" strokeDasharray="3 4" strokeLinecap="round" />
-            <g transform="translate(102, 7)">
+            {/* Braided Fuse & Unclipped Multi-Layer Spark */}
+            <path
+              d="M 70 22 C 70 11, 86 12, 98 9"
+              fill="none"
+              stroke="#d97706"
+              strokeWidth="5.2"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 70 22 C 70 11, 86 12, 98 9"
+              fill="none"
+              stroke="#161426"
+              strokeWidth="2.4"
+              strokeDasharray="3.5 3.5"
+              strokeLinecap="round"
+            />
+            <g transform="translate(101, 10)">
               <polygon
-                points="0,-11 4,-4 12,-5 6,1 10,8 2,5 -3,11 -4,3 -12,2 -5,-3"
+                points="0,-10 4,-4 11,-5 6,1 10,8 2,5 -3,10 -4,3 -11,2 -5,-3"
                 fill="#ffca3a"
                 stroke="#161426"
-                strokeWidth="2.4"
+                strokeWidth="2.5"
                 strokeLinejoin="round"
               />
-              <circle cx="0" cy="0" r="3.5" fill="#ffffff" />
+              <circle cx="0" cy="0" r="3.8" fill="#ffffff" />
             </g>
           </g>
         </svg>
@@ -706,74 +876,183 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scDefBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#dcfce7" />
+            <radialGradient id={`scDefBg_${uid}`} cx="50%" cy="48%" r="68%">
+              <stop offset="0%" stopColor="#a7f3d0" />
               <stop offset="55%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#064e3b" />
+              <stop offset="100%" stopColor="#047857" />
             </radialGradient>
             <linearGradient id={`scChrome_${uid}`} x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="50%" stopColor="#cbd5e1" />
-              <stop offset="100%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#e2e8f0" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
+            <linearGradient id={`scGripL_${uid}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="55%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
             </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scDefBg_${uid})`} />
-          {/* Tactical Grid Lines */}
-          <g stroke="#ffffff" strokeWidth="1" opacity="0.14">
-            <line x1="0" y1="27" x2="140" y2="27" />
-            <line x1="0" y1="54" x2="140" y2="54" />
-            <line x1="0" y1="81" x2="140" y2="81" />
-            <line x1="35" y1="0" x2="35" y2="108" />
-            <line x1="70" y1="0" x2="70" y2="108" />
-            <line x1="105" y1="0" x2="105" y2="108" />
+          {/* Bright Radial Rescue Burst */}
+          <circle
+            cx="68"
+            cy="36"
+            r="38"
+            fill="#ecfdf5"
+            opacity="0.22"
+          />
+          <circle
+            cx="68"
+            cy="36"
+            r="26"
+            fill="none"
+            stroke="#6ee7b7"
+            strokeWidth="2"
+            strokeDasharray="5 4"
+            opacity="0.7"
+          />
+
+          {/* Left Bomb Top-Cap Corner & Snipped Red Cable End (Left) */}
+          <path
+            d="M 6 33 C 24 33, 40 30, 52 28"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 6 33 C 24 33, 40 30, 52 28"
+            fill="none"
+            stroke="#f43f5e"
+            strokeWidth="5.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 10 31.5 C 24 31.5, 38 29, 49 27"
+            fill="none"
+            stroke="#fecdd3"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          {/* Frayed Copper Strands on Left Cut End */}
+          <path
+            d="M 52 28 L 58 23 M 52 28 L 59 28 M 52 28 L 57 33"
+            stroke="#ffca3a"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+
+          {/* Snipped Red Fuse End Recoiling Right */}
+          <path
+            d="M 80 28 C 96 25, 114 21, 132 18"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 80 28 C 96 25, 114 21, 132 18"
+            fill="none"
+            stroke="#e11d48"
+            strokeWidth="5.5"
+            strokeDasharray="6 4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 80 28 L 74 22 M 80 28 L 73 28 M 80 28 L 75 33"
+            stroke="#ffca3a"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+
+          {/* Tilted Dynamic Chrome Wire Cutters (-12 deg) */}
+          <g transform="rotate(-12 68 54)">
+            {/* Left Beveled Chrome Jaw */}
+            <path
+              d="M 68 52 L 49 21 C 56 14, 65 18, 68 33 Z"
+              fill={`url(#scChrome_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.6"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M 54 23 L 64 42"
+              stroke="#ffffff"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+            />
+            {/* Right Beveled Chrome Jaw */}
+            <path
+              d="M 68 52 L 87 21 C 80 14, 71 18, 68 33 Z"
+              fill={`url(#scChrome_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.6"
+              strokeLinejoin="round"
+            />
+            {/* Left Insulated Rubber Handle + Specular Highlight */}
+            <path
+              d="M 64 55 L 34 96 C 28 103, 41 108, 47 99 L 70 61 Z"
+              fill={`url(#scGripL_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.6"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M 61 61 L 39 93"
+              stroke="#bbf7d0"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            {/* Right Insulated Rubber Handle + Specular Highlight */}
+            <path
+              d="M 72 55 L 102 96 C 108 103, 95 108, 89 99 L 66 61 Z"
+              fill={`url(#scGripL_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.6"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M 75 61 L 97 93"
+              stroke="#86efac"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+            />
+            {/* Golden Pivot Bolt & Screw Slot */}
+            <circle
+              cx="68"
+              cy="53"
+              r="9.5"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="3.6"
+            />
+            <circle cx="68" cy="53" r="4" fill="#fff9ec" />
+            <line
+              x1="64"
+              y1="51"
+              x2="72"
+              y2="55"
+              stroke="#161426"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
           </g>
-          {/* Red Detonator Wire Snipped in Two */}
-          <path d="M 8 38 C 28 38, 44 43, 56 46" fill="none" stroke="#161426" strokeWidth="9" strokeLinecap="round" />
-          <path d="M 8 38 C 28 38, 44 43, 56 46" fill="none" stroke="#f43f5e" strokeWidth="5" strokeLinecap="round" />
-          <path d="M 84 46 C 96 43, 112 38, 132 38" fill="none" stroke="#161426" strokeWidth="9" strokeLinecap="round" strokeDasharray="8 6" />
-          <path d="M 84 46 C 96 43, 112 38, 132 38" fill="none" stroke="#f43f5e" strokeWidth="5" strokeLinecap="round" strokeDasharray="8 6" />
-          {/* Heavy Chrome Plier Jaws */}
-          <path
-            d="M 70 52 L 52 24 C 58 17, 66 20, 70 35 Z"
-            fill={`url(#scChrome_${uid})`}
-            stroke="#161426"
-            strokeWidth="3.5"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M 70 52 L 88 24 C 82 17, 74 20, 70 35 Z"
-            fill={`url(#scChrome_${uid})`}
-            stroke="#161426"
-            strokeWidth="3.5"
-            strokeLinejoin="round"
-          />
-          {/* Insulated Ergonomic Grip Handles */}
-          <path
-            d="M 66 55 L 36 96 C 31 102, 42 106, 48 98 L 71 61 Z"
-            fill="#22c55e"
-            stroke="#161426"
-            strokeWidth="3.5"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M 74 55 L 104 96 C 109 102, 98 106, 92 98 L 69 61 Z"
-            fill="#16a34a"
-            stroke="#161426"
-            strokeWidth="3.5"
-            strokeLinejoin="round"
-          />
-          {/* Brass Pivot Bolt */}
-          <circle cx="70" cy="54" r="8.5" fill="#ffca3a" stroke="#161426" strokeWidth="3.5" />
-          <circle cx="70" cy="54" r="3" fill="#161426" />
-          {/* Cyan Safety Spark */}
-          <polygon
-            points="70,6 73,16 83,14 76,22 82,29 73,27 70,36 67,27 58,29 64,22 57,14 67,16"
-            fill="#00f5d4"
-            stroke="#161426"
-            strokeWidth="2.4"
-            strokeLinejoin="round"
-          />
-          <circle cx="70" cy="21" r="4" fill="#ffffff" />
+
+          {/* Foreground Multi-Layer Snip Flash at Blade Tips */}
+          <g transform="translate(66, 26)">
+            <polygon
+              points="0,-18 4,-6 17,-8 8,1 15,11 3,7 0,18 -3,7 -15,11 -8,1 -17,-8 -4,-6"
+              fill="#00f5d4"
+              stroke="#161426"
+              strokeWidth="2.6"
+              strokeLinejoin="round"
+            />
+            <polygon
+              points="0,-10 3,-3 10,-3 4,2 6,9 0,5 -6,9 -4,2 -10,-3 -3,-3"
+              fill="#ffca3a"
+            />
+            <circle cx="0" cy="0" r="4.5" fill="#ffffff" />
+          </g>
         </svg>
       );
 
@@ -785,135 +1064,162 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scAtkBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#b45309" />
-              <stop offset="60%" stopColor="#7c2d12" />
-              <stop offset="100%" stopColor="#2a0a04" />
+            <radialGradient id={`scAtkBg_${uid}`} cx="50%" cy="50%" r="68%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="52%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#b45309" />
             </radialGradient>
+            <linearGradient id={`scBolt_${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="50%" stopColor="#ffca3a" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+            <linearGradient id={`scBadge_${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fb7185" />
+              <stop offset="45%" stopColor="#e11d48" />
+              <stop offset="100%" stopColor="#9f1239" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scAtkBg_${uid})`} />
+          {/* High-Voltage Comic Speed Rays */}
+          <g opacity="0.28" fill="#fffbeb">
+            <polygon points="70,54 0,10 22,0" />
+            <polygon points="70,54 118,0 140,10" />
+            <polygon points="70,54 140,85 118,108" />
+            <polygon points="70,54 22,108 0,85" />
+          </g>
+          <ellipse cx="70" cy="96" rx="46" ry="6.5" fill="#161426" opacity="0.3" />
 
-          {/* Subtle Golden Arena Ring */}
-          <circle
-            cx="70"
-            cy="54"
-            r="38"
-            fill="#451a03"
-            stroke="#f59e0b"
-            strokeWidth="2.5"
-            opacity="0.7"
-          />
-
-          {/* Sword 1 (Tilted -42 deg) */}
-          <g transform="rotate(-42 70 52)">
-            {/* Blade */}
-            <polygon
-              points="70,8 78,22 76,66 64,66 62,22"
-              fill="#f8fafc"
-              stroke="#161426"
-              strokeWidth="3.4"
-              strokeLinejoin="round"
-            />
-            <polygon points="70,11 75,22 74,64 70,64" fill="#bae6fd" />
-            {/* Golden Crossguard */}
+          {/* Back Plane: 2 Fanned Target Cards Being Struck (Matches boomdeck Icon!) */}
+          <g transform="rotate(-16 48 56)">
             <rect
-              x="53"
-              y="64"
-              width="34"
-              height="8"
+              x="26"
+              y="26"
+              width="36"
+              height="50"
+              rx="6.5"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <rect
+              x="31"
+              y="31"
+              width="26"
+              height="40"
               rx="4"
-              fill="#ffca3a"
+              fill="#00bbf9"
               stroke="#161426"
-              strokeWidth="3.2"
+              strokeWidth="2"
             />
-            {/* Handle & Pommel */}
+          </g>
+          <g transform="rotate(15 92 56)">
             <rect
-              x="66"
-              y="72"
-              width="8"
-              height="16"
-              rx="2"
-              fill="#e11d48"
+              x="78"
+              y="26"
+              width="36"
+              height="50"
+              rx="6.5"
+              fill="#fff9ec"
               stroke="#161426"
-              strokeWidth="3"
+              strokeWidth="3.5"
             />
-            <circle
-              cx="70"
-              cy="91"
-              r="5.5"
-              fill="#ffca3a"
+            <rect
+              x="83"
+              y="31"
+              width="26"
+              height="40"
+              rx="4"
+              fill="#f43f5e"
               stroke="#161426"
-              strokeWidth="3"
+              strokeWidth="2"
             />
           </g>
 
-          {/* Sword 2 (Tilted +42 deg) */}
-          <g transform="rotate(42 70 52)">
-            {/* Blade */}
+          {/* Middle Plane: Twin 3D Extruded Lightning Bolts */}
+          {/* Left Lightning Bolt */}
+          <g>
             <polygon
-              points="70,8 78,22 76,66 64,66 62,22"
-              fill="#f8fafc"
+              points="46,9 22,49 41,49 29,88 64,41 44,41"
+              transform="translate(0, 4)"
+              fill="#161426"
+            />
+            <polygon
+              points="46,9 22,49 41,49 29,88 64,41 44,41"
+              fill={`url(#scBolt_${uid})`}
               stroke="#161426"
-              strokeWidth="3.4"
+              strokeWidth="3.5"
               strokeLinejoin="round"
             />
-            <polygon points="70,11 75,22 74,64 70,64" fill="#bae6fd" />
-            {/* Golden Crossguard */}
-            <rect
-              x="53"
-              y="64"
-              width="34"
-              height="8"
-              rx="4"
-              fill="#ffca3a"
-              stroke="#161426"
-              strokeWidth="3.2"
+            <polyline
+              points="43,16 28,45 42,45"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
-            {/* Handle & Pommel */}
-            <rect
-              x="66"
-              y="72"
-              width="8"
-              height="16"
-              rx="2"
-              fill="#e11d48"
-              stroke="#161426"
-              strokeWidth="3"
+          </g>
+          {/* Right Lightning Bolt */}
+          <g>
+            <polygon
+              points="96,9 72,49 91,49 79,88 114,41 94,41"
+              transform="translate(0, 4)"
+              fill="#161426"
             />
-            <circle
-              cx="70"
-              cy="91"
-              r="5.5"
-              fill="#ffca3a"
+            <polygon
+              points="96,9 72,49 91,49 79,88 114,41 94,41"
+              fill={`url(#scBolt_${uid})`}
               stroke="#161426"
-              strokeWidth="3"
+              strokeWidth="3.5"
+              strokeLinejoin="round"
+            />
+            <polyline
+              points="93,16 78,45 92,45"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </g>
 
-          {/* Central Bold ×2 Power Shield */}
-          <g transform="translate(70, 56)">
+          {/* Foreground Plane: 3D Crimson & Gold ×2 Impact Shield Badge */}
+          <g transform="translate(70, 62) rotate(-5)">
+            <circle cx="0" cy="4" r="22" fill="#161426" />
             <circle
               cx="0"
               cy="0"
-              r="20"
-              fill="#e11d48"
+              r="22"
+              fill={`url(#scBadge_${uid})`}
               stroke="#161426"
               strokeWidth="3.8"
             />
+            <path
+              d="M -14 -10 A 17 17 0 0 1 14 -10"
+              fill="none"
+              stroke="#fecdd3"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
             <circle
               cx="0"
               cy="0"
-              r="15.5"
+              r="16.5"
               fill="none"
               stroke="#ffca3a"
               strokeWidth="2.2"
+              strokeDasharray="5 3"
             />
             <text
               x="0"
-              y="6"
+              y="7"
               textAnchor="middle"
               fill="#ffffff"
-              fontSize="17"
+              stroke="#161426"
+              strokeWidth="3.5"
+              paintOrder="stroke"
+              fontSize="19"
               fontWeight="900"
             >
               ×2
@@ -931,42 +1237,195 @@ export const BoomCardIllustrationSvg: React.FC<{
         >
           <defs>
             <linearGradient id={`scSkipBg_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#0284c7" />
-              <stop offset="55%" stopColor="#0369a1" />
-              <stop offset="100%" stopColor="#1e1b4b" />
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="55%" stopColor="#0284c7" />
+              <stop offset="100%" stopColor="#0369a1" />
+            </linearGradient>
+            <linearGradient id={`scShoe_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="55%" stopColor="#00bbf9" />
+              <stop offset="100%" stopColor="#0284c7" />
             </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scSkipBg_${uid})`} />
-          {/* Speed Lines Across Sky */}
-          <line x1="12" y1="24" x2="54" y2="24" stroke="#7dd3fc" strokeWidth="3.5" strokeLinecap="round" opacity="0.6" />
-          <line x1="6" y1="42" x2="36" y2="42" stroke="#38bdf8" strokeWidth="4" strokeLinecap="round" opacity="0.75" />
-          <line x1="18" y1="86" x2="68" y2="86" stroke="#7dd3fc" strokeWidth="3" strokeLinecap="round" opacity="0.5" />
-          {/* Exhaust Clouds & Flame */}
-          <circle cx="24" cy="66" r="11" fill="#ffffff" stroke="#161426" strokeWidth="3" />
-          <circle cx="35" cy="75" r="8" fill="#e0f2fe" stroke="#161426" strokeWidth="2.8" />
-          <path d="M 46 56 L 16 48 L 28 61 L 14 70 L 48 68 Z" fill="#f97316" stroke="#161426" strokeWidth="3" strokeLinejoin="round" />
-          {/* Winged Rocket Boot */}
-          <g transform="translate(14, -2) rotate(-10 70 54)">
+          {/* Supersonic Speed Lines */}
+          <line
+            x1="10"
+            y1="22"
+            x2="56"
+            y2="22"
+            stroke="#bae6fd"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            opacity="0.8"
+          />
+          <line
+            x1="6"
+            y1="38"
+            x2="34"
+            y2="38"
+            stroke="#ffffff"
+            strokeWidth="4"
+            strokeLinecap="round"
+            opacity="0.85"
+          />
+
+          {/* Tiny Bomb Left Behind at Bottom-Left (Visualizing "Skipping Danger!") */}
+          <g transform="translate(26, 86)">
+            <circle
+              cx="0"
+              cy="0"
+              r="11"
+              fill="#e11d48"
+              stroke="#161426"
+              strokeWidth="3"
+            />
+            <circle cx="-3.5" cy="-3.5" r="3" fill="#fecdd3" />
             <path
-              d="M 42 36 H 66 L 71 54 L 96 59 C 102 60, 103 73, 94 75 H 38 C 33 75, 33 63, 37 56 Z"
-              fill="#00bbf9"
+              d="M 6 -8 Q 12 -14 16 -10"
+              fill="none"
+              stroke="#ffca3a"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+          </g>
+          {/* Curved Vault Arc Over the Bomb */}
+          <path
+            d="M 18 72 Q 56 48 118 78"
+            fill="none"
+            stroke="#bae6fd"
+            strokeWidth="3"
+            strokeDasharray="6 5"
+            strokeLinecap="round"
+          />
+
+          {/* 3-Layer Nitro Rocket Exhaust Flame */}
+          <path
+            d="M 48 48 L 8 38 L 22 52 L 6 62 L 46 62 Z"
+            fill="#e11d48"
+            stroke="#161426"
+            strokeWidth="3.4"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 46 50 L 18 44 L 27 52 L 16 58 L 45 59 Z"
+            fill="#f97316"
+          />
+          <path
+            d="M 45 52 L 28 48 L 33 53 L 26 56 L 44 56 Z"
+            fill="#fef08a"
+          />
+
+          {/* Sculpted Nitro Winged Sneaker */}
+          <g transform="translate(14, -4) rotate(-14 72 54)">
+            {/* Chrome Heel Thruster Nozzle */}
+            <rect
+              x="29"
+              y="50"
+              width="10"
+              height="14"
+              rx="3"
+              fill="#cbd5e1"
+              stroke="#161426"
+              strokeWidth="3.2"
+            />
+            {/* Sneaker Main Body */}
+            <path
+              d="M 38 34 H 66 L 73 50 L 98 55 C 106 56, 107 69, 98 72 H 36 C 32 72, 32 60, 35 52 Z"
+              fill={`url(#scShoe_${uid})`}
               stroke="#161426"
               strokeWidth="3.8"
               strokeLinejoin="round"
             />
-            <rect x="34" y="70" width="64" height="8" rx="4" fill="#ffffff" stroke="#161426" strokeWidth="3.2" />
-            {/* Golden Wing */}
+            {/* Specular Highlight Along Collar & Instep */}
             <path
-              d="M 52 50 C 40 38, 28 40, 22 28 C 34 26, 44 30, 52 36 C 46 26, 38 22, 32 14 C 46 14, 58 24, 63 40 Z"
+              d="M 42 39 H 62 L 68 52"
+              fill="none"
+              stroke="#bae6fd"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* White Rubber Toe-Cap */}
+            <path
+              d="M 84 53 L 98 55 C 105 56, 106 68, 98 71 H 82 C 80 63, 81 57, 84 53 Z"
+              fill="#ffffff"
+              stroke="#161426"
+              strokeWidth="3.2"
+            />
+            {/* Yellow Shoelaces */}
+            <line
+              x1="67"
+              y1="43"
+              x2="75"
+              y2="41"
+              stroke="#ffca3a"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            <line
+              x1="70"
+              y1="49"
+              x2="78"
+              y2="47"
+              stroke="#ffca3a"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            {/* Thick Treaded Sole */}
+            <rect
+              x="33"
+              y="68"
+              width="70"
+              height="9"
+              rx="4.5"
+              fill="#ffffff"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <line
+              x1="46"
+              y1="72.5"
+              x2="88"
+              y2="72.5"
+              stroke="#e11d48"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            {/* Sculpted 3-Feather Golden Wing */}
+            <path
+              d="M 54 50 C 40 38, 26 40, 20 26 C 34 24, 45 28, 53 35 C 46 24, 36 20, 30 11 C 46 11, 60 22, 65 40 Z"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="3.4"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M 34 18 C 44 20, 53 27, 58 37"
+              fill="none"
+              stroke="#fef08a"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+            />
+          </g>
+
+          {/* Foreground Fast-Forward Chevrons */}
+          <g transform="translate(0, 2)">
+            <polygon
+              points="96,15 112,27 96,39"
               fill="#ffca3a"
               stroke="#161426"
               strokeWidth="3.2"
               strokeLinejoin="round"
             />
+            <polygon
+              points="111,15 127,27 111,39"
+              fill="#ffffff"
+              stroke="#161426"
+              strokeWidth="3.2"
+              strokeLinejoin="round"
+            />
           </g>
-          {/* Double Fast-Forward Chevrons */}
-          <polygon points="94,18 110,30 94,42" fill="#ffca3a" stroke="#161426" strokeWidth="3" strokeLinejoin="round" />
-          <polygon points="108,18 124,30 108,42" fill="#ffffff" stroke="#161426" strokeWidth="3" strokeLinejoin="round" />
         </svg>
       );
 
@@ -978,49 +1437,123 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scRevBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#9333ea" />
-              <stop offset="60%" stopColor="#581c87" />
-              <stop offset="100%" stopColor="#2e1065" />
+            <radialGradient id={`scRevBg_${uid}`} cx="50%" cy="50%" r="68%">
+              <stop offset="0%" stopColor="#d8b4fe" />
+              <stop offset="52%" stopColor="#9333ea" />
+              <stop offset="100%" stopColor="#581c87" />
             </radialGradient>
+            <linearGradient id={`scRevGold_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="50%" stopColor="#ffca3a" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+            <linearGradient id={`scRevCyan_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#cffafe" />
+              <stop offset="50%" stopColor="#00f5d4" />
+              <stop offset="100%" stopColor="#00bbf9" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scRevBg_${uid})`} />
 
-          {/* Clean Tilted Medallion Backdrop */}
+          {/* Tilted Cosmic Orbit Track & Mini Orbiting Cards */}
           <ellipse
             cx="70"
             cy="54"
-            rx="44"
-            ry="34"
-            transform="rotate(-18 70 54)"
+            rx="50"
+            ry="37"
+            transform="rotate(-16 70 54)"
             fill="#3b0764"
-            stroke="#c084fc"
+            stroke="#e9d5ff"
             strokeWidth="2.5"
-            opacity="0.75"
+            strokeDasharray="6 4"
+            opacity="0.7"
           />
-
-          {/* Symmetrical UNO-Style Interlocking Curved Arrows */}
-          <g transform="rotate(-18 70 54)">
-            {/* Top Arrow (Golden Yellow — Single Seamless Vector Path) */}
-            <path
-              d="M 38 52 C 38 28, 76 22, 90 36 L 98 27 L 106 52 L 80 48 L 88 40 C 76 31, 52 35, 52 52 Z"
-              fill="#ffca3a"
+          {/* Mini Orbiting Card Top-Left */}
+          <g transform="translate(22, 24) rotate(-25)">
+            <rect
+              x="-9"
+              y="-12"
+              width="18"
+              height="24"
+              rx="3.5"
+              fill="#f43f5e"
               stroke="#161426"
-              strokeWidth="3.5"
+              strokeWidth="2.8"
+            />
+            <circle cx="0" cy="0" r="4" fill="#ffca3a" />
+          </g>
+          {/* Mini Orbiting Card Bottom-Right */}
+          <g transform="translate(118, 84) rotate(25)">
+            <rect
+              x="-9"
+              y="-12"
+              width="18"
+              height="24"
+              rx="3.5"
+              fill="#00bbf9"
+              stroke="#161426"
+              strokeWidth="2.8"
+            />
+            <circle cx="0" cy="0" r="4" fill="#ffffff" />
+          </g>
+
+          {/* 3D Extruded Interlocking Curved Arrows */}
+          <g transform="rotate(-16 70 54)">
+            {/* Top Arrow 3D Extrusion Shadow */}
+            <path
+              d="M 34 52 C 34 24, 76 18, 92 34 L 101 24 L 109 52 L 81 47 L 89 39 C 76 29, 50 33, 50 52 Z"
+              transform="translate(0, 4.5)"
+              fill="#161426"
+            />
+            {/* Top Arrow (Golden Gradient + White Specular Highlight) */}
+            <path
+              d="M 34 52 C 34 24, 76 18, 92 34 L 101 24 L 109 52 L 81 47 L 89 39 C 76 29, 50 33, 50 52 Z"
+              fill={`url(#scRevGold_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.6"
               strokeLinejoin="round"
             />
+            <path
+              d="M 40 46 C 42 30, 68 25, 86 35"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="2.8"
+              strokeLinecap="round"
+            />
 
-            {/* Bottom Arrow (Crisp White — Exact 180-Degree Symmetry!) */}
+            {/* Bottom Arrow (180-Degree Symmetry — Electric Cyan Gradient + Specular Highlight) */}
             <g transform="rotate(180 70 54)">
               <path
-                d="M 38 52 C 38 28, 76 22, 90 36 L 98 27 L 106 52 L 80 48 L 88 40 C 76 31, 52 35, 52 52 Z"
-                fill="#ffffff"
+                d="M 34 52 C 34 24, 76 18, 92 34 L 101 24 L 109 52 L 81 47 L 89 39 C 76 29, 50 33, 50 52 Z"
+                transform="translate(0, -4.5)"
+                fill="#161426"
+              />
+              <path
+                d="M 34 52 C 34 24, 76 18, 92 34 L 101 24 L 109 52 L 81 47 L 89 39 C 76 29, 50 33, 50 52 Z"
+                fill={`url(#scRevCyan_${uid})`}
                 stroke="#161426"
-                strokeWidth="3.5"
+                strokeWidth="3.6"
                 strokeLinejoin="round"
+              />
+              <path
+                d="M 40 46 C 42 30, 68 25, 86 35"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="2.8"
+                strokeLinecap="round"
               />
             </g>
           </g>
+
+          {/* Central Vortex Star-Gem */}
+          <polygon
+            points="70,42 73.5,50.5 82,54 73.5,57.5 70,66 66.5,57.5 58,54 66.5,50.5"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="2.8"
+            strokeLinejoin="round"
+          />
+          <circle cx="70" cy="54" r="3.2" fill="#ffffff" />
         </svg>
       );
 
@@ -1032,36 +1565,194 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scRadBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#831843" />
-              <stop offset="100%" stopColor="#1e1b4b" />
+            <radialGradient id={`scRadBg_${uid}`} cx="50%" cy="48%" r="70%">
+              <stop offset="0%" stopColor="#f472b6" />
+              <stop offset="52%" stopColor="#db2777" />
+              <stop offset="100%" stopColor="#4c1d95" />
             </radialGradient>
+            <linearGradient id={`scBeam_${uid}`} x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="#00f5d4" stopOpacity="0.55" />
+              <stop offset="100%" stopColor="#00f5d4" stopOpacity="0.08" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scRadBg_${uid})`} />
-          {/* Radar Concentric Rings */}
-          <circle cx="70" cy="46" r="44" fill="none" stroke="#00f5d4" strokeWidth="1.5" opacity="0.25" />
-          <circle cx="70" cy="46" r="28" fill="none" stroke="#00f5d4" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.4" />
-          {/* 3 Fanned Cards Under X-Ray */}
-          <g transform="rotate(-15 42 42)">
-            <rect x="26" y="20" width="28" height="40" rx="5" fill="#e0f2fe" stroke="#161426" strokeWidth="3.2" />
-            <text x="40" y="45" textAnchor="middle" fill="#0284c7" fontSize="14" fontWeight="900">1</text>
+          {/* Radar Grid Rings */}
+          <circle
+            cx="70"
+            cy="44"
+            r="44"
+            fill="none"
+            stroke="#00f5d4"
+            strokeWidth="1.6"
+            opacity="0.35"
+          />
+          <circle
+            cx="70"
+            cy="44"
+            r="28"
+            fill="none"
+            stroke="#00f5d4"
+            strokeWidth="1.6"
+            strokeDasharray="5 4"
+            opacity="0.55"
+          />
+
+          {/* 3 Fanned Collectible Cards Under X-Ray Inspection */}
+          <g transform="rotate(-16 40 44)">
+            <rect
+              x="22"
+              y="18"
+              width="30"
+              height="42"
+              rx="5.5"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.4"
+            />
+            <rect
+              x="26"
+              y="22"
+              width="22"
+              height="34"
+              rx="3.5"
+              fill="#00bbf9"
+              stroke="#161426"
+              strokeWidth="1.8"
+            />
+            <text
+              x="37"
+              y="44"
+              textAnchor="middle"
+              fill="#ffffff"
+              fontSize="13"
+              fontWeight="900"
+            >
+              #1
+            </text>
           </g>
-          <g transform="rotate(15 98 42)">
-            <rect x="86" y="20" width="28" height="40" rx="5" fill="#dcfce7" stroke="#161426" strokeWidth="3.2" />
-            <text x="100" y="45" textAnchor="middle" fill="#16a34a" fontSize="14" fontWeight="900">3</text>
+          <g transform="rotate(16 100 44)">
+            <rect
+              x="88"
+              y="18"
+              width="30"
+              height="42"
+              rx="5.5"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.4"
+            />
+            <rect
+              x="92"
+              y="22"
+              width="22"
+              height="34"
+              rx="3.5"
+              fill="#22c55e"
+              stroke="#161426"
+              strokeWidth="1.8"
+            />
+            <text
+              x="103"
+              y="44"
+              textAnchor="middle"
+              fill="#ffffff"
+              fontSize="13"
+              fontWeight="900"
+            >
+              #3
+            </text>
           </g>
-          {/* Center Top Card Showing Hidden Bomb Silhouette */}
-          <rect x="54" y="14" width="32" height="44" rx="5.5" fill="#ffe4e6" stroke="#161426" strokeWidth="3.5" />
-          <circle cx="70" cy="37" r="9.5" fill="#e11d48" stroke="#161426" strokeWidth="2.5" />
-          <circle cx="70" cy="37" r="3.5" fill="#ffca3a" />
-          {/* Cybernetic X-Ray Visor Goggles */}
-          <rect x="30" y="62" width="80" height="28" rx="14" fill="#161426" stroke="#ffca3a" strokeWidth="3.5" />
-          <circle cx="52" cy="76" r="9.5" fill="#00f5d4" stroke="#161426" strokeWidth="2.2" />
-          <circle cx="88" cy="76" r="9.5" fill="#00f5d4" stroke="#161426" strokeWidth="2.2" />
-          <circle cx="49" cy="73" r="3" fill="#ffffff" />
-          <circle cx="85" cy="73" r="3" fill="#ffffff" />
-          {/* Laser Scan Line */}
-          <line x1="20" y1="36" x2="120" y2="36" stroke="#00f5d4" strokeWidth="3.5" strokeLinecap="round" />
+
+          {/* Center Card Revealed by X-Ray (Showing Hidden C4 Stick Inside!) */}
+          <rect
+            x="52"
+            y="11"
+            width="36"
+            height="48"
+            rx="6"
+            fill="#090d16"
+            stroke="#00f5d4"
+            strokeWidth="3.5"
+          />
+          {/* Mini C4 Dynamite Detected Inside Center Card */}
+          <rect
+            x="63"
+            y="20"
+            width="14"
+            height="30"
+            rx="4"
+            fill="#e11d48"
+            stroke="#ffca3a"
+            strokeWidth="2"
+          />
+          <rect
+            x="61"
+            y="30"
+            width="18"
+            height="10"
+            rx="2"
+            fill="#161426"
+            stroke="#ffca3a"
+            strokeWidth="1.5"
+          />
+          <circle cx="70" cy="35" r="2.5" fill="#ff595e" />
+
+          {/* Translucent Cyan X-Ray Scanner Beam Cone from Visor */}
+          <polygon
+            points="44,68 96,68 124,14 16,14"
+            fill={`url(#scBeam_${uid})`}
+          />
+          {/* Horizontal Laser Scan Line + Corner Target Reticles */}
+          <line
+            x1="18"
+            y1="34"
+            x2="122"
+            y2="34"
+            stroke="#00f5d4"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="28"
+            y1="34"
+            x2="112"
+            y2="34"
+            stroke="#ffffff"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+
+          {/* Foreground Cybernetic X-Ray Visor Goggles */}
+          <g transform="translate(0, 2)">
+            <rect
+              x="28"
+              y="62"
+              width="84"
+              height="30"
+              rx="15"
+              fill="#161426"
+              stroke="#ffca3a"
+              strokeWidth="3.6"
+            />
+            <circle
+              cx="51"
+              cy="77"
+              r="10.5"
+              fill="#00f5d4"
+              stroke="#161426"
+              strokeWidth="2.6"
+            />
+            <circle
+              cx="89"
+              cy="77"
+              r="10.5"
+              fill="#00f5d4"
+              stroke="#161426"
+              strokeWidth="2.6"
+            />
+            <circle cx="47.5" cy="73.5" r="3.5" fill="#ffffff" />
+            <circle cx="85.5" cy="73.5" r="3.5" fill="#ffffff" />
+          </g>
         </svg>
       );
 
@@ -1073,31 +1764,157 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scShufBg_${uid}`} cx="50%" cy="50%" r="65%">
+            <radialGradient id={`scShufBg_${uid}`} cx="50%" cy="50%" r="68%">
               <stop offset="0%" stopColor="#99f6e4" />
-              <stop offset="55%" stopColor="#0d9488" />
-              <stop offset="100%" stopColor="#134e4a" />
+              <stop offset="55%" stopColor="#14b8a6" />
+              <stop offset="100%" stopColor="#0f766e" />
             </radialGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scShufBg_${uid})`} />
-          {/* Swirling Wind Ribbons */}
-          <path d="M 22 36 Q 70 52 118 36" fill="none" stroke="#161426" strokeWidth="8" strokeLinecap="round" />
-          <path d="M 22 36 Q 70 52 118 36" fill="none" stroke="#00f5d4" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 30 62 Q 70 78 110 62" fill="none" stroke="#161426" strokeWidth="8" strokeLinecap="round" />
-          <path d="M 30 62 Q 70 78 110 62" fill="none" stroke="#5eead4" strokeWidth="4" strokeLinecap="round" />
-          {/* 3 Interleaving Casino Cards */}
-          <g transform="rotate(-22 40 44)">
-            <rect x="26" y="22" width="28" height="40" rx="5" fill="#ffca3a" stroke="#161426" strokeWidth="3.4" />
-            <circle cx="40" cy="42" r="6" fill="#e11d48" />
+
+          {/* Back Cyclone Swirl Ribbon (Passes Behind Cards) */}
+          <path
+            d="M 16 34 C 46 14, 94 14, 124 34"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="9"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 16 34 C 46 14, 94 14, 124 34"
+            fill="none"
+            stroke="#ffca3a"
+            strokeWidth="4.5"
+            strokeLinecap="round"
+          />
+
+          {/* 4 Swirling Collectible Boom Cards */}
+          <g transform="rotate(-24 36 46)">
+            <rect
+              x="20"
+              y="22"
+              width="30"
+              height="42"
+              rx="5.5"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.4"
+            />
+            <rect
+              x="24"
+              y="26"
+              width="22"
+              height="34"
+              rx="3.5"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="2"
+            />
+            <circle cx="35" cy="43" r="5" fill="#e11d48" />
           </g>
-          <g transform="rotate(22 100 44)">
-            <rect x="86" y="22" width="28" height="40" rx="5" fill="#00bbf9" stroke="#161426" strokeWidth="3.4" />
-            <circle cx="100" cy="42" r="6" fill="#ffffff" />
+          <g transform="rotate(24 104 46)">
+            <rect
+              x="90"
+              y="22"
+              width="30"
+              height="42"
+              rx="5.5"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.4"
+            />
+            <rect
+              x="94"
+              y="26"
+              width="22"
+              height="34"
+              rx="3.5"
+              fill="#00bbf9"
+              stroke="#161426"
+              strokeWidth="2"
+            />
+            <circle cx="105" cy="43" r="5" fill="#ffffff" />
           </g>
-          <g transform="rotate(4 70 48)">
-            <rect x="54" y="24" width="32" height="44" rx="5.5" fill="#fff9ec" stroke="#161426" strokeWidth="3.6" />
-            <polygon points="70,34 74,43 83,43 76,48 78,57 70,52 62,57 64,48 57,43 66,43" fill="#f15bb5" />
+          <g transform="rotate(-8 60 52)">
+            <rect
+              x="44"
+              y="26"
+              width="32"
+              height="44"
+              rx="6"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <rect
+              x="48.5"
+              y="30.5"
+              width="23"
+              height="35"
+              rx="3.5"
+              fill="#f43f5e"
+              stroke="#161426"
+              strokeWidth="2"
+            />
           </g>
+          <g transform="rotate(10 80 50)">
+            <rect
+              x="62"
+              y="24"
+              width="34"
+              height="46"
+              rx="6"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.6"
+            />
+            <rect
+              x="66.5"
+              y="28.5"
+              width="25"
+              height="37"
+              rx="4"
+              fill="#a855f7"
+              stroke="#161426"
+              strokeWidth="2"
+            />
+            <polygon
+              points="79,37 82,44 90,44 84,49 86,56 79,51 72,56 74,49 68,44 76,44"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="1.6"
+            />
+          </g>
+
+          {/* Front Cyclone Swirl Ribbon (Wraps Across the Front of Cards!) */}
+          <path
+            d="M 16 64 C 48 88, 92 88, 122 58"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="10"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 16 64 C 48 88, 92 88, 122 58"
+            fill="none"
+            stroke="#00f5d4"
+            strokeWidth="5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 24 67 C 52 84, 88 84, 114 62"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+          <polygon
+            points="126,52 114,55 123,66"
+            fill="#00f5d4"
+            stroke="#161426"
+            strokeWidth="2.8"
+            strokeLinejoin="round"
+          />
         </svg>
       );
 
@@ -1109,33 +1926,119 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scMagBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#ffedd5" />
+            <radialGradient id={`scMagBg_${uid}`} cx="50%" cy="50%" r="68%">
+              <stop offset="0%" stopColor="#fde047" />
               <stop offset="55%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#7c2d12" />
+              <stop offset="100%" stopColor="#c2410c" />
             </radialGradient>
+            <linearGradient id={`scMagBody_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fb7185" />
+              <stop offset="45%" stopColor="#e11d48" />
+              <stop offset="100%" stopColor="#9f1239" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scMagBg_${uid})`} />
-          {/* Magnetic Field Rings */}
-          <circle cx="70" cy="36" r="34" fill="none" stroke="#fde047" strokeWidth="2" strokeDasharray="6 4" opacity="0.6" />
-          {/* Target Card Being Yanked Downward */}
-          <g transform="rotate(14 70 24)">
-            <rect x="55" y="6" width="30" height="38" rx="5" fill="#ffca3a" stroke="#161426" strokeWidth="3.4" />
-            <rect x="60" y="11" width="20" height="28" rx="3" fill="#fff9ec" />
-          </g>
-          {/* Heavy Horseshoe Magnet */}
+
+          {/* Curved Cyan Tractor-Beam Wave Rings Pulling Card In */}
           <path
-            d="M 36 44 V 68 A 34 30 0 0 0 104 68 V 44 H 84 V 68 A 14 12 0 0 1 56 68 V 44 Z"
-            fill="#e11d48"
+            d="M 68 24 Q 84 36 74 52"
+            fill="none"
+            stroke="#00f5d4"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 80 18 Q 98 34 86 54"
+            fill="none"
+            stroke="#00f5d4"
+            strokeWidth="3.2"
+            strokeDasharray="5 4"
+            strokeLinecap="round"
+          />
+
+          {/* Stolen Collectible Card Being Yanked From Top-Right */}
+          <g transform="translate(96, 30) rotate(24)">
+            <rect
+              x="-16"
+              y="-22"
+              width="32"
+              height="44"
+              rx="5.5"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <rect
+              x="-11.5"
+              y="-17.5"
+              width="23"
+              height="35"
+              rx="3.5"
+              fill="#ffca3a"
+              stroke="#161426"
+              strokeWidth="2"
+            />
+            <polygon
+              points="0,-9 3,-2 10,-2 4,3 6,10 0,5 -6,10 -4,3 -10,-2 -3,-2"
+              fill="#e11d48"
+            />
+          </g>
+
+          {/* Dynamic Tilted 3D Horseshoe Magnet (-28 deg) */}
+          <g transform="translate(52, 60) rotate(-28)">
+            {/* 3D Extrusion Shadow */}
+            <path
+              d="M -30 -16 V 10 A 30 26 0 0 0 30 10 V -16 H 12 V 10 A 12 10 0 0 1 -12 10 V -16 Z"
+              transform="translate(0, 4.5)"
+              fill="#161426"
+            />
+            {/* Red U-Magnet Body */}
+            <path
+              d="M -30 -16 V 10 A 30 26 0 0 0 30 10 V -16 H 12 V 10 A 12 10 0 0 1 -12 10 V -16 Z"
+              fill={`url(#scMagBody_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.8"
+              strokeLinejoin="round"
+            />
+            {/* Inner Specular Highlight Arc */}
+            <path
+              d="M -24 -6 V 9 A 24 20 0 0 0 6 27"
+              fill="none"
+              stroke="#fecdd3"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            {/* Silver Chrome Polarity Tips */}
+            <rect
+              x="-30"
+              y="-28"
+              width="18"
+              height="13"
+              rx="2.5"
+              fill="#f8fafc"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <rect
+              x="12"
+              y="-28"
+              width="18"
+              height="13"
+              rx="2.5"
+              fill="#e2e8f0"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+          </g>
+
+          {/* Electric Cyan Spark Bolts at Magnet Poles */}
+          <polygon
+            points="64,14 56,26 65,26 58,38 74,23 65,23"
+            fill="#00f5d4"
             stroke="#161426"
-            strokeWidth="3.8"
+            strokeWidth="2.4"
             strokeLinejoin="round"
           />
-          <rect x="36" y="32" width="20" height="14" rx="2.5" fill="#e2e8f0" stroke="#161426" strokeWidth="3.5" />
-          <rect x="84" y="32" width="20" height="14" rx="2.5" fill="#e2e8f0" stroke="#161426" strokeWidth="3.5" />
-          {/* Electric Sparks */}
-          <path d="M 46 27 L 52 17 L 58 25" fill="none" stroke="#00f5d4" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M 82 25 L 88 17 L 94 27" fill="none" stroke="#00f5d4" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
 
@@ -1147,25 +2050,133 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scShawBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#fef3c7" />
-              <stop offset="55%" stopColor="#d97706" />
-              <stop offset="100%" stopColor="#451a03" />
+            <radialGradient id={`scShawBg_${uid}`} cx="50%" cy="50%" r="68%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="55%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
             </radialGradient>
+            <linearGradient id={`scMeat_${uid}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="45%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scShawBg_${uid})`} />
-          {/* Steel Rotisserie Stand & Spit Rod */}
-          <rect x="44" y="86" width="52" height="10" rx="4" fill="#94a3b8" stroke="#161426" strokeWidth="3.2" />
-          <line x1="70" y1="8" x2="70" y2="88" stroke="#161426" strokeWidth="5.5" strokeLinecap="round" />
-          {/* Layered Golden-Roasted Shawarma Cone */}
-          <path d="M 44 22 H 96 L 86 80 H 54 Z" fill="#b45309" stroke="#161426" strokeWidth="3.6" strokeLinejoin="round" />
-          <path d="M 47 32 Q 70 38 93 32" fill="none" stroke="#fde047" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 50 48 Q 70 54 90 48" fill="none" stroke="#fb923c" strokeWidth="4.5" strokeLinecap="round" />
-          <path d="M 53 64 Q 70 70 87 64" fill="none" stroke="#fde047" strokeWidth="4" strokeLinecap="round" />
-          {/* Crown Tomato & Sizzling Sparkles */}
-          <ellipse cx="70" cy="19" rx="14" ry="6" fill="#e11d48" stroke="#161426" strokeWidth="3" />
-          <polygon points="28,34 31,41 38,41 32,45 34,52 28,48 22,52 24,45 18,41 25,41" fill="#ffca3a" stroke="#161426" strokeWidth="2" />
-          <polygon points="112,28 114,34 120,34 115,38 117,44 112,40 107,44 109,38 104,34 110,34" fill="#ffca3a" stroke="#161426" strokeWidth="2" />
+          <ellipse cx="70" cy="96" rx="42" ry="6" fill="#161426" opacity="0.3" />
+
+          {/* Chrome Rotisserie Base & Vertical Spit Rod */}
+          <line
+            x1="70"
+            y1="7"
+            x2="70"
+            y2="90"
+            stroke="#161426"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+          <line
+            x1="69"
+            y1="9"
+            x2="69"
+            y2="88"
+            stroke="#e2e8f0"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+          <ellipse
+            cx="70"
+            cy="90"
+            rx="32"
+            ry="7"
+            fill="#cbd5e1"
+            stroke="#161426"
+            strokeWidth="3.5"
+          />
+
+          {/* Sculpted Scalloped Shawarma Meat Cone */}
+          <path
+            d="M 42 24 C 37 30, 44 36, 40 42 C 37 48, 45 54, 42 60 C 40 66, 48 72, 46 78 C 56 83, 84 83, 94 78 C 92 72, 100 66, 98 60 C 95 54, 103 48, 100 42 C 96 36, 103 30, 98 24 Z"
+            fill={`url(#scMeat_${uid})`}
+            stroke="#161426"
+            strokeWidth="3.6"
+            strokeLinejoin="round"
+          />
+          {/* Sizzling Golden Roasted Glaze Streaks */}
+          <path
+            d="M 46 33 Q 70 40 94 33"
+            fill="none"
+            stroke="#fde047"
+            strokeWidth="3.8"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 48 48 Q 70 55 92 48"
+            fill="none"
+            stroke="#fed7aa"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 51 63 Q 70 70 89 63"
+            fill="none"
+            stroke="#fde047"
+            strokeWidth="3.8"
+            strokeLinecap="round"
+          />
+
+          {/* Roasted Tomato & Green Pepper Crown */}
+          <ellipse
+            cx="70"
+            cy="21"
+            rx="18"
+            ry="6.5"
+            fill="#e11d48"
+            stroke="#161426"
+            strokeWidth="3.4"
+          />
+          <path
+            d="M 58 20 Q 70 24 82 20"
+            fill="none"
+            stroke="#fecdd3"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 64 15 C 66 10, 74 10, 76 15"
+            fill="#22c55e"
+            stroke="#161426"
+            strokeWidth="2.8"
+            strokeLinejoin="round"
+          />
+
+          {/* Gleaming Chef Carving Knife Slicing on the Right */}
+          <g transform="translate(106, 52) rotate(-28)">
+            <path
+              d="M -4 -26 C 4 -22, 6 4, 2 14 L -4 14 Z"
+              fill="#f8fafc"
+              stroke="#161426"
+              strokeWidth="3"
+              strokeLinejoin="round"
+            />
+            <rect
+              x="-5.5"
+              y="14"
+              width="9"
+              height="14"
+              rx="3"
+              fill="#e11d48"
+              stroke="#161426"
+              strokeWidth="2.8"
+            />
+          </g>
+
+          {/* Golden Aroma Sparkle */}
+          <polygon
+            points="24,36 27,43 34,43 28,47 30,54 24,50 18,54 20,47 14,43 21,43"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="2.2"
+          />
         </svg>
       );
 
@@ -1177,32 +2188,190 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scKabBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#ffedd5" />
-              <stop offset="55%" stopColor="#ea580c" />
-              <stop offset="100%" stopColor="#7c2d12" />
+            <radialGradient id={`scKabBg_${uid}`} cx="50%" cy="50%" r="68%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="55%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#c2410c" />
             </radialGradient>
+            <linearGradient id={`scRice_${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="55%" stopColor="#facc15" />
+              <stop offset="100%" stopColor="#eab308" />
+            </linearGradient>
+            <linearGradient id={`scDrum_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#c2410c" />
+              <stop offset="100%" stopColor="#7c2d12" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scKabBg_${uid})`} />
-          {/* Royal Silver Platter */}
-          <ellipse cx="70" cy="76" rx="52" ry="15" fill="#e2e8f0" stroke="#161426" strokeWidth="3.8" />
-          {/* Mound of Golden Saffron Rice */}
-          <path d="M 26 73 Q 70 28 114 73 Z" fill="#facc15" stroke="#161426" strokeWidth="3.6" strokeLinejoin="round" />
-          {/* Roasted Drumsticks on Top */}
-          <g transform="rotate(-18 56 48)">
-            <ellipse cx="52" cy="48" rx="15" ry="9" fill="#b45309" stroke="#161426" strokeWidth="3.2" />
-            <rect x="64" y="45" width="12" height="6" rx="2.5" fill="#fffbeb" stroke="#161426" strokeWidth="2.6" />
+          <ellipse cx="70" cy="94" rx="52" ry="7.5" fill="#161426" opacity="0.32" />
+
+          {/* Ornate Royal Silver Platter (Sahan) */}
+          <ellipse
+            cx="70"
+            cy="78"
+            rx="54"
+            ry="15"
+            fill="#f8fafc"
+            stroke="#161426"
+            strokeWidth="3.8"
+          />
+          <ellipse
+            cx="70"
+            cy="78"
+            rx="46"
+            ry="11"
+            fill="#cbd5e1"
+            stroke="#161426"
+            strokeWidth="2"
+          />
+
+          {/* Fluffy Scalloped Mound of Golden Saffron Rice */}
+          <path
+            d="M 24 75 C 24 54, 42 40, 56 42 C 64 34, 76 34, 84 42 C 98 40, 116 54, 116 75 C 94 83, 46 83, 24 75 Z"
+            fill={`url(#scRice_${uid})`}
+            stroke="#161426"
+            strokeWidth="3.6"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 36 62 Q 52 54 66 60"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="2.8"
+            strokeLinecap="round"
+            opacity="0.85"
+          />
+
+          {/* Left Roasted Chicken Drumstick (Angled Outward with Bone Knuckles!) */}
+          <g transform="translate(50, 44) rotate(-26)">
+            <rect
+              x="-24"
+              y="-3.5"
+              width="14"
+              height="7"
+              rx="3"
+              fill="#fffbeb"
+              stroke="#161426"
+              strokeWidth="2.8"
+            />
+            <circle
+              cx="-25"
+              cy="-3.5"
+              r="4"
+              fill="#fffbeb"
+              stroke="#161426"
+              strokeWidth="2.6"
+            />
+            <circle
+              cx="-25"
+              cy="3.5"
+              r="4"
+              fill="#fffbeb"
+              stroke="#161426"
+              strokeWidth="2.6"
+            />
+            <path
+              d="M -12 -5 C -2 -12, 18 -11, 18 0 C 18 11, -2 12, -12 5 Z"
+              fill={`url(#scDrum_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.4"
+            />
+            <path
+              d="M -4 -5 Q 6 -8 12 -3"
+              fill="none"
+              stroke="#fed7aa"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
           </g>
-          <g transform="rotate(20 84 48)">
-            <ellipse cx="88" cy="48" rx="15" ry="9" fill="#9a3412" stroke="#161426" strokeWidth="3.2" />
-            <rect x="64" y="45" width="12" height="6" rx="2.5" fill="#fffbeb" stroke="#161426" strokeWidth="2.6" />
+
+          {/* Right Roasted Chicken Drumstick (Angled Outward with Bone Knuckles!) */}
+          <g transform="translate(90, 44) rotate(26) scale(-1, 1)">
+            <rect
+              x="-24"
+              y="-3.5"
+              width="14"
+              height="7"
+              rx="3"
+              fill="#fffbeb"
+              stroke="#161426"
+              strokeWidth="2.8"
+            />
+            <circle
+              cx="-25"
+              cy="-3.5"
+              r="4"
+              fill="#fffbeb"
+              stroke="#161426"
+              strokeWidth="2.6"
+            />
+            <circle
+              cx="-25"
+              cy="3.5"
+              r="4"
+              fill="#fffbeb"
+              stroke="#161426"
+              strokeWidth="2.6"
+            />
+            <path
+              d="M -12 -5 C -2 -12, 18 -11, 18 0 C 18 11, -2 12, -12 5 Z"
+              fill={`url(#scDrum_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.4"
+            />
+            <path
+              d="M -4 -5 Q 6 -8 12 -3"
+              fill="none"
+              stroke="#fed7aa"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
           </g>
-          {/* Almonds, Raisins & Steam */}
-          <circle cx="56" cy="64" r="3.5" fill="#451a03" />
-          <circle cx="72" cy="61" r="3.5" fill="#fef08a" stroke="#161426" strokeWidth="1.5" />
-          <circle cx="86" cy="65" r="3.5" fill="#451a03" />
-          <path d="M 52 26 Q 48 16 54 10" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
-          <path d="M 88 26 Q 92 16 86 10" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" opacity="0.8" />
+
+          {/* Toasted Almonds, Raisins, Red Chili & Steam Wisps */}
+          <ellipse
+            cx="50"
+            cy="68"
+            rx="5"
+            ry="2.8"
+            fill="#fffbeb"
+            stroke="#161426"
+            strokeWidth="2"
+          />
+          <ellipse
+            cx="90"
+            cy="68"
+            rx="5"
+            ry="2.8"
+            fill="#fffbeb"
+            stroke="#161426"
+            strokeWidth="2"
+          />
+          <path
+            d="M 62 66 Q 70 72 78 65"
+            fill="none"
+            stroke="#e11d48"
+            strokeWidth="4.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 52 24 Q 47 15 54 8"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+            opacity="0.9"
+          />
+          <path
+            d="M 88 24 Q 93 15 86 8"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+            opacity="0.9"
+          />
         </svg>
       );
 
@@ -1214,22 +2383,134 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scKrkBg_${uid}`} cx="50%" cy="50%" r="65%">
+            <radialGradient id={`scKrkBg_${uid}`} cx="50%" cy="50%" r="68%">
               <stop offset="0%" stopColor="#f3e8ff" />
-              <stop offset="55%" stopColor="#9333ea" />
-              <stop offset="100%" stopColor="#3b0764" />
+              <stop offset="55%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#581c87" />
             </radialGradient>
+            <linearGradient id={`scGoldDallah_${uid}`} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="45%" stopColor="#ffca3a" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scKrkBg_${uid})`} />
-          {/* Ornate Golden Dallah (Arabic Coffee/Karak Flask) */}
-          <path d="M 48 36 C 32 36, 22 46, 18 32 C 28 28, 38 30, 48 26 Z" fill="#ffca3a" stroke="#161426" strokeWidth="3.4" strokeLinejoin="round" />
-          <path d="M 90 36 C 106 36, 108 66, 88 68" fill="none" stroke="#161426" strokeWidth="8" strokeLinecap="round" />
-          <path d="M 90 36 C 106 36, 108 66, 88 68" fill="none" stroke="#ffca3a" strokeWidth="4" strokeLinecap="round" />
-          <path d="M 50 28 H 86 L 94 84 C 95 92, 41 92, 42 84 Z" fill="#f59e0b" stroke="#161426" strokeWidth="3.8" strokeLinejoin="round" />
-          <path d="M 54 28 C 54 14, 82 14, 82 28 Z" fill="#fde047" stroke="#161426" strokeWidth="3.4" />
-          <circle cx="68" cy="12" r="5" fill="#e11d48" stroke="#161426" strokeWidth="2.8" />
-          {/* Ruby Gem & Cardamom Stars */}
-          <polygon points="68,48 75,58 68,68 61,58" fill="#00f5d4" stroke="#161426" strokeWidth="2.6" />
+          <ellipse cx="72" cy="96" rx="46" ry="6.5" fill="#161426" opacity="0.3" />
+
+          {/* Warm Spiced Karak Stream Pouring from Beak into Cup */}
+          <path
+            d="M 27 36 Q 22 54 28 70"
+            fill="none"
+            stroke="#161426"
+            strokeWidth="7"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 27 36 Q 22 54 28 70"
+            fill="none"
+            stroke="#d97706"
+            strokeWidth="3.8"
+            strokeLinecap="round"
+          />
+
+          {/* Glass Istikana Karak Cup on Left */}
+          <g transform="translate(28, 78)">
+            <path
+              d="M -11 -14 H 11 L 8 12 C 8 15, -8 15, -8 12 Z"
+              fill="#fed7aa"
+              stroke="#161426"
+              strokeWidth="3.2"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M -9 -8 H 9 L 7 10 H -7 Z"
+              fill="#c2410c"
+            />
+            <line
+              x1="-6"
+              y1="-5"
+              x2="-5"
+              y2="7"
+              stroke="#ffffff"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+            />
+          </g>
+
+          {/* Authentic Pinched-Waist Golden Dallah (Arabic Coffee/Karak Pot) */}
+          <g transform="translate(6, 0)">
+            {/* Curved S-Handle */}
+            <path
+              d="M 88 34 C 108 32, 110 66, 88 70"
+              fill="none"
+              stroke="#161426"
+              strokeWidth="9"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 88 34 C 108 32, 110 66, 88 70"
+              fill="none"
+              stroke="#ffca3a"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+            />
+            {/* Prominent Curved Crescent Spout (Beak) */}
+            <path
+              d="M 52 34 C 36 34, 26 26, 20 35 C 28 45, 38 46, 50 48 Z"
+              fill={`url(#scGoldDallah_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.5"
+              strokeLinejoin="round"
+            />
+            {/* Hourglass Pinched Waist & Bulbous Lower Belly */}
+            <path
+              d="M 50 28 H 86 C 84 42, 80 48, 84 56 C 90 68, 96 80, 90 88 C 82 94, 54 94, 46 88 C 40 80, 46 68, 52 56 C 56 48, 52 42, 50 28 Z"
+              fill={`url(#scGoldDallah_${uid})`}
+              stroke="#161426"
+              strokeWidth="3.8"
+              strokeLinejoin="round"
+            />
+            {/* Engraved Collar Band */}
+            <path
+              d="M 52 52 Q 68 56 84 52"
+              fill="none"
+              stroke="#161426"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            {/* Vertical Specular Highlight Along Left Belly */}
+            <path
+              d="M 55 34 C 57 46, 53 60, 50 78"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="3"
+              strokeLinecap="round"
+              opacity="0.88"
+            />
+            {/* Tiered Spire Lid & Finial Gem */}
+            <path
+              d="M 52 28 C 54 14, 82 14, 84 28 Z"
+              fill="#fde047"
+              stroke="#161426"
+              strokeWidth="3.5"
+            />
+            <circle
+              cx="68"
+              cy="12"
+              r="5"
+              fill="#e11d48"
+              stroke="#161426"
+              strokeWidth="2.8"
+            />
+            {/* Center Turquoise Diamond Jewel */}
+            <polygon
+              points="68,60 75,70 68,80 61,70"
+              fill="#00f5d4"
+              stroke="#161426"
+              strokeWidth="2.8"
+              strokeLinejoin="round"
+            />
+          </g>
         </svg>
       );
 
@@ -1241,25 +2522,118 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scFlcBg_${uid}`} cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stopColor="#ecfccb" />
-              <stop offset="55%" stopColor="#4d7c0f" />
-              <stop offset="100%" stopColor="#1a2e05" />
+            <radialGradient id={`scFlcBg_${uid}`} cx="50%" cy="50%" r="68%">
+              <stop offset="0%" stopColor="#d9f99d" />
+              <stop offset="55%" stopColor="#65a30d" />
+              <stop offset="100%" stopColor="#365314" />
             </radialGradient>
+            <linearGradient id={`scWing_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scFlcBg_${uid})`} />
-          {/* Golden Crest Shield Behind Falcon */}
-          <circle cx="70" cy="54" r="38" fill="#161426" stroke="#ffca3a" strokeWidth="3.5" />
-          {/* Spread Golden Wings */}
-          <path d="M 70 58 L 16 28 L 28 54 L 20 68 L 70 72 Z" fill="#f59e0b" stroke="#161426" strokeWidth="3.4" strokeLinejoin="round" />
-          <path d="M 70 58 L 124 28 L 112 54 L 120 68 L 70 72 Z" fill="#f59e0b" stroke="#161426" strokeWidth="3.4" strokeLinejoin="round" />
-          {/* Noble Falcon Head & Hooked Beak */}
-          <circle cx="70" cy="48" r="18" fill="#fffbeb" stroke="#161426" strokeWidth="3.6" />
-          <path d="M 62 48 Q 70 42 78 48 L 73 66 Q 70 70 67 66 Z" fill="#ffca3a" stroke="#161426" strokeWidth="3.2" strokeLinejoin="round" />
-          {/* Tactical Aviator Visor */}
-          <rect x="53" y="38" width="14" height="9" rx="3" fill="#00f5d4" stroke="#161426" strokeWidth="2.5" />
-          <rect x="73" y="38" width="14" height="9" rx="3" fill="#00f5d4" stroke="#161426" strokeWidth="2.5" />
-          <line x1="67" y1="42" x2="73" y2="42" stroke="#161426" strokeWidth="3" />
+
+          {/* Royal Emblem Shield Behind Falcon */}
+          <circle
+            cx="70"
+            cy="56"
+            r="39"
+            fill="#161426"
+            stroke="#ffca3a"
+            strokeWidth="3.8"
+          />
+          <circle
+            cx="70"
+            cy="56"
+            r="33"
+            fill="none"
+            stroke="#fde047"
+            strokeWidth="1.6"
+            strokeDasharray="5 4"
+            opacity="0.65"
+          />
+
+          {/* Sculpted 3-Tiered Feathered Golden Wings */}
+          <path
+            d="M 70 60 L 10 22 L 22 44 L 14 58 L 28 70 L 70 76 Z"
+            fill={`url(#scWing_${uid})`}
+            stroke="#161426"
+            strokeWidth="3.6"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 70 60 L 130 22 L 118 44 L 126 58 L 112 70 L 70 76 Z"
+            fill={`url(#scWing_${uid})`}
+            stroke="#161426"
+            strokeWidth="3.6"
+            strokeLinejoin="round"
+          />
+          {/* Wing Feather Specular Ridges */}
+          <path
+            d="M 20 30 L 48 50 M 118 30 L 92 50"
+            stroke="#fef08a"
+            strokeWidth="2.8"
+            strokeLinecap="round"
+          />
+
+          {/* Sculpted Falcon Crest Head & Crown Tuft */}
+          <path
+            d="M 48 48 C 48 26, 62 20, 70 15 C 78 20, 92 26, 92 48 C 92 66, 82 78, 70 78 C 58 78, 48 66, 48 48 Z"
+            fill="#fffbeb"
+            stroke="#161426"
+            strokeWidth="3.8"
+            strokeLinejoin="round"
+          />
+          {/* Brown Falcon Crown Cap */}
+          <path
+            d="M 50 40 C 52 24, 63 20, 70 15 C 77 20, 88 24, 90 40 Q 70 34 50 40 Z"
+            fill="#b45309"
+            stroke="#161426"
+            strokeWidth="3.2"
+            strokeLinejoin="round"
+          />
+
+          {/* Sleek Cyan Tactical Aviator Visor + Diagonal White Glare */}
+          <path
+            d="M 46 38 L 70 43 L 94 38 L 90 52 L 70 49 L 50 52 Z"
+            fill="#00f5d4"
+            stroke="#161426"
+            strokeWidth="3.4"
+            strokeLinejoin="round"
+          />
+          <line
+            x1="54"
+            y1="41"
+            x2="60"
+            y2="49"
+            stroke="#ffffff"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+          <line
+            x1="78"
+            y1="41"
+            x2="84"
+            y2="49"
+            stroke="#ffffff"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+
+          {/* Fierce Hooked Golden Raptor Beak with Dark Tip */}
+          <path
+            d="M 60 50 Q 70 44 80 50 L 74 70 Q 70 76 66 70 Z"
+            fill="#ffca3a"
+            stroke="#161426"
+            strokeWidth="3.4"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 66 64 L 74 64 L 72 71 Q 70 74 68 71 Z"
+            fill="#161426"
+          />
         </svg>
       );
 
@@ -1272,37 +2646,91 @@ export const BoomCardIllustrationSvg: React.FC<{
           className={className}
         >
           <defs>
-            <radialGradient id={`scBlkBg_${uid}`} cx="50%" cy="50%" r="65%">
+            <radialGradient id={`scBlkBg_${uid}`} cx="50%" cy="50%" r="68%">
               <stop offset="0%" stopColor="#fecdd3" />
-              <stop offset="55%" stopColor="#dc2626" />
-              <stop offset="100%" stopColor="#450a0a" />
+              <stop offset="55%" stopColor="#e11d48" />
+              <stop offset="100%" stopColor="#9f1239" />
             </radialGradient>
+            <linearGradient id={`scShield_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#fb7185" />
+              <stop offset="45%" stopColor="#e11d48" />
+              <stop offset="100%" stopColor="#be123c" />
+            </linearGradient>
           </defs>
           <rect width="140" height="108" rx="12" fill={`url(#scBlkBg_${uid})`} />
-          {/* Octagonal Steel Stop Shield */}
-          <polygon
-            points="50,10 90,10 114,34 114,74 90,98 50,98 26,74 26,34"
-            fill="#ef4444"
-            stroke="#161426"
-            strokeWidth="4"
-            strokeLinejoin="round"
-          />
-          <polygon
-            points="53,16 87,16 108,37 108,71 87,92 53,92 32,71 32,37"
-            fill="none"
-            stroke="#fecdd3"
-            strokeWidth="2.2"
-            strokeLinejoin="round"
-          />
-          <circle cx="70" cy="54" r="24" fill="#fff9ec" stroke="#161426" strokeWidth="3.6" />
-          {/* Stop Hand + Diagonal Slash */}
-          <rect x="61" y="50" width="18" height="16" rx="4" fill="#ef4444" stroke="#161426" strokeWidth="2.5" />
-          <rect x="59" y="38" width="5" height="14" rx="2.2" fill="#ef4444" stroke="#161426" strokeWidth="2.2" />
-          <rect x="65" y="35" width="5" height="16" rx="2.2" fill="#ef4444" stroke="#161426" strokeWidth="2.2" />
-          <rect x="71" y="36" width="5" height="15" rx="2.2" fill="#ef4444" stroke="#161426" strokeWidth="2.2" />
-          <rect x="77" y="40" width="5" height="12" rx="2.2" fill="#ef4444" stroke="#161426" strokeWidth="2.2" />
-          <line x1="53" y1="37" x2="87" y2="71" stroke="#161426" strokeWidth="7.5" strokeLinecap="round" />
-          <line x1="53" y1="37" x2="87" y2="71" stroke="#ffca3a" strokeWidth="3.8" strokeLinecap="round" />
+
+          {/* Back Plane: Opponent's Card Being Slammed & Cancelled */}
+          <g transform="rotate(18 82 54)">
+            <rect
+              x="64"
+              y="18"
+              width="42"
+              height="58"
+              rx="6.5"
+              fill="#fde047"
+              stroke="#161426"
+              strokeWidth="3.4"
+            />
+          </g>
+
+          {/* Middle & Foreground Plane: Heavy 3D Octagonal Stop-Shield (-5 deg) */}
+          <g transform="rotate(-5 68 54)">
+            {/* 3D Extruded Drop Base */}
+            <polygon
+              points="48,10 88,10 112,34 112,74 88,98 48,98 24,74 24,34"
+              transform="translate(0, 5)"
+              fill="#161426"
+            />
+            {/* Main Crimson Octagon Shield */}
+            <polygon
+              points="48,10 88,10 112,34 112,74 88,98 48,98 24,74 24,34"
+              fill={`url(#scShield_${uid})`}
+              stroke="#161426"
+              strokeWidth="4"
+              strokeLinejoin="round"
+            />
+            {/* Crisp Inner Specular Bevel */}
+            <polygon
+              points="51,16 85,16 106,37 106,71 85,92 51,92 30,71 30,37"
+              fill="none"
+              stroke="#ffe4e6"
+              strokeWidth="2.4"
+              strokeLinejoin="round"
+            />
+            {/* Corner Gold Rivets */}
+            <circle cx="51" cy="21" r="2.8" fill="#ffca3a" stroke="#161426" strokeWidth="1.6" />
+            <circle cx="85" cy="21" r="2.8" fill="#ffca3a" stroke="#161426" strokeWidth="1.6" />
+            <circle cx="51" cy="87" r="2.8" fill="#ffca3a" stroke="#161426" strokeWidth="1.6" />
+            <circle cx="85" cy="87" r="2.8" fill="#ffca3a" stroke="#161426" strokeWidth="1.6" />
+
+            {/* Central Cream Medallion + Bold 3D Extruded Cancel X */}
+            <circle
+              cx="68"
+              cy="54"
+              r="24"
+              fill="#fff9ec"
+              stroke="#161426"
+              strokeWidth="3.8"
+            />
+            <path
+              d="M 55 41 L 81 67 M 81 41 L 55 67"
+              stroke="#161426"
+              strokeWidth="12"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 55 41 L 81 67 M 81 41 L 55 67"
+              stroke="#ffca3a"
+              strokeWidth="6"
+              strokeLinecap="round"
+            />
+            <path
+              d="M 57 40 L 66 49 M 79 40 L 70 49"
+              stroke="#ffffff"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+            />
+          </g>
         </svg>
       );
   }
@@ -2156,27 +3584,28 @@ export const ArenaSpatialFXLayer: React.FC<{
           </g>
         )}
 
-        {/* ==================== DEFUSE: CLEAN SNIP & SHIELD SEAL ==================== */}
+        {/* ==================== DEFUSE: BOMB ABOUT TO BLOW -> WIRE CUTTERS SWOOP IN & SNIP FUSE! ==================== */}
         {cinematic.type === 'defuse' && (
           <g
             transform={`translate(${TABLE_CENTER_COORD.x}, ${TABLE_CENTER_COORD.y})`}
             filter={`url(#cardDropShadow_${uid})`}
           >
-            <circle r="36" fill="none" stroke="#22c55e" strokeWidth="4">
+            {/* Emerald Safety Shockwave Ring */}
+            <circle r="36" fill="none" stroke="#22c55e" strokeWidth="4.5">
               <animate
                 attributeName="r"
-                values="28;86"
+                values="24;96"
                 keyTimes="0; 1"
-                dur="0.65s"
+                dur="0.75s"
                 calcMode="spline"
                 keySplines="0.22 1 0.36 1"
                 fill="freeze"
               />
               <animate
                 attributeName="opacity"
-                values="0.9;0"
+                values="0.95;0"
                 keyTimes="0; 1"
-                dur="0.65s"
+                dur="0.75s"
                 fill="freeze"
               />
             </circle>
@@ -2308,6 +3737,10 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     targetPlayerId?: string;
     comboCount?: 1 | 2 | 3;
   } | null>(null);
+  const [defuseShowdown, setDefuseShowdown] = useState<{
+    drawerId: string;
+    defuseCard: BoomCard;
+  } | null>(null);
   const [comboBuilder, setComboBuilder] = useState<{
     card: BoomCard;
     targetPlayerId: string;
@@ -2351,13 +3784,34 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   // Trigger single-shot in-arena animation for 1.25 seconds whenever `lastCinematic` updates
   useEffect(() => {
     if (!gameData.lastCinematic) return;
+    const cid = gameData.lastCinematic.id;
     setActiveCinematic(gameData.lastCinematic);
+
+    // If another player just defused a bomb, play the full 2-beat Defuse Showdown for spectators too!
+    let defTimer: ReturnType<typeof setTimeout> | null = null;
+    if (
+      gameData.lastCinematic.type === 'defuse' &&
+      gameData.lastCinematic.actorId !== activeViewerId
+    ) {
+      setDefuseShowdown({
+        drawerId: gameData.lastCinematic.actorId,
+        defuseCard: { id: `spec_def_${Date.now()}`, type: 'defuse' },
+      });
+      defTimer = setTimeout(() => {
+        setDefuseShowdown(null);
+      }, 1850);
+    }
+
+    const clearDelay =
+      gameData.lastCinematic.type === 'defuse' ? 1850 : 1250;
     const timer = setTimeout(() => {
-      setActiveCinematic((prev) =>
-        prev?.id === gameData.lastCinematic?.id ? null : prev
-      );
-    }, 1250);
-    return () => clearTimeout(timer);
+      setActiveCinematic((prev) => (prev?.id === cid ? null : prev));
+    }, clearDelay);
+
+    return () => {
+      if (defTimer) clearTimeout(defTimer);
+      clearTimeout(timer);
+    };
   }, [gameData.lastCinematic?.id]);
 
   // Reset Pass-and-Play privacy lock when turn changes
@@ -2914,16 +4368,16 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
         const defuseIdx = drawerHand.findIndex((c) => c.type === 'defuse');
 
         // Case A: Player holds a Defuse ("مقص الإنقاذ") card!
-        // Immediately animate the Defuse card flying from their hand to the center Discard Pile (520ms), then open the Bomb Planting selector directly!
+        // Play the dramatic 2-beat "Bomb About to Explode -> Last-Second Wire Cutters Snip!" animation (1850ms), then open the Bomb Planting selector directly!
         if (defuseIdx !== -1) {
           const [usedDefuse] = drawerHand.splice(defuseIdx, 1);
-          setLocalPlayPreview({
-            card: usedDefuse,
-            actorId: drawerId,
+          setDefuseShowdown({
+            drawerId,
+            defuseCard: usedDefuse,
           });
 
           setTimeout(() => {
-            setLocalPlayPreview(null);
+            setDefuseShowdown(null);
             onUpdateGameData({
               ...gameData,
               phase: 'planting_bomb',
@@ -2940,19 +4394,19 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                 id: `cin_defuse_${Date.now()}`,
                 type: 'defuse',
                 actorId: drawerId,
-                subtitle_ar: `${drawerName} سحب قنبلة وقصّ السلك بمقص الإنقاذ تلقائياً!`,
-                subtitle_en: `${drawerName} drew a Bomb and auto-defused it with Wire Cutters!`,
+                subtitle_ar: `${drawerName} فكّك القنبلة بمقص الإنقاذ قبل الانفجار بثانية!`,
+                subtitle_en: `${drawerName} snipped the bomb fuse at the very last second!`,
                 timestamp: Date.now(),
               },
               actionLog: [
                 {
-                  ar: `${drawerName} سحب قنبلة وفكّكها تلقائياً بمقص الإنقاذ! الآن يزرعها بالكومة...`,
-                  en: `${drawerName} drew a bomb and auto-defused it! Now planting it back in the deck...`,
+                  ar: `${drawerName} سحب قنبلة وفكّكها بمقص الإنقاذ بآخر لحظة! الآن يزرعها بالكومة...`,
+                  en: `${drawerName} defused the bomb at the last second! Now planting it in the deck...`,
                 },
                 ...(gameData.actionLog || []).slice(0, 7),
               ],
             });
-          }, 520);
+          }, 1850);
           return;
         }
 
@@ -3822,7 +5276,609 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             </div>
           </div>
 
-          {/* Keyframes for Physical Card-Draw Flight, Card-Play Flight & Discard Settle */}
+          {/* ==================================================================
+              DRAMATIC 2-BEAT "BOMB ABOUT TO BLOW -> WIRE CUTTERS RESCUE!" STAGE
+              Beat 1 (0.0s - 0.95s): Vertical 3-Stick C4 Bundle (matching boomdeck icon!)
+                shakes, swells, and ticks 00:03 -> 00:02 -> 00:01 as the fuse burns down!
+              Beat 2 (0.95s - 1.85s): Chrome Wire Cutters swoop in diagonally from top-right,
+                snip the fuse with their blade tips at (154, 42) so the upper fuse recoils &
+                flies away while the timer turns green SAFE ✓!
+             ================================================================== */}
+          {defuseShowdown && (
+            <div className="pointer-events-none absolute inset-0 z-[65] flex items-center justify-center">
+              <div className="relative w-[340px] h-[265px] rounded-[32px] bg-[#161426]/95 border-4 border-[#ffca3a] shadow-[0_14px_0_#090712] flex flex-col items-center justify-center p-3 overflow-hidden">
+                <svg
+                  viewBox="0 0 280 185"
+                  className="w-full h-full overflow-visible"
+                >
+                  <defs>
+                    <linearGradient id="showdownC4Side" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#fb7185" />
+                      <stop offset="45%" stopColor="#e11d48" />
+                      <stop offset="100%" stopColor="#9f1239" />
+                    </linearGradient>
+                    <linearGradient id="showdownC4Center" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#fda4af" />
+                      <stop offset="40%" stopColor="#f43f5e" />
+                      <stop offset="100%" stopColor="#be123c" />
+                    </linearGradient>
+                    <linearGradient id="showdownChrome" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#ffffff" />
+                      <stop offset="50%" stopColor="#e2e8f0" />
+                      <stop offset="100%" stopColor="#94a3b8" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* 1. Pulsing Red Danger Ring (0.0s -> 0.95s) */}
+                  <circle
+                    cx="132"
+                    cy="102"
+                    r="44"
+                    fill="none"
+                    stroke="#e11d48"
+                    strokeWidth="4"
+                  >
+                    <animate
+                      attributeName="r"
+                      values="38; 88; 38; 92"
+                      keyTimes="0; 0.45; 0.5; 1"
+                      dur="0.95s"
+                      fill="freeze"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0.85; 0; 0.9; 0"
+                      keyTimes="0; 0.45; 0.5; 1"
+                      dur="0.95s"
+                      fill="freeze"
+                    />
+                  </circle>
+
+                  {/* Grounded Stage Shadow */}
+                  <ellipse
+                    cx="132"
+                    cy="154"
+                    rx="58"
+                    ry="9"
+                    fill="#090712"
+                    opacity="0.55"
+                  />
+
+                  {/* 2. Ticking & Swelling Vertical 3-Stick C4 Bundle (Direct Match to boomdeck Icon!) */}
+                  <g>
+                    <animateTransform
+                      attributeName="transform"
+                      type="translate"
+                      values="0,0; -4,-3; 4,2; -5,2; 5,-3; -6,3; 6,-2; 0,0; 0,0"
+                      keyTimes="0; 0.12; 0.24; 0.36; 0.48; 0.60; 0.72; 0.80; 1"
+                      dur="1.2s"
+                      fill="freeze"
+                    />
+                    <g transform="translate(132, 108)">
+                      <animateTransform
+                        attributeName="transform"
+                        type="scale"
+                        values="0.96; 1.06; 1.16; 1.0; 1.0"
+                        keyTimes="0; 0.45; 0.76; 0.90; 1"
+                        dur="1.25s"
+                        additive="sum"
+                        fill="freeze"
+                      />
+
+                      {/* Back Fanned Gold & Cyan Ability Cards (Echoing boomdeck Icon!) */}
+                      <g transform="rotate(-16 -24 -4)">
+                        <rect
+                          x="-52"
+                          y="-36"
+                          width="36"
+                          height="52"
+                          rx="6.5"
+                          fill="#f59e0b"
+                          stroke="#161426"
+                          strokeWidth="3.4"
+                        />
+                        <rect
+                          x="-47.5"
+                          y="-31.5"
+                          width="27"
+                          height="43"
+                          rx="4"
+                          fill="none"
+                          stroke="#fff9ec"
+                          strokeWidth="1.6"
+                          strokeDasharray="4 3"
+                        />
+                      </g>
+                      <g transform="rotate(14 24 -4)">
+                        <rect
+                          x="16"
+                          y="-36"
+                          width="36"
+                          height="52"
+                          rx="6.5"
+                          fill="#00bbf9"
+                          stroke="#161426"
+                          strokeWidth="3.4"
+                        />
+                        <rect
+                          x="20.5"
+                          y="-31.5"
+                          width="27"
+                          height="43"
+                          rx="4"
+                          fill="#e0f2fe"
+                        />
+                      </g>
+
+                      {/* Left Vertical C4 Cylinder + Specular Highlight */}
+                      <rect
+                        x="-36"
+                        y="-32"
+                        width="22"
+                        height="68"
+                        rx="7.5"
+                        fill="url(#showdownC4Side)"
+                        stroke="#161426"
+                        strokeWidth="3.6"
+                      />
+                      <line
+                        x1="-30"
+                        y1="-25"
+                        x2="-30"
+                        y2="29"
+                        stroke="#fecdd3"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        opacity="0.85"
+                      />
+
+                      {/* Right Vertical C4 Cylinder + Specular Highlight */}
+                      <rect
+                        x="14"
+                        y="-32"
+                        width="22"
+                        height="68"
+                        rx="7.5"
+                        fill="url(#showdownC4Side)"
+                        stroke="#161426"
+                        strokeWidth="3.6"
+                      />
+                      <line
+                        x1="20"
+                        y1="-25"
+                        x2="20"
+                        y2="29"
+                        stroke="#fecdd3"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        opacity="0.85"
+                      />
+
+                      {/* Center Tall C4 Cylinder + Bright Specular Highlight */}
+                      <rect
+                        x="-14"
+                        y="-39"
+                        width="28"
+                        height="78"
+                        rx="8.5"
+                        fill="url(#showdownC4Center)"
+                        stroke="#161426"
+                        strokeWidth="3.8"
+                      />
+                      <line
+                        x1="-7"
+                        y1="-32"
+                        x2="-7"
+                        y2="32"
+                        stroke="#ffffff"
+                        strokeWidth="3.4"
+                        strokeLinecap="round"
+                        opacity="0.9"
+                      />
+
+                      {/* Horizontal Tactical Steel & Carbon Straps */}
+                      <rect
+                        x="-40"
+                        y="-19"
+                        width="80"
+                        height="8"
+                        rx="3"
+                        fill="#161426"
+                      />
+                      <rect
+                        x="-40"
+                        y="14"
+                        width="80"
+                        height="8"
+                        rx="3"
+                        fill="#161426"
+                      />
+
+                      {/* Digital Countdown Screen (Unobscured Center Stage!) */}
+                      <rect
+                        x="-30"
+                        y="-14"
+                        width="60"
+                        height="28"
+                        rx="6"
+                        fill="#161426"
+                        stroke="#ffca3a"
+                        strokeWidth="3.2"
+                      >
+                        <animate
+                          attributeName="stroke"
+                          values="#ffca3a; #e11d48; #22c55e"
+                          keyTimes="0; 0.52; 1"
+                          dur="1.1s"
+                          fill="freeze"
+                        />
+                      </rect>
+                      <rect
+                        x="-25.5"
+                        y="-9.5"
+                        width="51"
+                        height="19"
+                        rx="3.5"
+                        fill="#090d16"
+                      />
+
+                      {/* Countdown Tick 1: 00:03 (0.0s -> 0.32s) */}
+                      <text
+                        x="0"
+                        y="5"
+                        textAnchor="middle"
+                        fill="#ffca3a"
+                        fontSize="14.5"
+                        fontWeight="900"
+                        fontFamily="monospace"
+                      >
+                        00:03
+                        <animate
+                          attributeName="opacity"
+                          values="1; 1; 0; 0"
+                          keyTimes="0; 0.29; 0.31; 1"
+                          dur="1.05s"
+                          fill="freeze"
+                        />
+                      </text>
+                      {/* Countdown Tick 2: 00:02 (0.32s -> 0.64s) */}
+                      <text
+                        x="0"
+                        y="5"
+                        textAnchor="middle"
+                        fill="#fb7185"
+                        fontSize="14.5"
+                        fontWeight="900"
+                        fontFamily="monospace"
+                        opacity="0"
+                      >
+                        00:02
+                        <animate
+                          attributeName="opacity"
+                          values="0; 0; 1; 1; 0; 0"
+                          keyTimes="0; 0.29; 0.31; 0.59; 0.61; 1"
+                          dur="1.05s"
+                          fill="freeze"
+                        />
+                      </text>
+                      {/* Countdown Tick 3: 00:01 (0.64s -> 0.95s) */}
+                      <text
+                        x="0"
+                        y="5"
+                        textAnchor="middle"
+                        fill="#ff595e"
+                        fontSize="15"
+                        fontWeight="900"
+                        fontFamily="monospace"
+                        opacity="0"
+                      >
+                        00:01
+                        <animate
+                          attributeName="opacity"
+                          values="0; 0; 1; 1; 0; 0"
+                          keyTimes="0; 0.59; 0.61; 0.88; 0.91; 1"
+                          dur="1.05s"
+                          fill="freeze"
+                        />
+                      </text>
+                      {/* Defused SAFE ✓ Text (0.95s -> 1.85s) */}
+                      <text
+                        x="0"
+                        y="4.5"
+                        textAnchor="middle"
+                        fill="#22c55e"
+                        fontSize="13.5"
+                        fontWeight="900"
+                        opacity="0"
+                      >
+                        SAFE ✓
+                        <animate
+                          attributeName="opacity"
+                          values="0; 0; 1"
+                          keyTimes="0; 0.89; 1"
+                          dur="1.08s"
+                          fill="freeze"
+                        />
+                      </text>
+                    </g>
+                  </g>
+
+                  {/* 3A. Intact Braided Fuse Before the Snip (0.0s -> 0.95s) */}
+                  <g>
+                    <animate
+                      attributeName="opacity"
+                      values="1; 1; 0; 0"
+                      keyTimes="0; 0.56; 0.58; 1"
+                      dur="1.65s"
+                      fill="freeze"
+                    />
+                    <path
+                      d="M 132 69 C 132 50, 152 38, 178 24"
+                      fill="none"
+                      stroke="#161426"
+                      strokeWidth="8.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 132 69 C 132 50, 152 38, 178 24"
+                      fill="none"
+                      stroke="#d97706"
+                      strokeWidth="4.8"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 132 69 C 132 50, 152 38, 178 24"
+                      fill="none"
+                      stroke="#161426"
+                      strokeWidth="2.2"
+                      strokeDasharray="4 4"
+                      strokeLinecap="round"
+                    />
+                  </g>
+
+                  {/* Burning Spark Racing Down Fuse Toward the Snip Point (148, 43) */}
+                  <g>
+                    <animateTransform
+                      attributeName="transform"
+                      type="translate"
+                      values="178,24; 162,33; 148,43"
+                      keyTimes="0; 0.5; 1"
+                      dur="0.95s"
+                      fill="freeze"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="1; 1; 0"
+                      keyTimes="0; 0.92; 1"
+                      dur="0.96s"
+                      fill="freeze"
+                    />
+                    <polygon
+                      points="0,-16 4,-5 16,-8 7,1 14,11 3,7 0,18 -3,7 -14,11 -7,1 -16,-8 -4,-5"
+                      fill="#ffca3a"
+                      stroke="#161426"
+                      strokeWidth="2.5"
+                      strokeLinejoin="round"
+                    />
+                    <circle r="5" fill="#ffffff" />
+                  </g>
+
+                  {/* 3B. Post-Snip Lower Fuse Stump + Recoiling Severed Upper Fuse Piece (0.95s -> 1.85s)! */}
+                  <g opacity="0">
+                    <animate
+                      attributeName="opacity"
+                      values="0; 0; 1; 1"
+                      keyTimes="0; 0.56; 0.58; 1"
+                      dur="1.65s"
+                      fill="freeze"
+                    />
+                    {/* Lower Safe Fuse Stump Attached to C4 */}
+                    <path
+                      d="M 132 69 C 132 57, 138 49, 145 45"
+                      fill="none"
+                      stroke="#161426"
+                      strokeWidth="8.5"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 132 69 C 132 57, 138 49, 145 45"
+                      fill="none"
+                      stroke="#d97706"
+                      strokeWidth="4.8"
+                      strokeLinecap="round"
+                    />
+                    {/* Severed Upper Fuse Half Flying Away & Fading Out! */}
+                    <g>
+                      <animateTransform
+                        attributeName="transform"
+                        type="translate"
+                        values="0,0; 0,0; 28,-22"
+                        keyTimes="0; 0.57; 1"
+                        calcMode="spline"
+                        keySplines="0 0 1 1; 0.22 1 0.36 1"
+                        dur="1.65s"
+                        fill="freeze"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="1; 1; 0"
+                        keyTimes="0; 0.68; 1"
+                        dur="1.65s"
+                        fill="freeze"
+                      />
+                      <path
+                        d="M 152 41 C 162 34, 170 29, 178 24"
+                        fill="none"
+                        stroke="#161426"
+                        strokeWidth="8.5"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M 152 41 C 162 34, 170 29, 178 24"
+                        fill="none"
+                        stroke="#f43f5e"
+                        strokeWidth="4.8"
+                        strokeDasharray="4 4"
+                        strokeLinecap="round"
+                      />
+                      <circle
+                        cx="154"
+                        cy="40"
+                        r="5.5"
+                        fill="#ffca3a"
+                        stroke="#161426"
+                        strokeWidth="2"
+                      />
+                    </g>
+                  </g>
+
+                  {/* 4. WIRE CUTTERS ("مقص الإنقاذ") SWOOPING IN DIAGONALLY FROM TOP-RIGHT!
+                      Pivot sits at (164, 54) rotated -56 deg so the cutting jaw tips (0, -20)
+                      meet the fuse cleanly at (148, 43) while green handles stay to the right,
+                      100% clear of the 00:03 -> 00:01 -> SAFE ✓ screen! */}
+                  <g opacity="0">
+                    <animate
+                      attributeName="opacity"
+                      values="0; 0; 1; 1"
+                      keyTimes="0; 0.32; 0.45; 1"
+                      dur="1.4s"
+                      fill="freeze"
+                    />
+                    <animateTransform
+                      attributeName="transform"
+                      type="translate"
+                      values="236,6; 236,6; 164,54; 164,54"
+                      keyTimes="0; 0.32; 0.62; 1"
+                      calcMode="spline"
+                      keySplines="0 0 1 1; 0.22 1 0.36 1; 0 0 1 1"
+                      dur="1.4s"
+                      fill="freeze"
+                    />
+                    <g transform="rotate(-56)">
+                      {/* Left Cutter Jaw & Green Insulated Handle (Snaps shut from -28 deg -> 0 deg!) */}
+                      <g>
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          values="-28; -28; 0; 0"
+                          keyTimes="0; 0.54; 0.68; 1"
+                          dur="1.4s"
+                          fill="freeze"
+                        />
+                        <path
+                          d="M 0 -2 L -19 -28 C -11 -35, -2 -30, 0 -16 Z"
+                          fill="url(#showdownChrome)"
+                          stroke="#161426"
+                          strokeWidth="3.5"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M -3 3 L -26 38 C -30 43, -21 47, -16 40 L 2 8 Z"
+                          fill="#22c55e"
+                          stroke="#161426"
+                          strokeWidth="3.5"
+                          strokeLinejoin="round"
+                        />
+                        <line
+                          x1="-6"
+                          y1="10"
+                          x2="-20"
+                          y2="34"
+                          stroke="#bbf7d0"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                        />
+                      </g>
+
+                      {/* Right Cutter Jaw & Green Insulated Handle (Snaps shut from +28 deg -> 0 deg!) */}
+                      <g>
+                        <animateTransform
+                          attributeName="transform"
+                          type="rotate"
+                          values="28; 28; 0; 0"
+                          keyTimes="0; 0.54; 0.68; 1"
+                          dur="1.4s"
+                          fill="freeze"
+                        />
+                        <path
+                          d="M 0 -2 L 19 -28 C 11 -35, 2 -30, 0 -16 Z"
+                          fill="url(#showdownChrome)"
+                          stroke="#161426"
+                          strokeWidth="3.5"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M 3 3 L 26 38 C 30 43, 21 47, 16 40 L -2 8 Z"
+                          fill="#16a34a"
+                          stroke="#161426"
+                          strokeWidth="3.5"
+                          strokeLinejoin="round"
+                        />
+                        <line
+                          x1="6"
+                          y1="10"
+                          x2="20"
+                          y2="34"
+                          stroke="#86efac"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                        />
+                      </g>
+
+                      {/* Golden Brass Pivot Bolt */}
+                      <circle
+                        cx="0"
+                        cy="0"
+                        r="7.5"
+                        fill="#ffca3a"
+                        stroke="#161426"
+                        strokeWidth="3.4"
+                      />
+                      <circle cx="0" cy="0" r="2.8" fill="#fff9ec" />
+                    </g>
+                  </g>
+
+                  {/* 5. 3-Layer Emerald-Cyan & Gold Snip Flash at Blade Tips (148, 43) */}
+                  <g transform="translate(148, 43)" opacity="0">
+                    <animate
+                      attributeName="opacity"
+                      values="0; 0; 1; 0"
+                      keyTimes="0; 0.56; 0.63; 1"
+                      dur="1.65s"
+                      fill="freeze"
+                    />
+                    <circle r="10" fill="none" stroke="#00f5d4" strokeWidth="4">
+                      <animate
+                        attributeName="r"
+                        values="8; 8; 48"
+                        keyTimes="0; 0.56; 1"
+                        dur="1.65s"
+                        fill="freeze"
+                      />
+                    </circle>
+                    <polygon
+                      points="0,-20 5,-6 19,-6 8,3 12,17 0,9 -12,17 -8,3 -19,-6 -5,-6"
+                      fill="#00f5d4"
+                      stroke="#161426"
+                      strokeWidth="2.6"
+                      strokeLinejoin="round"
+                    />
+                    <polygon
+                      points="0,-11 3,-3 11,-3 4,2 7,10 0,5 -7,10 -4,2 -11,-3 -3,-3"
+                      fill="#ffca3a"
+                    />
+                    <circle r="4.5" fill="#ffffff" />
+                  </g>
+                </svg>
+
+                <div className="px-3.5 py-1 rounded-full bg-[#22c55e] text-[#161426] border-2 border-[#161426] font-black text-xs shadow-[0_3px_0_#090712]">
+                  {ar
+                    ? 'تدخّل «مقص الإنقاذ» وقصّ الفتيل قبل الانفجار!'
+                    : 'Wire Cutters snipped the fuse just in time!'}
+                </div>
+              </div>
+            </div>
+          )}
           <style>{`
             @keyframes boomDrawCardFlight {
               0% {
@@ -4518,7 +6574,8 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                         (pickingMagnetTarget && selectedCardId === card.id) ||
                         comboBuilder?.card.id === card.id;
                       const isBeingPlayedNow =
-                        localPlayPreview?.card.id === card.id;
+                        localPlayPreview?.card.id === card.id ||
+                        defuseShowdown?.defuseCard.id === card.id;
 
                       const actionLabel = isComboCard
                         ? copyCount >= 3
