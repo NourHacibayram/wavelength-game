@@ -1237,9 +1237,9 @@ export const BoomPlayingCard: React.FC<{
       onClick={onClick}
       className={`group relative bg-[#fffdf7] border-[3.5px] border-[#161426] p-1.5 rounded-[22px] select-none transition-all duration-200 ease-out shrink-0 ${
         isSelected
-          ? 'z-40 -translate-y-3 ring-4 ring-[#f97316] shadow-[0_14px_0_#161426]'
+          ? 'z-30 ring-4 ring-[#f97316] shadow-[0_8px_0_#161426]'
           : canPlay
-          ? 'hover:-translate-y-2.5 hover:z-30 shadow-[0_7px_0_#161426] hover:shadow-[0_12px_0_#161426] cursor-pointer'
+          ? 'hover:-translate-y-1.5 hover:z-30 shadow-[0_7px_0_#161426] hover:shadow-[0_10px_0_#161426] cursor-pointer'
           : 'shadow-[0_6px_0_#161426]'
       } ${className}`}
     >
@@ -2195,11 +2195,9 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   } | null>(null);
   const [comboBuilder, setComboBuilder] = useState<{
     card: BoomCard;
-    availableCopies: number;
-    comboCount: 2 | 3;
     targetPlayerId: string;
-    demandedCardType: BoomCardType;
   } | null>(null);
+  const [customBombSlot, setCustomBombSlot] = useState<number>(1);
 
   const activeViewerId = isPassAndPlay ? gameData.turnPlayerId : myPlayerId;
   const rawHand = gameData.hands?.[activeViewerId] || [];
@@ -2253,6 +2251,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     setSelectedCardId(null);
     setPickingMagnetTarget(false);
     setComboBuilder(null);
+    setCustomBombSlot(1);
   }, [gameData.turnPlayerId, gameData.phase]);
 
   // Reset Radar dismissal when a new Radar peek occurs
@@ -2555,27 +2554,10 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     const actorHand = gameData.hands?.[actorId] || [];
     const matchingCopies = actorHand.filter((c) => c.type === card.type);
 
-    // If this is a Combo Set card (or player hasn't selected target for combo yet)
-    if (isComboSetCard(card.type) && !targetPlayerId) {
-      if (matchingCopies.length < 2) return; // Cannot play 1 Combo card alone!
-      const validRivals = (gameData.alivePlayerIds || []).filter(
-        (id) => id !== actorId && (gameData.hands?.[id] || []).length > 0
-      );
-      const defaultTarget =
-        validRivals[0] ||
-        (gameData.alivePlayerIds || []).find((id) => id !== actorId) ||
-        actorId;
-      setComboBuilder({
-        card,
-        availableCopies: matchingCopies.length,
-        comboCount: matchingCopies.length >= 3 ? 3 : 2,
-        targetPlayerId: defaultTarget,
-        demandedCardType: 'defuse',
-      });
-      return;
-    }
-
-    if (card.type === 'magnet' && !targetPlayerId) {
+    // If this is a Combo Set card or Magnet and the player hasn't clicked a rival on the table yet:
+    // Activate direct table-seat targeting (ZERO clutter modal!).
+    if ((isComboSetCard(card.type) || card.type === 'magnet') && !targetPlayerId) {
+      if (isComboSetCard(card.type) && matchingCopies.length < 2) return;
       setSelectedCardId(card.id);
       setPickingMagnetTarget(true);
       return;
@@ -3336,7 +3318,18 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                 key={riv.id}
                 onClick={() => {
                   if (isTargetable && selectedCard) {
-                    handleInitiateCardPlay(selectedCard, riv.id);
+                    const copies = handTypeCounts[selectedCard.type] || 1;
+                    if (isComboSetCard(selectedCard.type) && copies >= 3) {
+                      setPickingMagnetTarget(false);
+                      setComboBuilder({
+                        card: selectedCard,
+                        targetPlayerId: riv.id,
+                      });
+                    } else if (isComboSetCard(selectedCard.type)) {
+                      handleInitiateCardPlay(selectedCard, riv.id, 2);
+                    } else {
+                      handleInitiateCardPlay(selectedCard, riv.id, 1);
+                    }
                   }
                 }}
                 className={`group flex flex-col items-center transition-transform duration-200 ${
@@ -3754,14 +3747,20 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             }
           `}</style>
 
-          {/* ABSOLUTE FLOATING MAGNET TARGETING BANNER (Zero Layout Shift!) */}
+          {/* ABSOLUTE FLOATING TARGETING BANNER (Zero Layout Shift!) */}
           {pickingMagnetTarget && (
             <div className="absolute top-1 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-2xl bg-[#f97316] text-white border-3 border-[#161426] shadow-[0_6px_0_#161426] flex items-center gap-3 whitespace-nowrap">
               <Magnet weight="fill" className="w-5 h-5 text-[#ffca3a]" />
               <span className="text-xs sm:text-sm font-black">
-                {ar
-                  ? 'اضغط على أي خصم فوق لسحب كرت من يده!'
-                  : 'Click any rival above to steal a card!'}
+                {selectedCard &&
+                isComboSetCard(selectedCard.type) &&
+                (handTypeCounts[selectedCard.type] || 0) >= 3
+                  ? ar
+                    ? 'اضغط على الخصم فوق لطلب أي كرت بالاسم من يده (3×)!'
+                    : 'Tap a rival above to claim a named card from their hand (3×)!'
+                  : ar
+                  ? 'اضغط على أي خصم فوق لسحب كرت عشوائي من يده!'
+                  : 'Tap any rival above to steal a random card!'}
               </span>
               <button
                 type="button"
@@ -3776,208 +3775,90 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             </div>
           )}
 
-          {/* ABSOLUTE FLOATING 2x / 3x COMBO BUILDER MODAL (Exploding-Kittens-Style Pair & Triple Combos!) */}
+          {/* ULTRA-CLEAN 1-CLICK CARD PICKER (Only appears for 3× Combo after clicking a rival!) */}
           {comboBuilder && (
-            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-xl w-full">
+            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-[#161426] space-y-3 shadow-[0_12px_0_#161426] max-w-md w-full">
               <div className="flex items-center justify-between gap-2">
-                <span className="cartoon-badge bg-[#f59e0b] text-[#161426] px-3 py-0.5 text-xs font-black">
+                <h3 className="text-sm sm:text-base font-black text-[#161426]">
                   {ar
-                    ? `كومبو تجميع الكروت (${comboBuilder.availableCopies} متوفرة بيدك)`
-                    : `Card Set Combo (${comboBuilder.availableCopies} in hand)`}
-                </span>
+                    ? `أي كرت تطلب من يد ${getPlayerName(
+                        comboBuilder.targetPlayerId
+                    )}؟`
+                    : `Which card do you want from ${getPlayerName(
+                        comboBuilder.targetPlayerId
+                    )}?`}
+                </h3>
                 <button
                   type="button"
-                  onClick={() => setComboBuilder(null)}
-                  className="cartoon-btn bg-[#e2e8f0] text-[#161426] px-2.5 py-0.5 text-xs font-black cursor-pointer"
+                  onClick={() => {
+                    setComboBuilder(null);
+                    setSelectedCardId(null);
+                  }}
+                  className="px-2.5 py-1 rounded-xl bg-[#e11d48] text-white text-xs font-black border-2 border-[#161426] cursor-pointer"
                 >
                   {ar ? 'إلغاء ✕' : 'Cancel ✕'}
                 </button>
               </div>
 
-              {/* Choose 2-of-a-Kind vs 3-of-a-Kind when holding >= 3 copies */}
-              {comboBuilder.availableCopies >= 3 ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setComboBuilder({ ...comboBuilder, comboCount: 2 })
-                    }
-                    className={`p-2 rounded-2xl border-3 border-[#161426] text-xs font-black transition-all cursor-pointer ${
-                      comboBuilder.comboCount === 2
-                        ? 'bg-[#ffca3a] text-[#161426] shadow-[0_4px_0_#161426]'
-                        : 'bg-[#f1f5f9] text-[#3f3b5c] opacity-80'
-                    }`}
-                  >
-                    <div>
-                      {ar
-                        ? 'ثنائية (2× كرتين متطابقين)'
-                        : '2-of-a-Kind (Spend 2)'}
-                    </div>
-                    <div className="text-[10px] font-bold opacity-85">
-                      {ar
-                        ? 'اسرق كرتاً عشوائياً من يد الخصم'
-                        : 'Steal 1 random card from rival'}
-                    </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setComboBuilder({ ...comboBuilder, comboCount: 3 })
-                    }
-                    className={`p-2 rounded-2xl border-3 border-[#161426] text-xs font-black transition-all cursor-pointer ${
-                      comboBuilder.comboCount === 3
-                        ? 'bg-[#8ac926] text-[#161426] shadow-[0_4px_0_#161426]'
-                        : 'bg-[#f1f5f9] text-[#3f3b5c] opacity-80'
-                    }`}
-                  >
-                    <div>
-                      {ar
-                        ? 'ثلاثية خارقة (3× كروت متطابقة)!'
-                        : '3-of-a-Kind (Spend 3)!'}
-                    </div>
-                    <div className="text-[10px] font-bold opacity-85">
-                      {ar
-                        ? 'اطلب أي كرت بالاسم وانتزعه فوراً!'
-                        : 'Name ANY card & take it from rival!'}
-                    </div>
-                  </button>
-                </div>
-              ) : (
-                <div className="px-3 py-1.5 rounded-xl bg-[#fef3c7] border-2 border-[#161426] text-xs font-black text-[#161426]">
-                  {ar
-                    ? 'كومبو ثنائي (2×): ارمِ كرتين متطابقين لسرقة كرت عشوائي من يد أي خصم! (اجمع 3 لطلب كرت بالاسم)'
-                    : '2-of-a-Kind Combo (2×): Spend 2 matching cards to steal a random card from any rival!'}
-                </div>
-              )}
-
-              {/* Step 1: Select Target Rival */}
-              <div className="space-y-1 text-start">
-                <div className="text-xs font-black text-[#161426]">
-                  {ar ? '1. اختر الخصم المستهدف:' : '1. Pick Target Rival:'}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {rivalPlayers
-                    .filter((r) => (gameData.alivePlayerIds || []).includes(r.id))
-                    .map((riv) => {
-                      const rCards = (gameData.hands?.[riv.id] || []).length;
-                      const selected = comboBuilder.targetPlayerId === riv.id;
-                      return (
-                        <button
-                          key={riv.id}
-                          type="button"
-                          disabled={rCards === 0}
-                          onClick={() =>
-                            setComboBuilder({
-                              ...comboBuilder,
-                              targetPlayerId: riv.id,
-                            })
-                          }
-                          className={`px-3 py-1.5 rounded-xl border-2 border-[#161426] text-xs font-black flex items-center gap-1.5 cursor-pointer ${
-                            selected
-                              ? 'bg-[#f97316] text-white shadow-[0_3px_0_#161426]'
-                              : rCards === 0
-                              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-[#161426]'
-                          }`}
-                        >
-                          <span>{riv.name}</span>
-                          <span className="px-1.5 py-0.2 rounded bg-black/15 text-[10px]">
-                            {ar ? `${rCards} كروت` : `${rCards}`}
-                          </span>
-                        </button>
-                      );
-                    })}
-                </div>
+              {/* Clean 2×4 Grid of the 8 Power Cards — 1 Click Immediately Executes! */}
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    'defuse',
+                    'block',
+                    'attack',
+                    'skip',
+                    'radar',
+                    'magnet',
+                    'reverse',
+                    'shuffle',
+                  ] as BoomCardType[]
+                ).map((cType) => {
+                  const cMeta = BOOM_CARD_META[cType];
+                  return (
+                    <button
+                      key={cType}
+                      type="button"
+                      onClick={() =>
+                        handleInitiateCardPlay(
+                          comboBuilder.card,
+                          comboBuilder.targetPlayerId,
+                          3,
+                          cType
+                        )
+                      }
+                      style={{ backgroundColor: cMeta.bg }}
+                      className="p-2 rounded-2xl border-2 border-[#161426] shadow-[0_3px_0_#161426] hover:-translate-y-0.5 transition-transform flex items-center gap-2 text-start cursor-pointer"
+                    >
+                      <span
+                        style={{ backgroundColor: cMeta.badgeBg }}
+                        className="w-7 h-7 rounded-lg border-2 border-[#161426] text-white text-xs font-black flex items-center justify-center shrink-0"
+                      >
+                        {cMeta.symbol}
+                      </span>
+                      <span className="text-xs font-black text-[#161426] truncate">
+                        {ar ? cMeta.name_ar : cMeta.name_en}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Step 2 (Only for 3-of-a-Kind): Select Exact Card to Demand by Name! */}
-              {comboBuilder.comboCount === 3 && (
-                <div className="space-y-1 text-start">
-                  <div className="text-xs font-black text-[#161426]">
-                    {ar
-                      ? '2. سمِّ الكرت الذي تريد انتزاعه من يده (إن وُجد بيده يأتيك فوراً!):'
-                      : '2. Name the exact card to claim from their hand:'}
-                  </div>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5 max-h-[132px] overflow-y-auto p-1">
-                    {(
-                      [
-                        'defuse',
-                        'block',
-                        'attack',
-                        'skip',
-                        'radar',
-                        'magnet',
-                        'reverse',
-                        'shuffle',
-                        'combo_shawarma',
-                        'combo_kabsa',
-                        'combo_karak',
-                        'combo_falcon',
-                      ] as BoomCardType[]
-                    ).map((cType) => {
-                      const cMeta = BOOM_CARD_META[cType];
-                      const isDemanded =
-                        comboBuilder.demandedCardType === cType;
-                      return (
-                        <button
-                          key={cType}
-                          type="button"
-                          onClick={() =>
-                            setComboBuilder({
-                              ...comboBuilder,
-                              demandedCardType: cType,
-                            })
-                          }
-                          className={`p-1.5 rounded-xl border-2 border-[#161426] text-[11px] font-black flex items-center gap-1 text-start cursor-pointer transition-transform ${
-                            isDemanded
-                              ? 'bg-[#161426] text-[#ffca3a] ring-2 ring-[#f97316] scale-[1.02]'
-                              : 'bg-[#f8fafc] text-[#161426] hover:bg-[#fef3c7]'
-                          }`}
-                        >
-                          <span
-                            style={{ backgroundColor: cMeta.badgeBg }}
-                            className="w-5 h-5 rounded-md border border-[#161426] text-white text-[9px] font-black flex items-center justify-center shrink-0"
-                          >
-                            {cMeta.symbol}
-                          </span>
-                          <span className="truncate">
-                            {ar ? cMeta.name_ar : cMeta.name_en}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-center pt-1">
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleInitiateCardPlay(
-                      comboBuilder.card,
-                      comboBuilder.targetPlayerId,
-                      comboBuilder.comboCount,
-                      comboBuilder.comboCount === 3
-                        ? comboBuilder.demandedCardType
-                        : undefined
-                    )
-                  }
-                  className="cartoon-btn bg-[#8ac926] hover:bg-[#7cb518] text-[#161426] px-6 py-2 text-xs sm:text-sm font-black cursor-pointer"
-                >
-                  {comboBuilder.comboCount === 3
-                    ? ar
-                      ? `نفّذ الثلاثية (3×) واطلب «${
-                          BOOM_CARD_META[comboBuilder.demandedCardType].name_ar
-                        }»!`
-                      : `Play 3× Combo & Demand "${
-                          BOOM_CARD_META[comboBuilder.demandedCardType].name_en
-                        }"!`
-                    : ar
-                    ? 'نفّذ الثنائية (2×) واسرق كرتاً عشوائياً!'
-                    : 'Play 2× Combo & Steal Random Card!'}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  handleInitiateCardPlay(
+                    comboBuilder.card,
+                    comboBuilder.targetPlayerId,
+                    2
+                  )
+                }
+                className="w-full py-1.5 rounded-xl bg-[#f1f5f9] hover:bg-[#ffca3a] border-2 border-[#161426] text-xs font-extrabold text-[#161426] cursor-pointer transition-colors"
+              >
+                {ar
+                  ? 'أو العب ثنائية (2×) فقط واسرق كرتاً عشوائياً'
+                  : 'Or play 2× only to steal a random card'}
+              </button>
             </div>
           )}
 
@@ -4258,64 +4139,57 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             </div>
           )}
 
-          {/* ABSOLUTE CENTER OVERLAY 3: SECRET BOMB RE-PLANTING VAULT (Place Bomb at ANY Exact Position 1 .. N+1!) */}
+          {/* ABSOLUTE CENTER OVERLAY 3: SECRET BOMB RE-PLANTING VAULT (Clean 4 Quick Buttons + 1 Smooth Exact-Slot Slider!) */}
           {gameData.phase === 'planting_bomb' && (
-            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#f0fdf4] border-4 border-[#161426] text-center space-y-2.5 shadow-[0_12px_0_#161426] max-w-2xl w-full">
+            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-md w-full">
               {isCrisisMine || isPassAndPlay ? (
                 <>
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="cartoon-badge bg-[#16a34a] text-white px-3 py-0.5 text-xs">
-                      {ar
-                        ? 'سري للغاية — ازرع القنبلة بأي مكان تريده بالكومة!'
-                        : 'TOP SECRET — Plant the Bomb at ANY Spot in the Deck!'}
-                    </span>
-                  </div>
-                  <h3 className="text-sm sm:text-base font-black text-[#161426]">
+                  <span className="cartoon-badge bg-[#22c55e] text-[#161426] px-3 py-0.5 text-xs">
+                    {ar
+                      ? 'سري للغاية — اختر مكان الفخ داخل الكومة!'
+                      : 'TOP SECRET — Hide Bomb in the Pile!'}
+                  </span>
+                  <h3 className="text-base sm:text-lg font-black text-[#161426]">
                     {ar
                       ? `يا ${getPlayerName(
                           crisisPlayerId
-                        )}، اختر أي موقع بالضبط (من الكرت #1 عالوجه حتى الكرت #${
-                          totalDeckCount + 1
-                        } بأسفل الكومة):`
+                        )}، وين بدك تزرع الديناميت؟`
                       : `${getPlayerName(
                           crisisPlayerId
-                        )}, pick ANY exact card position (#1 on top to #${
-                          totalDeckCount + 1
-                        } at bottom):`}
+                        )}, where do you want to hide the bomb?`}
                   </h3>
 
-                  {/* Quick Tactical Presets */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {/* 4 Clean Quick Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => handlePlantBombAt(0)}
-                      className="cartoon-btn bg-[#e11d48] text-white py-1.5 px-2 text-xs flex items-center justify-center gap-1 cursor-pointer"
+                      className="cartoon-btn bg-[#e11d48] text-white py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Flame weight="fill" className="w-3.5 h-3.5 text-[#ffca3a]" />
-                      <span>{ar ? '1. أول كرت عالوجه!' : '1. Right on TOP!'}</span>
+                      <Flame weight="fill" className="w-4 h-4 text-[#ffca3a]" />
+                      <span>{ar ? '1. أول كرت عالوجه!' : '1. Top Card (#1)'}</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() =>
-                        handlePlantBombAt(Math.floor(totalDeckCount / 2))
-                      }
-                      className="cartoon-btn bg-[#00bbf9] text-[#161426] py-1.5 px-2 text-xs flex items-center justify-center gap-1 cursor-pointer"
+                      onClick={() => handlePlantBombAt(1)}
+                      className="cartoon-btn bg-[#f97316] text-white py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <FastForward weight="fill" className="w-3.5 h-3.5" />
+                      <Lightning
+                        weight="fill"
+                        className="w-4 h-4 text-[#ffca3a]"
+                      />
                       <span>
-                        {ar
-                          ? `بالنص (#${Math.floor(totalDeckCount / 2) + 1})`
-                          : `Middle (#${Math.floor(totalDeckCount / 2) + 1})`}
+                        {ar ? '2. تاني كرت من فوق' : '2. Second Card (#2)'}
                       </span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handlePlantBombAt(totalDeckCount)}
-                      className="cartoon-btn bg-[#8ac926] text-[#161426] py-1.5 px-2 text-xs flex items-center justify-center gap-1 cursor-pointer"
+                      className="cartoon-btn bg-[#8ac926] text-[#161426] py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <ShieldCheck weight="fill" className="w-3.5 h-3.5" />
+                      <ShieldCheck weight="fill" className="w-4 h-4" />
                       <span>
                         {ar
                           ? `آخر كرت تحت (#${totalDeckCount + 1})`
@@ -4326,58 +4200,47 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     <button
                       type="button"
                       onClick={() => handlePlantBombAt('random')}
-                      className="cartoon-btn bg-[#9b5de5] text-white py-1.5 px-2 text-xs flex items-center justify-center gap-1 cursor-pointer"
+                      className="cartoon-btn bg-[#9b5de5] text-white py-2 px-3 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Shuffle
                         weight="bold"
-                        className="w-3.5 h-3.5 text-[#ffca3a]"
+                        className="w-4 h-4 text-[#ffca3a]"
                       />
-                      <span>{ar ? 'مكان عشوائي سري' : 'Random Spot'}</span>
+                      <span>{ar ? 'مكان عشوائي' : 'Random Spot'}</span>
                     </button>
                   </div>
 
-                  {/* Every Single Exact Card Position (1 .. totalDeckCount + 1) */}
-                  <div className="bg-white/90 rounded-2xl border-2 border-[#161426] p-2.5 space-y-1.5">
-                    <div className="text-[11px] font-black text-[#3f3b5c]">
+                  {/* Single Clean Slider to Pick ANY Exact Card Number (1 .. N+1) */}
+                  <div className="p-2.5 rounded-2xl bg-[#f1f5f9] border-2 border-[#161426] flex items-center gap-2.5">
+                    <input
+                      type="range"
+                      min={1}
+                      max={Math.max(1, totalDeckCount + 1)}
+                      value={Math.min(customBombSlot, totalDeckCount + 1)}
+                      onChange={(e) =>
+                        setCustomBombSlot(Number(e.target.value))
+                      }
+                      className="flex-1 accent-[#e11d48] cursor-pointer"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handlePlantBombAt(
+                          Math.min(customBombSlot, totalDeckCount + 1) - 1
+                        )
+                      }
+                      className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3 py-1.5 text-xs font-black shrink-0 cursor-pointer"
+                    >
                       {ar
-                        ? 'أو اضغط على رقم الكرت المحدد الذي تريد زرع القنبلة فيه (1 = أول سحبة، 2 = ثاني سحبة، إلخ):'
-                        : 'Or tap the exact card number from the top where you want the bomb:'}
-                    </div>
-                    <div className="flex flex-wrap items-center justify-center gap-1.5 max-h-[124px] overflow-y-auto p-1">
-                      {Array.from({ length: totalDeckCount + 1 }).map(
-                        (_, slotIdx) => {
-                          const cardNum = slotIdx + 1;
-                          const isTop = slotIdx === 0;
-                          const isBottom = slotIdx === totalDeckCount;
-                          return (
-                            <button
-                              key={slotIdx}
-                              type="button"
-                              onClick={() => handlePlantBombAt(slotIdx)}
-                              className={`px-2.5 py-1 rounded-xl border-2 border-[#161426] font-black text-xs transition-transform hover:-translate-y-0.5 cursor-pointer shadow-[0_2px_0_#161426] ${
-                                isTop
-                                  ? 'bg-[#ffe4e6] text-[#e11d48]'
-                                  : isBottom
-                                  ? 'bg-[#dcfce7] text-[#15803d]'
-                                  : 'bg-[#fef9c3] hover:bg-[#ffca3a] text-[#161426]'
-                              }`}
-                            >
-                              {isTop
-                                ? ar
-                                  ? `#1 (عالوجه)`
-                                  : `#1 (Top)`
-                                : isBottom
-                                ? ar
-                                  ? `#${cardNum} (الأخير)`
-                                  : `#${cardNum} (Last)`
-                                : ar
-                                ? `الكرت #${cardNum}`
-                                : `Card #${cardNum}`}
-                            </button>
-                          );
-                        }
-                      )}
-                    </div>
+                        ? `ازرع بالكرت #${Math.min(
+                            customBombSlot,
+                            totalDeckCount + 1
+                          )}`
+                        : `Plant at #${Math.min(
+                            customBombSlot,
+                            totalDeckCount + 1
+                          )}`}
+                    </button>
                   </div>
                 </>
               ) : (
@@ -4613,11 +4476,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                       isSelected={isPickedForMagnet}
                       comboBadge={comboBadge}
                       actionLabel={actionLabel}
-                      style={{
-                        transform: isPickedForMagnet
-                          ? 'translateY(-10px)'
-                          : 'none',
-                      }}
+                      style={{ transform: 'none' }}
                       onClick={() => {
                         if (canPlayNow) {
                           handleInitiateCardPlay(card);
