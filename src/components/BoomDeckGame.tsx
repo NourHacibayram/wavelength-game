@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { soundManager } from '../utils/soundManager';
 import {
   Flame,
   Scissors,
@@ -3814,6 +3815,12 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     };
   }, [gameData.lastCinematic?.id]);
 
+  // Play the real recorded 2-beat Defuse Showdown audio (ticking clock -> wire cutters snip!) whenever defuseShowdown starts
+  useEffect(() => {
+    if (!defuseShowdown) return;
+    soundManager.playDefuseShowdownSequence();
+  }, [defuseShowdown?.defuseCard?.id]);
+
   // Reset Pass-and-Play privacy lock when turn changes
   useEffect(() => {
     setPassAndPlayHandUnlocked(false);
@@ -4152,6 +4159,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     setComboBuilder(null);
 
     // 1. Trigger smooth 460ms physical card flight from Player's Hand -> Center Discard Pile!
+    soundManager.playSfx('card_play');
     setLocalPlayPreview({
       card,
       actorId,
@@ -4358,6 +4366,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     const drawerName = getPlayerName(drawerId);
 
     // 1. Play physical local card-draw flight & flip animation first (680ms)!
+    soundManager.playSfx('card_draw');
     setLocalDrawPreview({ card: topCard, drawerId });
 
     setTimeout(() => {

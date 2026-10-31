@@ -142,6 +142,8 @@ import {
   ReactionType,
 } from './components/CartoonIcons';
 import { GameTutorialPlayer } from './components/tutorials/GameTutorialPlayer';
+import { AudioControlPanel } from './components/AudioControlPanel';
+import { soundManager } from './utils/soundManager';
 import {
   Globe,
   Question,
@@ -1339,6 +1341,7 @@ export function App() {
 
     if (scoreAwards && Object.keys(scoreAwards).length > 0) {
       confetti({ particleCount: 75, spread: 70, origin: { y: 0.6 } });
+      soundManager.playSfx('applause_win');
       const updatedPlayers = players.map((p) => {
         const add = scoreAwards[p.id] || 0;
         bonusTotal += add;
@@ -1370,6 +1373,7 @@ export function App() {
 
   const sendCartoonReaction = (reactionType: ReactionType) => {
     const sender = playerName || 'Player';
+    soundManager.playSfx('ui_pop');
     spawnReaction(reactionType, sender);
     if (channelRef.current && !isPassAndPlay) {
       channelRef.current.send({
@@ -1442,6 +1446,28 @@ export function App() {
     PARTY_GAMES_CATALOG.find((g) => g.id === activeGameId) || PARTY_GAMES_CATALOG[0];
   const homeSelectedMeta =
     PARTY_GAMES_CATALOG.find((g) => g.id === homeSelectedGame) || PARTY_GAMES_CATALOG[0];
+
+  // Sync Background Music Track with Active Game or Home Selected Game
+  useEffect(() => {
+    soundManager.setGameContext(room ? activeGameId : homeSelectedGame);
+  }, [room?.id, activeGameId, homeSelectedGame]);
+
+  // Automatically trigger real studio-recorded Foley SFX across all 27 games whenever `room.game_data` updates!
+  const prevGameDataRef = useRef<any>(null);
+  useEffect(() => {
+    if (!room || room.status === 'lobby') {
+      prevGameDataRef.current = room?.game_data || null;
+      return;
+    }
+    if (prevGameDataRef.current && room.game_data && prevGameDataRef.current !== room.game_data) {
+      soundManager.playGameDataTransitionSfx(
+        activeGameId,
+        prevGameDataRef.current,
+        room.game_data
+      );
+    }
+    prevGameDataRef.current = room.game_data;
+  }, [room?.game_data, activeGameId, room?.status]);
 
   const wavelengthGuesses: Record<string, number> =
     room?.game_data?.wavelength_guesses || {};
@@ -1544,6 +1570,8 @@ export function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            <AudioControlPanel lang={lang} />
+
             <button
               type="button"
               onClick={() => openHowToPlayFor(room ? activeGameId : homeSelectedGame)}
@@ -2352,6 +2380,8 @@ export function App() {
 
               {/* Room Total Score + Quick Lang/Exit in Immersive Tabletop Mode */}
               <div className="flex flex-wrap items-center gap-2">
+                <AudioControlPanel lang={lang} compact />
+
                 <div className="cartoon-badge bg-[#8ac926] text-[#161426] px-3.5 py-1 text-xs sm:text-sm flex items-center gap-1.5">
                   <Trophy weight="fill" className="w-4 h-4" />
                   <span>
