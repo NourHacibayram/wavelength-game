@@ -36,21 +36,48 @@ export type BoomCardType =
   | 'skip'
   | 'reverse'
   | 'radar'
+  | 'scry'
+  | 'bottom_draw'
+  | 'stack_deck'
   | 'shuffle'
   | 'magnet'
   | 'block'
   | 'combo_shawarma'
   | 'combo_kabsa'
   | 'combo_karak'
-  | 'combo_falcon';
+  | 'combo_falcon'
+  | 'wild_joker';
 
 export function isComboSetCard(type: BoomCardType): boolean {
   return (
     type === 'combo_shawarma' ||
     type === 'combo_kabsa' ||
     type === 'combo_karak' ||
-    type === 'combo_falcon'
+    type === 'combo_falcon' ||
+    type === 'wild_joker'
   );
+}
+
+const COMBO_SET_TYPES: BoomCardType[] = [
+  'combo_shawarma',
+  'combo_kabsa',
+  'combo_karak',
+  'combo_falcon',
+];
+
+/** The cards that may be played together with `played`: its own copies, plus jokers for sets */
+function getComboPartnerMatcher(played: BoomCardType, hand: BoomCard[]) {
+  if (!isComboSetCard(played)) return (c: BoomCard) => c.type === played;
+  // A joker played first joins whichever set is largest in hand
+  const copiesOf = (t: BoomCardType) => hand.filter((c) => c.type === t).length;
+  const setType =
+    played !== 'wild_joker'
+      ? played
+      : COMBO_SET_TYPES.reduce<BoomCardType>(
+          (best, t) => (copiesOf(t) > (best === 'wild_joker' ? 0 : copiesOf(best)) ? t : best),
+          'wild_joker'
+        );
+  return (c: BoomCard) => c.type === setType || c.type === 'wild_joker';
 }
 
 export interface BoomCard {
@@ -85,6 +112,8 @@ export interface BoomDeckGameState {
   phase:
     | 'playing'
     | 'counter_window'
+    | 'scry'
+    | 'stack_deck'
     | 'bomb_crisis'
     | 'planting_bomb'
     | 'round_over';
@@ -101,6 +130,10 @@ export interface BoomDeckGameState {
   crisisPlayerId?: string | null;
   radarPeekPlayerId?: string | null;
   radarCards?: BoomCard[];
+  /** Who is privately looking at the top 3 (phase === 'scry' or 'stack_deck') */
+  scryPlayerId?: string | null;
+  /** A card played this turn forces the next draw, from this end of the deck */
+  nextDrawSource?: 'top' | 'bottom' | null;
   lastCinematic?: BoomCinematicEvent | null;
   winnerId?: string | null;
   actionLog: {
@@ -237,6 +270,66 @@ export const BOOM_CARD_META: Record<
     tag_en: 'RADAR',
     symbol: '3x',
   },
+  scry: {
+    name_ar: 'نظرة وخلطة',
+    name_en: 'Peek & Mix',
+    short_ar: 'شوف أول 3، اخلطهم، واسحب',
+    short_en: 'See top 3, mix them, draw',
+    desc_ar: 'شوف أول 3 كروت بالكومة، بعدها بينخلطوا وبتسحب واحد منهم عالعمياني وبيخلص دورك.',
+    desc_en: 'See the top 3 cards, then they get mixed and you blindly draw one of them to end your turn.',
+    bg: '#ede9fe',
+    frameBg: '#4c1d95',
+    badgeBg: '#7c3aed',
+    accent: '#9b5de5',
+    tag_ar: 'نظرة',
+    tag_en: 'PEEK',
+    symbol: '3↻',
+  },
+  stack_deck: {
+    name_ar: 'رتّبها عكيفك',
+    name_en: 'Stack the Deck',
+    short_ar: 'شوف أول 3 ورتّبهم',
+    short_en: 'See & reorder top 3',
+    desc_ar: 'بتشوف أول 3 كروت بالكومة لحالك وبترتبهم متل ما بدك، وبعدها بتكمل دورك عادي.',
+    desc_en: 'Privately see the top 3 cards and put them in any order, then carry on with your turn.',
+    bg: '#cffafe',
+    frameBg: '#164e63',
+    badgeBg: '#0891b2',
+    accent: '#06b6d4',
+    tag_ar: 'ترتيب',
+    tag_en: 'STACK',
+    symbol: '↕',
+  },
+  wild_joker: {
+    name_ar: 'الجوكر',
+    name_en: 'Wild Joker',
+    short_ar: 'بيكمّل أي طقم للسرقة',
+    short_en: 'Completes any steal set',
+    desc_ar: 'بيحسب مكان أي كرت من كروت الأطقام (الشاورما، الكبسة، الكرك، الصقر) لتعمل 2× أو 3× وتسرق.',
+    desc_en: 'Counts as any set card (Shawarma, Kabsa, Karak, Falcon) to complete a 2× or 3× steal.',
+    bg: '#fef3c7',
+    frameBg: '#78350f',
+    badgeBg: '#d97706',
+    accent: '#f59e0b',
+    tag_ar: 'جوكر',
+    tag_en: 'WILD',
+    symbol: '★',
+  },
+  bottom_draw: {
+    name_ar: 'من تحت لتحت',
+    name_en: 'Bottom Deal',
+    short_ar: 'اسحب من آخر الكومة',
+    short_en: 'Draw from the bottom',
+    desc_ar: 'بدل ما تسحب من فوق، بتسحب آخر كرت بالكومة وبيخلص دورك. وإذا كانت قنبلة، بتنفجر عادي!',
+    desc_en: 'Draw the very last card of the deck instead of the top to end your turn. A bomb down there still blows!',
+    bg: '#d1fae5',
+    frameBg: '#064e3b',
+    badgeBg: '#059669',
+    accent: '#10b981',
+    tag_ar: 'من تحت',
+    tag_en: 'BOTTOM',
+    symbol: '⇩',
+  },
   shuffle: {
     name_ar: 'خلط الكومة',
     name_en: 'Shuffle',
@@ -353,60 +446,76 @@ function shuffleArray<T>(arr: T[]): T[] {
   return copy;
 }
 
+// Copies per tier follow the Party Pack rulebook (paw-print set for 2-3, plain set for 4-7,
+// both for 8-10). Mapped: Nope -> block, Favor -> magnet, See the Future -> radar,
+// Alter the Future -> stack_deck, Feral Cat -> wild_joker, Cat cards -> comboEach.
+// reverse and scry are not in that box, so their counts are this game's own.
 export function getPlayerCountDeckSpec(playerCount: number) {
   if (playerCount <= 3) {
     return {
       tier_ar: 'حزمة المواجهة (2-3 لاعبين)',
       tier_en: 'Quick Pack (2-3P)',
-      dealtRandomCards: 6, // + 1 Defuse = 7 starting cards per player
+      dealtRandomCards: 7, // + 1 Defuse = 8 starting cards per player
       counts: {
-        skip: 3,
-        attack: 3,
+        skip: 4,
+        attack: 4,
         radar: 3,
+        scry: 2,
+        bottomDraw: 3,
+        stackDeck: 2,
         reverse: 2,
         shuffle: 2,
         magnet: 2,
-        block: 3,
-        comboEach: 3, // 3 copies of each of the 4 Combo Set cards = 12 combo cards
+        block: 4,
+        wildJoker: 2,
+        comboEach: 3,
       },
-      extraDefusesInDeck: playerCount === 2 ? 1 : 2,
+      extraDefusesInDeck: Math.max(0, 3 - playerCount),
       bombsInDeck: Math.max(1, playerCount - 1),
     };
   }
-  if (playerCount <= 6) {
+  if (playerCount <= 7) {
     return {
-      tier_ar: 'الحزمة القياسية (4-6 لاعبين)',
-      tier_en: 'Standard Pack (4-6P)',
-      dealtRandomCards: 6, // + 1 Defuse = 7 starting cards per player
+      tier_ar: 'الحزمة القياسية (4-7 لاعبين)',
+      tier_en: 'Standard Pack (4-7P)',
+      dealtRandomCards: 7, // + 1 Defuse = 8 starting cards per player
       counts: {
-        skip: 5,
-        attack: 5,
-        radar: 5,
+        skip: 6,
+        attack: 7,
+        radar: 3,
+        scry: 3,
+        bottomDraw: 4,
+        stackDeck: 4,
         reverse: 4,
         shuffle: 4,
         magnet: 4,
-        block: 5,
-        comboEach: 4, // 4 copies of each of the 4 Combo Set cards = 16 combo cards
+        block: 6,
+        wildJoker: 4,
+        comboEach: 4,
       },
-      extraDefusesInDeck: 2,
+      extraDefusesInDeck: 7 - playerCount,
       bombsInDeck: playerCount - 1,
     };
   }
   return {
-    tier_ar: 'حزمة الحفلة الكبرى (7+ لاعبين)',
-    tier_en: 'Party Pack (7+P)',
-    dealtRandomCards: 6, // + 1 Defuse = 7 starting cards per player
+    tier_ar: 'حزمة الحفلة الكبرى (8+ لاعبين)',
+    tier_en: 'Party Pack (8+P)',
+    dealtRandomCards: 7, // + 1 Defuse = 8 starting cards per player
     counts: {
-      skip: 7,
-      attack: 7,
-      radar: 7,
-      reverse: 5,
-      shuffle: 5,
+      skip: 10,
+      attack: 11,
+      radar: 6,
+      scry: 5,
+      bottomDraw: 7,
+      stackDeck: 6,
+      reverse: 6,
+      shuffle: 6,
       magnet: 6,
-      block: 7,
-      comboEach: 6, // 6 copies of each of the 4 Combo Set cards = 24 combo cards
+      block: 10,
+      wildJoker: 6,
+      comboEach: 7,
     },
-    extraDefusesInDeck: 3,
+    extraDefusesInDeck: Math.max(0, 10 - playerCount),
     bombsInDeck: playerCount - 1,
   };
 }
@@ -436,6 +545,10 @@ export function buildInitialBoomDeckState(
   for (let i = 0; i < spec.counts.skip; i++) pool.push(makeCard('skip'));
   for (let i = 0; i < spec.counts.attack; i++) pool.push(makeCard('attack'));
   for (let i = 0; i < spec.counts.radar; i++) pool.push(makeCard('radar'));
+  for (let i = 0; i < spec.counts.scry; i++) pool.push(makeCard('scry'));
+  for (let i = 0; i < spec.counts.bottomDraw; i++) pool.push(makeCard('bottom_draw'));
+  for (let i = 0; i < spec.counts.stackDeck; i++) pool.push(makeCard('stack_deck'));
+  for (let i = 0; i < spec.counts.wildJoker; i++) pool.push(makeCard('wild_joker'));
   for (let i = 0; i < spec.counts.reverse; i++) pool.push(makeCard('reverse'));
   for (let i = 0; i < spec.counts.shuffle; i++) pool.push(makeCard('shuffle'));
   for (let i = 0; i < spec.counts.magnet; i++) pool.push(makeCard('magnet'));
@@ -1556,6 +1669,206 @@ export const BoomCardIllustrationSvg: React.FC<{
             strokeLinejoin="round"
           />
           <circle cx="70" cy="54" r="3.2" fill="#ffffff" />
+        </svg>
+      );
+
+    case 'stack_deck':
+      return (
+        <svg
+          viewBox="0 0 140 108"
+          preserveAspectRatio="xMidYMid slice"
+          className={className}
+        >
+          <defs>
+            <linearGradient id={`scStackBg_${uid}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="60%" stopColor="#0e7490" />
+              <stop offset="100%" stopColor="#083344" />
+            </linearGradient>
+          </defs>
+          <rect width="140" height="108" fill={`url(#scStackBg_${uid})`} />
+
+          {/* Three numbered cards, the middle one being lifted out of order */}
+          <g stroke="#161426" strokeLinejoin="round" fontWeight="900" textAnchor="middle">
+            <rect x="22" y="36" width="34" height="50" rx="6" fill="#fffdf7" strokeWidth="3" />
+            <text x="39" y="69" fontSize="24" fill="#0891b2" stroke="none">1</text>
+            <g transform="rotate(-6 70 44)">
+              <rect x="53" y="14" width="34" height="50" rx="6" fill="#ffca3a" strokeWidth="3" />
+              <text x="70" y="47" fontSize="24" fill="#161426" stroke="none">2</text>
+            </g>
+            <rect x="84" y="36" width="34" height="50" rx="6" fill="#fffdf7" strokeWidth="3" />
+            <text x="101" y="69" fontSize="24" fill="#e11d48" stroke="none">3</text>
+          </g>
+
+          {/* Pointing finger */}
+          <path
+            d="M70 76 V66 M62 74 L70 64 L78 74"
+            fill="none"
+            stroke="#fff9ec"
+            strokeWidth="5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M34 96 Q70 108 106 96"
+            fill="none"
+            stroke="#fff9ec"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path d="M98 90 L107 96 L99 103" fill="none" stroke="#fff9ec" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+
+    case 'wild_joker':
+      return (
+        <svg
+          viewBox="0 0 140 108"
+          preserveAspectRatio="xMidYMid slice"
+          className={className}
+        >
+          <defs>
+            <radialGradient id={`scJokerBg_${uid}`} cx="50%" cy="50%" r="72%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="55%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#451a03" />
+            </radialGradient>
+          </defs>
+          <rect width="140" height="108" fill={`url(#scJokerBg_${uid})`} />
+
+          {/* Jester hat with three bells */}
+          <g stroke="#161426" strokeWidth="3" strokeLinejoin="round">
+            <path d="M46 52 Q30 34 12 40 Q30 42 38 66 Z" fill="#9b5de5" />
+            <path d="M94 52 Q110 34 128 40 Q110 42 102 66 Z" fill="#00bbf9" />
+            <path d="M46 56 Q56 14 70 6 Q84 14 94 56 Z" fill="#ff595e" />
+            <circle cx="12" cy="40" r="6" fill="#ffca3a" />
+            <circle cx="128" cy="40" r="6" fill="#ffca3a" />
+            <circle cx="70" cy="7" r="6" fill="#ffca3a" />
+            <path d="M40 54 Q70 66 100 54 L100 62 Q70 74 40 62 Z" fill="#fff9ec" />
+            {/* Grinning face */}
+            <path d="M46 64 Q70 72 94 64 Q96 100 70 102 Q44 100 46 64 Z" fill="#fff9ec" />
+          </g>
+          <circle cx="58" cy="78" r="4" fill="#161426" />
+          <circle cx="82" cy="78" r="4" fill="#161426" />
+          <path
+            d="M56 88 Q70 100 84 88"
+            fill="none"
+            stroke="#e11d48"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+        </svg>
+      );
+
+    case 'scry':
+      return (
+        <svg
+          viewBox="0 0 140 108"
+          preserveAspectRatio="xMidYMid slice"
+          className={className}
+        >
+          <defs>
+            <radialGradient id={`scScryBg_${uid}`} cx="50%" cy="42%" r="72%">
+              <stop offset="0%" stopColor="#c4b5fd" />
+              <stop offset="55%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#2e1065" />
+            </radialGradient>
+          </defs>
+          <rect width="140" height="108" fill={`url(#scScryBg_${uid})`} />
+          <circle cx="70" cy="66" r="44" fill="#ffffff" opacity="0.1" />
+
+          {/* Three cards fanned out, the third about to be mixed back in */}
+          <g stroke="#161426" strokeWidth="2.6" strokeLinejoin="round">
+            <g transform="rotate(-20 40 74)">
+              <rect x="25" y="50" width="30" height="44" rx="5" fill="#fffdf7" />
+              <rect x="30" y="55" width="20" height="34" rx="3" fill="#00bbf9" strokeWidth="1.8" />
+            </g>
+            <g transform="rotate(20 100 74)">
+              <rect x="85" y="50" width="30" height="44" rx="5" fill="#fffdf7" />
+              <rect x="90" y="55" width="20" height="34" rx="3" fill="#8ac926" strokeWidth="1.8" />
+            </g>
+            <rect x="55" y="46" width="30" height="46" rx="5" fill="#fffdf7" />
+            <rect x="60" y="51" width="20" height="36" rx="3" fill="#ff595e" strokeWidth="1.8" />
+            <circle cx="70" cy="69" r="6" fill="#ffca3a" strokeWidth="2" />
+          </g>
+
+          {/* The all-seeing eye */}
+          <path
+            d="M34 26 Q70 -6 106 26 Q70 56 34 26 Z"
+            fill="#fff9ec"
+            stroke="#161426"
+            strokeWidth="3.4"
+            strokeLinejoin="round"
+          />
+          <circle cx="70" cy="25" r="13" fill="#00f5d4" stroke="#161426" strokeWidth="3" />
+          <circle cx="70" cy="25" r="6" fill="#161426" />
+          <circle cx="74" cy="21" r="2.4" fill="#ffffff" />
+
+          {/* Mixing arrows */}
+          <g fill="none" stroke="#ffca3a" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 58 Q10 40 24 32" />
+            <path d="M18 30 L25 31 L24 38" />
+            <path d="M126 58 Q130 40 116 32" />
+            <path d="M122 30 L115 31 L116 38" />
+          </g>
+        </svg>
+      );
+
+    case 'bottom_draw':
+      return (
+        <svg
+          viewBox="0 0 140 108"
+          preserveAspectRatio="xMidYMid slice"
+          className={className}
+        >
+          <defs>
+            <linearGradient id={`scBottomBg_${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="60%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#022c22" />
+            </linearGradient>
+          </defs>
+          <rect width="140" height="108" fill={`url(#scBottomBg_${uid})`} />
+
+          {/* The deck, seen from the side */}
+          <g stroke="#161426" strokeWidth="2.6" strokeLinejoin="round">
+            <rect x="34" y="12" width="72" height="11" rx="4" fill="#881337" />
+            <rect x="31" y="21" width="72" height="11" rx="4" fill="#9f1239" />
+            <rect x="36" y="30" width="72" height="11" rx="4" fill="#881337" />
+            <rect x="32" y="39" width="72" height="11" rx="4" fill="#9f1239" />
+          </g>
+
+          {/* A sneaky hand slipping the last card out from underneath */}
+          <g transform="rotate(-7 74 72)" stroke="#161426" strokeLinejoin="round">
+            <rect x="46" y="54" width="62" height="42" rx="6" fill="#fffdf7" strokeWidth="3" />
+            <rect x="52" y="60" width="50" height="30" rx="4" fill="#ffca3a" strokeWidth="2" />
+            <text
+              x="77"
+              y="83"
+              textAnchor="middle"
+              fontSize="24"
+              fontWeight="900"
+              fill="#161426"
+              stroke="none"
+            >
+              ?
+            </text>
+          </g>
+          <path
+            d="M6 80 Q24 66 44 72 L52 70 Q58 72 54 78 L50 80 Q54 88 46 90 L26 94 Q12 96 6 92 Z"
+            fill="#fbbf8a"
+            stroke="#161426"
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M122 14 V44 M112 35 L122 46 L132 35"
+            fill="none"
+            stroke="#fff9ec"
+            strokeWidth="5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       );
 
@@ -2811,7 +3124,7 @@ export const BoomPlayingCard: React.FC<{
             {meta.symbol}
           </span>
           <div className="min-w-0 flex-1 text-start">
-            <div className="font-black text-[12px] sm:text-[13px] text-[#161426] leading-tight truncate">
+            <div className="font-black text-[12px] text-[#161426] leading-tight truncate tracking-tight">
               {ar ? meta.name_ar : meta.name_en}
             </div>
           </div>
@@ -3387,7 +3700,10 @@ export const ArenaSpatialFXLayer: React.FC<{
         )}
 
         {/* ==================== RADAR: SINGLE SOFT SCAN WAVE ACROSS THE DRAW PILE ==================== */}
-        {cinematic.type === 'radar' && (
+        {(cinematic.type === 'radar' ||
+          cinematic.type === 'scry' ||
+          cinematic.type === 'stack_deck' ||
+          cinematic.type === 'bottom_draw') && (
           <g transform={`translate(${DRAW_PILE_COORD.x}, ${DRAW_PILE_COORD.y})`}>
             <circle r="30" fill="none" stroke="#00f5d4" strokeWidth="3.5">
               <animate
@@ -3755,11 +4071,12 @@ function computeHandFan(idx: number, n: number, width: number, cardH: number) {
 }
 
 /** The drawn card rises face-down, trembles, flips — and only then do you know */
-const DrawRevealCard: React.FC<{ card: BoomCard; ar: boolean; reduceMotion: boolean }> = ({
-  card,
-  ar,
-  reduceMotion,
-}) => {
+const DrawRevealCard: React.FC<{
+  card: BoomCard;
+  ar: boolean;
+  reduceMotion: boolean;
+  fromBottom?: boolean;
+}> = ({ card, ar, reduceMotion, fromBottom = false }) => {
   const isBomb = card.type === 'bomb';
   const times = [0, 0.36, 0.62, 1];
   const duration = reduceMotion ? 0 : DRAW_REVEAL_MS / 1000;
@@ -3767,11 +4084,11 @@ const DrawRevealCard: React.FC<{ card: BoomCard; ar: boolean; reduceMotion: bool
     <motion.div
       style={{ perspective: 900 }}
       className="absolute inset-0 z-50 pointer-events-none"
-      initial={{ y: 0, scale: 1, rotate: 0, opacity: 1 }}
+      initial={{ y: fromBottom ? 90 : 0, scale: 1, rotate: 0, opacity: 1 }}
       animate={
         isBomb
-          ? { y: [0, -30, -30, -18], scale: [1, 1.08, 1.12, 1.3], rotate: [0, -2.5, 0, 2], opacity: 1 }
-          : { y: [0, -30, -30, 190], scale: [1, 1.08, 1.12, 0.86], rotate: [0, -2.5, 0, 0], opacity: [1, 1, 1, 0] }
+          ? { y: [fromBottom ? 90 : 0, -30, -30, -18], scale: [1, 1.08, 1.12, 1.3], rotate: [0, -2.5, 0, 2], opacity: 1 }
+          : { y: [fromBottom ? 90 : 0, -30, -30, 190], scale: [1, 1.08, 1.12, 0.86], rotate: [0, -2.5, 0, 0], opacity: [1, 1, 1, 0] }
       }
       transition={{ duration, times, ease: 'easeOut' }}
     >
@@ -3830,6 +4147,181 @@ const BurningFuse: React.FC<{ riskPercent: number; ar: boolean }> = ({ riskPerce
         />
       </div>
       <span className="text-sm font-black text-[#ffca3a] tabular-nums">{riskPercent}%</span>
+    </div>
+  );
+};
+
+/** Tap two cards to swap them: the leftmost-in-reading-order one is drawn next */
+const StackDeckOverlay: React.FC<{
+  cards: BoomCard[];
+  ar: boolean;
+  reduceMotion: boolean;
+  compact: boolean;
+  onConfirm: (ordered: BoomCard[]) => void;
+}> = ({ cards, ar, reduceMotion, compact, onConfirm }) => {
+  const [order, setOrder] = useState<BoomCard[]>(cards);
+  const [pickedId, setPickedId] = useState<string | null>(null);
+  const scale = compact ? 0.56 : 0.8;
+  const slotW = Math.round(HAND_CARD_W * scale) + 10;
+  const slotH = Math.round(HAND_CARD_H * scale);
+
+  const tapCard = (id: string) => {
+    if (!pickedId || pickedId === id) {
+      setPickedId(pickedId === id ? null : id);
+      return;
+    }
+    const a = order.findIndex((c) => c.id === pickedId);
+    const b = order.findIndex((c) => c.id === id);
+    const next = [...order];
+    [next[a], next[b]] = [next[b], next[a]];
+    setOrder(next);
+    setPickedId(null);
+  };
+
+  return (
+    <div className="absolute inset-x-2 sm:inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto max-w-xl rounded-3xl bg-[#161426]/95 border-4 border-[#06b6d4] shadow-[0_12px_0_#161426] text-white text-center p-3 sm:p-4 space-y-2.5">
+      <h3 className="text-base sm:text-lg font-black text-[#fff9ec]">
+        {pickedId
+          ? ar
+            ? 'هلق اضغط الكرت اللي بدك تبدّل معه'
+            : 'Now tap the card to swap with'
+          : ar
+          ? 'اضغط كرتين لتبدّل مكانهم'
+          : 'Tap two cards to swap them'}
+      </h3>
+
+      <div className="flex items-start justify-center" style={{ minHeight: slotH + 24 }}>
+        {order.map((card, idx) => (
+          <motion.button
+            key={card.id}
+            layout={!reduceMotion}
+            type="button"
+            onClick={() => tapCard(card.id)}
+            aria-pressed={pickedId === card.id}
+            aria-label={`${idx + 1}: ${ar ? BOOM_CARD_META[card.type].name_ar : BOOM_CARD_META[card.type].name_en}`}
+            animate={{ y: pickedId === card.id ? -6 : 0 }}
+            transition={{ type: 'spring', stiffness: 460, damping: 30 }}
+            style={{ width: slotW }}
+            className="relative flex flex-col items-center gap-1 cursor-pointer"
+          >
+            <span
+              className={`px-2 py-0.5 rounded-full text-[11px] font-black border-2 border-[#161426] ${
+                idx === 0 ? 'bg-[#e11d48] text-white' : 'bg-[#ffca3a] text-[#161426]'
+              }`}
+            >
+              {idx === 0 ? (ar ? 'الجاي' : 'Next') : idx + 1}
+            </span>
+            <span
+              className={`relative block rounded-[22px] ${pickedId === card.id ? 'ring-4 ring-[#ffca3a]' : ''}`}
+              style={{ width: HAND_CARD_W * scale, height: slotH }}
+            >
+              <span
+                style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}
+                className="absolute top-0 left-0 block pointer-events-none"
+              >
+                <BoomPlayingCard type={card.type} ar={ar} size="sm" />
+              </span>
+            </span>
+          </motion.button>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onConfirm(order)}
+        className="cartoon-btn bg-[#06b6d4] text-[#161426] px-6 py-2 text-base cursor-pointer"
+      >
+        {ar ? 'تمام، رجّعهم عالكومة' : 'Done, put them back'}
+      </button>
+    </div>
+  );
+};
+
+/** Peek at the top 3, then watch them flip face-down and get mixed before you draw blind */
+const ScryMixOverlay: React.FC<{
+  cards: BoomCard[];
+  ar: boolean;
+  reduceMotion: boolean;
+  compact: boolean;
+  onMixed: () => void;
+}> = ({ cards, ar, reduceMotion, compact, onMixed }) => {
+  const [isMixing, setIsMixing] = useState<boolean>(false);
+  const scale = compact ? 0.62 : 0.85;
+  const slotW = Math.round(HAND_CARD_W * scale) + 8;
+  const slotH = Math.round(HAND_CARD_H * scale);
+
+  const startMix = () => {
+    if (isMixing) return;
+    setIsMixing(true);
+    setTimeout(onMixed, reduceMotion ? 0 : 1150);
+  };
+
+  return (
+    <div className="absolute inset-x-2 sm:inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto max-w-xl rounded-3xl bg-[#161426]/95 border-4 border-[#9b5de5] shadow-[0_12px_0_#161426] text-white text-center p-3 sm:p-4 space-y-3">
+      <h3 className="text-base sm:text-lg font-black text-[#fff9ec]">
+        {isMixing
+          ? ar
+            ? 'عم ينخلطوا...'
+            : 'Mixing...'
+          : ar
+          ? 'هدول أول 3 كروت. احفظهم منيح!'
+          : 'These are the top 3. Remember them!'}
+      </h3>
+
+      <div dir="ltr" className="flex items-center justify-center" style={{ height: slotH }}>
+        {cards.map((card, idx) => {
+          const toCenter = ((cards.length - 1) / 2 - idx) * slotW;
+          return (
+            <motion.div
+              key={card.id}
+              style={{ width: slotW, height: slotH, perspective: 800 }}
+              className="relative"
+              animate={
+                isMixing && !reduceMotion
+                  ? { x: [0, toCenter, -toCenter * 0.7, toCenter * 0.45, 0], y: [0, -10, 8, -6, 0] }
+                  : { x: 0, y: 0 }
+              }
+              transition={{ duration: 0.85, delay: 0.25, ease: 'easeInOut' }}
+            >
+              <motion.div
+                style={{ transformStyle: 'preserve-3d' }}
+                className="relative w-full h-full"
+                initial={false}
+                animate={{ rotateY: isMixing ? 180 : 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.28 }}
+              >
+                <div
+                  style={{
+                    width: HAND_CARD_W,
+                    height: HAND_CARD_H,
+                    transform: `translateX(-50%) scale(${scale})`,
+                    transformOrigin: 'top center',
+                  }}
+                  className="absolute top-0 left-1/2 [backface-visibility:hidden]"
+                >
+                  <BoomPlayingCard type={card.type} ar={ar} size="sm" />
+                </div>
+                <div
+                  style={{ transform: 'rotateY(180deg)' }}
+                  className="absolute inset-0 px-1 [backface-visibility:hidden]"
+                >
+                  <BoomCardBackSvg className="w-full h-full" />
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        disabled={isMixing}
+        onClick={startMix}
+        className="cartoon-btn bg-[#ffca3a] hover:bg-[#fde047] text-[#161426] px-6 py-2 text-base inline-flex items-center gap-2 cursor-pointer"
+      >
+        <Shuffle weight="bold" className="w-5 h-5" />
+        <span>{ar ? 'اخلطهم واسحب واحد' : 'Mix them and draw one'}</span>
+      </button>
     </div>
   );
 };
@@ -4115,6 +4607,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   const [localDrawPreview, setLocalDrawPreview] = useState<{
     card: BoomCard;
     drawerId: string;
+    fromBottom?: boolean;
   } | null>(null);
   const [localPlayPreview, setLocalPlayPreview] = useState<{
     card: BoomCard;
@@ -4133,6 +4626,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   const [nudgeId, setNudgeId] = useState<string | null>(null);
   const [fxGeometry, setFxGeometry] = useState<ArenaFxGeometry | null>(null);
   const celebratedRoundRef = useRef<string>('');
+  const forcedDrawFiredRef = useRef<boolean>(false);
   const reduceMotion = !!useReducedMotion();
   const tableRef = useRef<HTMLDivElement>(null);
   const centerRef = useRef<HTMLDivElement>(null);
@@ -4192,12 +4686,16 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     skip: 4,
     reverse: 5,
     radar: 6,
+    scry: 6,
+    bottom_draw: 6,
+    stack_deck: 6,
     shuffle: 7,
     magnet: 8,
     combo_shawarma: 9,
     combo_kabsa: 10,
     combo_karak: 11,
     combo_falcon: 12,
+    wild_joker: 12,
     bomb: 13,
   };
   const myHand = [...rawHand].sort(
@@ -4209,6 +4707,14 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     acc[c.type] = (acc[c.type] || 0) + 1;
     return acc;
   }, {});
+  const jokersInHand = handTypeCounts.wild_joker || 0;
+  if (jokersInHand > 0) {
+    const setSizes = COMBO_SET_TYPES.map((t) => handTypeCounts[t] || 0);
+    COMBO_SET_TYPES.forEach((t) => {
+      if (handTypeCounts[t]) handTypeCounts[t] += jokersInHand;
+    });
+    handTypeCounts.wild_joker = jokersInHand + Math.max(...setSizes);
+  }
 
   const isMyTurn = activeViewerId === gameData.turnPlayerId;
   const isAmAlive = (gameData.alivePlayerIds || []).includes(activeViewerId);
@@ -4457,6 +4963,9 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     let nextHands = { ...baseState.hands };
     let nextTurnPlayerId = baseState.turnPlayerId;
     let nextTurnsRemaining = baseState.turnsRemaining;
+    let nextPhase: BoomDeckGameState['phase'] = 'playing';
+    let nextScryPlayerId: string | null = null;
+    let nextDrawSource: BoomDeckGameState['nextDrawSource'] = null;
     let nextDirection = baseState.direction;
     let nextRadarPlayerId: string | null = null;
     let nextRadarCards: BoomCard[] = [];
@@ -4581,11 +5090,27 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
       nextDeck = shuffleArray(nextDeck);
       logAr = `${actorName} خلط كومة السحب بالكامل!`;
       logEn = `${actorName} shuffled the entire Draw Pile!`;
+    } else if (cType === 'scry') {
+      nextPhase = 'scry';
+      nextScryPlayerId = pending.actorId;
+      logAr = `${actorName} عم يشوف أول ${Math.min(3, nextDeck.length)} كروت قبل ما يخلطهم ويسحب واحد!`;
+      logEn = `${actorName} is peeking at the top ${Math.min(3, nextDeck.length)} cards before mixing them and drawing one!`;
+    } else if (cType === 'stack_deck') {
+      nextPhase = 'stack_deck';
+      nextScryPlayerId = pending.actorId;
+      logAr = `${actorName} عم يرتّب أول ${Math.min(3, nextDeck.length)} كروت بالكومة عكيفه!`;
+      logEn = `${actorName} is secretly reordering the top ${Math.min(3, nextDeck.length)} cards!`;
+    } else if (cType === 'bottom_draw') {
+      nextDrawSource = 'bottom';
+      logAr = `${actorName} مدّ إيده من تحت لتحت ورح يسحب آخر كرت بالكومة!`;
+      logEn = `${actorName} is sneaking the very last card out of the deck!`;
     }
 
     return {
       ...baseState,
-      phase: 'playing',
+      phase: nextPhase,
+      scryPlayerId: nextScryPlayerId,
+      nextDrawSource,
       deck: nextDeck,
       hands: nextHands,
       turnPlayerId: nextTurnPlayerId,
@@ -4619,6 +5144,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   ) => {
     if (
       gameData.phase !== 'playing' ||
+      gameData.nextDrawSource ||
       !isMyTurn ||
       localDrawPreview ||
       localPlayPreview
@@ -4633,7 +5159,8 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
 
     const actorId = gameData.turnPlayerId;
     const actorHand = gameData.hands?.[actorId] || [];
-    const matchingCopies = actorHand.filter((c) => c.type === card.type);
+    const isComboPartner = getComboPartnerMatcher(card.type, actorHand);
+    const matchingCopies = actorHand.filter(isComboPartner);
 
     // If this is a Combo Set card, Magnet, OR any Special Card where the player is choosing a 2x/3x Combo target:
     if (
@@ -4684,9 +5211,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
           discardedCards.push(...currentHand.splice(clickedIdx, 1));
         }
         while (discardedCards.length < effectiveComboCount) {
-          const nextMatchIdx = currentHand.findIndex(
-            (c) => c.type === actionCardType
-          );
+          const nextMatchIdx = currentHand.findIndex(isComboPartner);
           if (nextMatchIdx === -1) break;
           discardedCards.push(...currentHand.splice(nextMatchIdx, 1));
         }
@@ -4862,16 +5387,20 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   // Draw the top card from the Draw Pile with a physical 3D Card-Draw Flight & Flip Animation!
   const handleDrawCard = () => {
     if (gameData.phase !== 'playing' || !isMyTurn || localDrawPreview) return;
+    if (gameData.nextDrawSource && forcedDrawFiredRef.current) return;
     const currentDeck = [...(gameData.deck || [])];
     if (currentDeck.length === 0) return;
 
-    const topCard = currentDeck.shift()!;
+    forcedDrawFiredRef.current = !!gameData.nextDrawSource;
+    const fromBottom = gameData.nextDrawSource === 'bottom';
+    const topCard = fromBottom ? currentDeck.pop()! : currentDeck.shift()!;
+    const stateAfterDraw: BoomDeckGameState = { ...gameData, nextDrawSource: null };
     const drawerId = gameData.turnPlayerId;
     const drawerName = getPlayerName(drawerId);
 
     // 1. Play the face-down rise, tremble & flip first, so the draw has real suspense!
     soundManager.playSfx('card_draw');
-    setLocalDrawPreview({ card: topCard, drawerId });
+    setLocalDrawPreview({ card: topCard, drawerId, fromBottom });
 
     setTimeout(() => {
       setLocalDrawPreview(null);
@@ -4892,7 +5421,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
           setTimeout(() => {
             setDefuseShowdown(null);
             onUpdateGameData({
-              ...gameData,
+              ...stateAfterDraw,
               phase: 'planting_bomb',
               deck: currentDeck,
               crisisPlayerId: drawerId,
@@ -4941,7 +5470,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
 
           onUpdateGameData(
             {
-              ...gameData,
+              ...stateAfterDraw,
               phase: 'round_over',
               deck: currentDeck,
               alivePlayerIds: nextAlive,
@@ -4986,7 +5515,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
         );
 
         onUpdateGameData({
-          ...gameData,
+          ...stateAfterDraw,
           phase: 'playing',
           deck: currentDeck,
           alivePlayerIds: nextAlive,
@@ -5033,7 +5562,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
       const drawnMeta = BOOM_CARD_META[topCard.type];
 
       onUpdateGameData({
-        ...gameData,
+        ...stateAfterDraw,
         deck: currentDeck,
         hands: {
           ...gameData.hands,
@@ -5081,6 +5610,42 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
         ],
       });
     }, DRAW_REVEAL_MS);
+  };
+
+  // A played card forced this draw: run it by itself on the acting player's screen
+  useEffect(() => {
+    if (!gameData.nextDrawSource) {
+      forcedDrawFiredRef.current = false;
+      return;
+    }
+    if (gameData.phase !== 'playing' || !isMyTurn || localDrawPreview || forcedDrawFiredRef.current) {
+      return;
+    }
+    const timer = setTimeout(handleDrawCard, reduceMotion ? 0 : 450);
+    return () => clearTimeout(timer);
+  }, [gameData.nextDrawSource, gameData.phase, isMyTurn, !!localDrawPreview]);
+
+  // Put the reordered top cards back; the turn carries on as normal
+  const handleStackConfirmed = (ordered: BoomCard[]) => {
+    onUpdateGameData({
+      ...gameData,
+      phase: 'playing',
+      scryPlayerId: null,
+      deck: [...ordered, ...(gameData.deck || []).slice(ordered.length)],
+    });
+  };
+
+  // Mix the peeked cards back on top, then draw the new top card blind
+  const handleScryMixed = () => {
+    const deck = gameData.deck || [];
+    const peeked = deck.slice(0, 3);
+    onUpdateGameData({
+      ...gameData,
+      phase: 'playing',
+      scryPlayerId: null,
+      nextDrawSource: 'top',
+      deck: [...shuffleArray(peeked), ...deck.slice(3)],
+    });
   };
 
   // Re-plant the defused bomb at ANY exact position (0 .. nextDeck.length) or random in the Draw Pile!
@@ -5195,6 +5760,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     const isPassiveOnly = card.type === 'defuse' || (card.type === 'block' && copies < 2);
     return (
       gameData.phase === 'playing' &&
+      !gameData.nextDrawSource &&
       isMyTurn &&
       !isPassiveOnly &&
       (!isComboSetCard(card.type) || copies >= 2) &&
@@ -5634,6 +6200,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     card={localDrawPreview.card}
                     ar={ar}
                     reduceMotion={reduceMotion}
+                    fromBottom={localDrawPreview.fromBottom}
                   />
                 )}
 
@@ -6572,6 +7139,9 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     'attack',
                     'skip',
                     'radar',
+                    'scry',
+                    'bottom_draw',
+                    'stack_deck',
                     'magnet',
                     'reverse',
                     'shuffle',
@@ -6579,6 +7149,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     'combo_kabsa',
                     'combo_karak',
                     'combo_falcon',
+                    'wild_joker',
                   ] as BoomCardType[]
                 ).map((cType) => {
                   const cMeta = BOOM_CARD_META[cType];
@@ -6832,6 +7403,36 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             })()}
 
           {/* (Bomb Crisis is now 100% automatic: Defuse card flies smoothly to the table and opens the Bomb Planting selector directly!) */}
+
+          {/* PEEK & MIX: only the player who played it sees the three cards */}
+          {(gameData.phase === 'scry' || gameData.phase === 'stack_deck') &&
+            (gameData.scryPlayerId === activeViewerId ? (
+              gameData.phase === 'scry' ? (
+                <ScryMixOverlay
+                  key={gameData.lastCinematic?.id}
+                  cards={(gameData.deck || []).slice(0, 3)}
+                  ar={ar}
+                  reduceMotion={reduceMotion}
+                  compact={arenaSize.tableW < 640}
+                  onMixed={handleScryMixed}
+                />
+              ) : (
+                <StackDeckOverlay
+                  key={gameData.lastCinematic?.id}
+                  cards={(gameData.deck || []).slice(0, 3)}
+                  ar={ar}
+                  reduceMotion={reduceMotion}
+                  compact={arenaSize.tableW < 640}
+                  onConfirm={handleStackConfirmed}
+                />
+              )
+            ) : (
+              <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto max-w-sm rounded-2xl bg-[#161426]/95 border-3 border-[#9b5de5] px-4 py-3 text-center text-sm font-black text-white">
+                {ar
+                  ? `${getPlayerName(gameData.scryPlayerId)} عم يشوف أول 3 كروت...`
+                  : `${getPlayerName(gameData.scryPlayerId)} is peeking at the top 3...`}
+              </div>
+            ))}
 
           {/* ABSOLUTE CENTER OVERLAY 3: SECRET BOMB RE-PLANTING VAULT */}
           {gameData.phase === 'planting_bomb' && (
@@ -7088,7 +7689,11 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                   })}
                 </AnimatePresence>
 
-                {isPassAndPlay && !passAndPlayHandUnlocked && gameData.phase !== 'planting_bomb' && (
+                {isPassAndPlay &&
+                  !passAndPlayHandUnlocked &&
+                  gameData.phase !== 'planting_bomb' &&
+                  gameData.phase !== 'scry' &&
+                  gameData.phase !== 'stack_deck' && (
                   <div
                     dir={ar ? 'rtl' : 'ltr'}
                     className="absolute z-[65] inset-x-3 top-1/2 -translate-y-1/2 mx-auto max-w-md px-4 py-3 rounded-3xl bg-[#191636]/95 border-3 border-[#ffca3a] text-center space-y-2 shadow-[0_8px_0_#161426]"

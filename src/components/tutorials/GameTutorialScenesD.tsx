@@ -1935,8 +1935,8 @@ export const BoomDeckTutorialScene: React.FC<TutorialSceneProps> = ({
             bg="#ffca3a"
             text={
               ar
-                ? 'معك 6 كروت قدرات ومقص أسلاك — والقنابل مزروعة بالكومة!'
-                : 'Start with 6 Ability Cards + Wire Cutters — Bombs lurk in the deck!'
+                ? 'معك 7 كروت قدرات ومقص إنقاذ — والقنابل مزروعة بالكومة!'
+                : 'Start with 7 Ability Cards + Wire Cutters — Bombs lurk in the deck!'
             }
           />
           {/* Center Draw Pile with Bomb Risk */}

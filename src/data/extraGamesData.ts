@@ -165,14 +165,14 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     longDesc_en:
       'A high-voltage deck rigged with Lit Bombs and cinematic abilities! Scan the top 3 cards with X-Ray Radar, yank cards with Heist Magnet, dodge with Turbo Skip, or stack Double Trouble ×2 on your friend — and when you draw a bomb, snip the wire and secretly plant it anywhere in the pile!',
     rules_ar: [
-      'يبدأ كل لاعب وبيده 6 كروت مضمونة تضم «مقص الإنقاذ» لحمايته، بينما تُزرع القنابل داخل كومة السحب.',
-      'في دورك: يمكنك لعب أي عدد من كروت القدرات (رادار الكومة، مغناطيس السرقة، خلط الأوراق، تزحليقة، عكس السير، أو تدبيل ×2).',
+      'يبدأ كل لاعب وبيده 8 كروت بينها «مقص الإنقاذ» لحمايته، بينما تُزرع القنابل داخل كومة السحب.',
+      'في دورك: يمكنك لعب أي عدد من كروت القدرات (رادار الكومة، نظرة وخلطة، رتّبها عكيفك، من تحت لتحت، مغناطيس السرقة، خلط الأوراق، تزحليقة، عكس السير، أو تدبيل ×2).',
       'لإنهاء دورك يجب أن تسحب كرتاً واحداً من الكومة (إلا إذا لعبت تزحليقة، عكس السير، أو تدبيل ×2 لتهرب من السحب!).',
       'إذا سحبت «القنبلة المشتعلة»: يشتغل مقص الإنقاذ لينقذك ويفتح لك خزنة سرية لتزرع القنبلة بأي مكان بالكومة (حتى أول كرت بوجه صاحبك!)، ومن لا يملك مقصاً ينفجر ويخرج حتى يفوز الناجي الأخير!',
     ],
     rules_en: [
-      'Every player starts with 6 cards including 1 guaranteed Wire Cutters, while Lit Bombs are shuffled into the pile.',
-      'On your turn: play as many Ability Cards as you like (X-Ray Radar, Heist Magnet, Shuffle, Turbo Skip, Reverse, or Double Trouble ×2).',
+      'Every player starts with 8 cards including 1 guaranteed Wire Cutters, while Lit Bombs are shuffled into the pile.',
+      'On your turn: play as many Ability Cards as you like (X-Ray Radar, Peek & Mix, Stack the Deck, Bottom Deal, Heist Magnet, Shuffle, Turbo Skip, Reverse, or Double Trouble ×2).',
       'End your turn by drawing 1 card from the pile (unless you played Skip, Reverse, or Double Trouble ×2 to dodge drawing!).',
       'Draw a Lit Bomb? Snip the wire with Wire Cutters and secretly re-plant the bomb anywhere in the deck — last survivor standing wins!',
     ],

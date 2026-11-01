@@ -559,10 +559,15 @@ class SoundManager {
             this.playSfx('card_shove');
             return;
           case 'shuffle':
+          case 'scry':
             this.playSfx('card_shuffle');
             return;
           case 'radar':
+          case 'stack_deck':
             this.playSfx('metal_click');
+            return;
+          case 'bottom_draw':
+            this.playSfx('card_shove');
             return;
           case 'block':
             this.playSfx('heavy_slam');
