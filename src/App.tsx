@@ -1570,7 +1570,7 @@ export function App() {
               className="cartoon-btn bg-[#00bbf9] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
             >
               <Globe weight="bold" className="w-5 h-5" />
-              <span className={room ? 'hidden sm:inline' : ''}>{t.langToggle}</span>
+              <span className={room ? 'hidden sm:inline' : 'hidden min-[400px]:inline'}>{t.langToggle}</span>
             </button>
 
             {room && (
@@ -1965,10 +1965,20 @@ export function App() {
           /* ================= ACTIVE GAMEPLAY BOARD ================= */
           <div className="w-full space-y-3.5">
             {/* Sleek Top Active Game & Room Control Bar */}
-            <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#25204d] border-4 border-[#120f29] shadow-[0_6px_0_#120f29] rounded-2xl px-4 py-2.5">
-              <div className="flex flex-wrap items-center gap-2">
+            <div
+              className={`flex items-center justify-between bg-[#25204d] border-[#120f29] rounded-2xl ${
+                isImmersiveTable
+                  ? 'flex-nowrap sm:flex-wrap gap-1.5 sm:gap-2.5 border-3 sm:border-4 shadow-[0_3px_0_#120f29] sm:shadow-[0_6px_0_#120f29] px-1.5 sm:px-4 pt-1 pb-2 sm:py-2.5 overflow-x-auto no-scrollbar sm:overflow-visible'
+                  : 'flex-wrap gap-2.5 border-4 shadow-[0_6px_0_#120f29] px-4 py-2.5'
+              }`}
+            >
+              <div className={`flex items-center gap-1.5 sm:gap-2 ${isImmersiveTable ? 'flex-nowrap sm:flex-wrap shrink-0' : 'flex-wrap'}`}>
                 {/* Active Game Badge */}
-                <div className="cartoon-badge bg-[#fff9ec] text-[#161426] px-3.5 py-1 text-sm flex items-center gap-2">
+                <div
+                  className={`cartoon-badge bg-[#fff9ec] text-[#161426] px-3.5 py-1 text-sm items-center gap-2 ${
+                    isImmersiveTable ? 'hidden sm:flex' : 'flex'
+                  }`}
+                >
                   <PartyGameSvgIcon gameId={activeGameId} className="w-5 h-5" />
                   <span>
                     {lang === 'ar' ? activeGameMeta.name_ar : activeGameMeta.name_en}
@@ -2037,7 +2047,7 @@ export function App() {
               )}
 
               {/* Room Total Score + Quick Lang/Exit in Immersive Tabletop Mode */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className={`flex items-center gap-1.5 sm:gap-2 ${isImmersiveTable ? 'flex-nowrap sm:flex-wrap shrink-0' : 'flex-wrap'}`}>
                 <AudioControlPanel lang={lang} compact />
 
                 <div className="cartoon-badge bg-[#8ac926] text-[#161426] px-3.5 py-1 text-xs sm:text-sm flex items-center gap-1.5">
@@ -2059,7 +2069,7 @@ export function App() {
                       className="cartoon-btn bg-[#00bbf9] text-[#161426] px-2.5 py-1 text-xs flex items-center gap-1"
                     >
                       <Globe weight="bold" className="w-4 h-4" />
-                      <span>{t.langToggle}</span>
+                      <span className="hidden sm:inline">{t.langToggle}</span>
                     </button>
                     <button
                       type="button"
