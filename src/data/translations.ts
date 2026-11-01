@@ -3,7 +3,7 @@ export type Lang = 'ar' | 'en';
 export const TRANSLATIONS = {
   ar: {
     appTitle: 'سهرة الشلّة',
-    appSubtitle: '18 لعبة جماعية أونلاين أو على نفس الجهاز!',
+    appSubtitle: 'جمّعوا الشلّة، اختاروا لعبة، وبلّشوا بدقيقة',
     howToPlay: 'كيف بتلعب؟',
     langToggle: 'English',
     yourName: 'اسمك باللعبة',
@@ -84,7 +84,7 @@ export const TRANSLATIONS = {
   },
   en: {
     appTitle: 'Shilla Party',
-    appSubtitle: '18 Multiplayer Party Games Online!',
+    appSubtitle: 'Round up your group, pick a game, start in a minute',
     howToPlay: 'How to Play?',
     langToggle: 'العربية',
     yourName: 'Your Nickname',

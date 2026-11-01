@@ -41,11 +41,13 @@ interface DixitGameProps {
 
 export function buildDixitHands(playerIds: string[], prevStorytellerId?: string): DixitGameState {
   const deck = Array.from({ length: 24 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+  // Shrink hands as the table grows so nobody is ever dealt the same art card twice
+  const handSize = Math.min(5, Math.floor(deck.length / Math.max(1, playerIds.length)));
   const hands: Record<string, number[]> = {};
   let cursor = 0;
   playerIds.forEach((pid) => {
     const hand: number[] = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < handSize; i++) {
       hand.push(deck[cursor % deck.length]);
       cursor++;
     }

@@ -51,9 +51,13 @@ interface GameTutorialPlayerProps {
   onStepChange?: (step: number) => void;
   compact?: boolean;
   onExpandModal?: () => void;
+  /** Set to false when the reader takes over the steps, to stop auto-advancing */
+  autoPlay?: boolean;
 }
 
-const STEP_DURATION_MS = 3800;
+const COMPACT_STEP_DURATION_MS = 3800;
+// The full guide is read alongside its step text, so it needs longer per step
+const FULL_STEP_DURATION_MS = 6500;
 const ENTRANCE_DURATION_MS = 650;
 
 export const GameTutorialSvgScene: React.FC<{
@@ -131,7 +135,9 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
   onStepChange,
   compact = false,
   onExpandModal,
+  autoPlay = true,
 }) => {
+  const stepDurationMs = compact ? COMPACT_STEP_DURATION_MS : FULL_STEP_DURATION_MS;
   const [internalStep, setInternalStep] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [progress, setProgress] = useState<number>(0);
@@ -176,6 +182,10 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
     }
   }, [gameId]);
 
+  useEffect(() => {
+    if (!autoPlay) setIsPlaying(false);
+  }, [autoPlay]);
+
   // Smooth ~30fps Animation & Auto-Advance Loop (Pure Native SVG Driver!)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -187,7 +197,7 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
       setAnimT(Math.min(1, stepElapsed / ENTRANCE_DURATION_MS));
 
       if (isPlaying) {
-        const pct = (stepElapsed / STEP_DURATION_MS) * 100;
+        const pct = (stepElapsed / stepDurationMs) * 100;
         if (pct >= 100) {
           stepStartRef.current = now;
           const next = (currentStep + 1) % 4;
@@ -204,7 +214,7 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
     }, 33);
 
     return () => clearInterval(interval);
-  }, [isPlaying, currentStep]);
+  }, [isPlaying, currentStep, stepDurationMs]);
 
   const gameMeta =
     PARTY_GAMES_CATALOG.find((g) => g.id === gameId) || PARTY_GAMES_CATALOG[0];
@@ -229,42 +239,17 @@ export const GameTutorialPlayer: React.FC<GameTutorialPlayerProps> = ({
           />
           <span>
             {lang === 'ar'
-              ? `شرح متحرك — خطوة ${currentStep + 1} من 4`
-              : `Animated Guide — Step ${currentStep + 1} of 4`}
+              ? `خطوة ${currentStep + 1} من 4`
+              : `Step ${currentStep + 1} of 4`}
           </span>
         </div>
 
-        {/* Step Controls: Play/Pause + 1-2-3-4 Pills */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <div className="flex items-center gap-1 sm:gap-1.5">
-            {[0, 1, 2, 3].map((idx) => {
-              const active = idx === currentStep;
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setStep(idx)}
-                  className={`${
-                    compact ? 'w-6 h-6 text-xs' : 'w-7 h-7 sm:w-8 sm:h-8 text-xs sm:text-sm'
-                  } rounded-lg font-extrabold transition-all cursor-pointer border-2 border-[#161426] flex items-center justify-center ${
-                    active
-                      ? 'bg-[#ffca3a] text-[#161426] scale-110'
-                      : 'bg-[#2a2456] text-white/80 hover:bg-[#383070]'
-                  }`}
-                  title={
-                    lang === 'ar' ? `انتقل للخطوة ${idx + 1}` : `Go to Step ${idx + 1}`
-                  }
-                >
-                  {idx + 1}
-                </button>
-              );
-            })}
-          </div>
-
+        {/* Play/Pause */}
+        <div className="flex items-center">
           <button
             type="button"
             onClick={() => {
-              stepStartRef.current = performance.now() - (progress / 100) * STEP_DURATION_MS;
+              stepStartRef.current = performance.now() - (progress / 100) * stepDurationMs;
               setIsPlaying((p) => !p);
             }}
             className={`${

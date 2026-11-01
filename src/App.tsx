@@ -20,7 +20,6 @@ import {
 import { TRANSLATIONS, Lang } from './data/translations';
 import {
   PartyGameId,
-  PartyGameCategory,
   CHAMELEON_TOPICS,
   ITO_THEMES,
   WORD_BOMB_CHALLENGES,
@@ -34,6 +33,7 @@ import {
   WITS_QUESTIONS,
   INSIDER_WORDS,
 } from './data/extraGamesData';
+import { HomePage } from './components/HomePage';
 import { WavelengthWheel } from './components/WavelengthWheel';
 import { SpectrumCard } from './components/SpectrumCard';
 import {
@@ -137,11 +137,9 @@ import {
 } from './components/BoomDeckGame';
 import {
   PartyGameSvgIcon,
-  CartoonAvatarSvg,
   ReactionSvgIcon,
   ReactionType,
 } from './components/CartoonIcons';
-import { GameTutorialPlayer } from './components/tutorials/GameTutorialPlayer';
 import { AudioControlPanel } from './components/AudioControlPanel';
 import { soundManager } from './utils/soundManager';
 import {
@@ -157,15 +155,11 @@ import {
   Target,
   Trophy,
   Plus,
-  DeviceMobile,
-  GameController,
   Play,
   ArrowCounterClockwise,
   Eye,
   EyeSlash,
   UserMinus,
-  MagnifyingGlass,
-  Shuffle,
   SquaresFour,
   Medal,
   Sword,
@@ -262,10 +256,8 @@ export function App() {
     setShowHowToPlay(true);
   };
 
-  // Home Page Catalog Filters
+  // Home Page Selected Game
   const [homeSelectedGame, setHomeSelectedGame] = useState<PartyGameId>('wavelength');
-  const [homeCategory, setHomeCategory] = useState<PartyGameCategory>('all');
-  const [homeSearch, setHomeSearch] = useState<string>('');
 
   // Gameplay local inputs
   const [clueInput, setClueInput] = useState<string>('');
@@ -1399,13 +1391,6 @@ export function App() {
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const pickRandomHomeGame = () => {
-    const others = PARTY_GAMES_CATALOG.filter((g) => g.id !== homeSelectedGame);
-    const pick = others[Math.floor(Math.random() * others.length)] || PARTY_GAMES_CATALOG[0];
-    setHomeSelectedGame(pick.id);
-    setHomeCategory('all');
-  };
-
   const isPsychic = room ? (isPassAndPlay ? true : room.psychic_id === playerId) : false;
   const psychicPlayer = players.find((p) => p.id === room?.psychic_id);
   const myPlayer = players.find((p) => p.id === playerId);
@@ -1442,10 +1427,13 @@ export function App() {
     : '';
 
   const activeGameId: PartyGameId = room?.selected_game || 'wavelength';
+  const isImmersiveTable =
+    activeGameId === 'trix' ||
+    activeGameId === 'monopoly' ||
+    activeGameId === 'snakes' ||
+    activeGameId === 'boomdeck';
   const activeGameMeta =
     PARTY_GAMES_CATALOG.find((g) => g.id === activeGameId) || PARTY_GAMES_CATALOG[0];
-  const homeSelectedMeta =
-    PARTY_GAMES_CATALOG.find((g) => g.id === homeSelectedGame) || PARTY_GAMES_CATALOG[0];
 
   // Sync Background Music Track with Active Game or Home Selected Game
   useEffect(() => {
@@ -1494,29 +1482,6 @@ export function App() {
     };
   });
 
-  // Filtered Home Catalog
-  const homeCategories: { id: PartyGameCategory; ar: string; en: string }[] = [
-    { id: 'all', ar: `الكل (${PARTY_GAMES_CATALOG.length})`, en: `All (${PARTY_GAMES_CATALOG.length})` },
-    { id: 'bluff', ar: 'خداع وجواسيس (9)', en: 'Bluff & Spies (9)' },
-    { id: 'telepathy', ar: 'تخاطر وخيال (6)', en: 'Mind & Art (6)' },
-    { id: 'drawing', ar: 'رسم وإبداع (4)', en: 'Drawing (4)' },
-    { id: 'speed', ar: 'سرعة ومواجهة (4)', en: 'Speed & Action (4)' },
-  ];
-
-  const filteredHomeGames = PARTY_GAMES_CATALOG.filter((g) => {
-    const matchCat = homeCategory === 'all' || g.category === homeCategory;
-    const q = homeSearch.trim().toLowerCase();
-    const matchSearch =
-      !q ||
-      g.name_ar.toLowerCase().includes(q) ||
-      g.name_en.toLowerCase().includes(q) ||
-      g.desc_ar.toLowerCase().includes(q) ||
-      g.desc_en.toLowerCase().includes(q) ||
-      g.tag_ar.toLowerCase().includes(q) ||
-      g.tag_en.toLowerCase().includes(q);
-    return matchCat && matchSearch;
-  });
-
   return (
     <div className="min-h-[100dvh] flex flex-col justify-between pb-8 relative">
       {/* Floating Live Vector Reactions */}
@@ -1556,14 +1521,30 @@ export function App() {
             }}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="w-12 h-12 rounded-2xl bg-[#ff595e] border-4 border-[#161426] shadow-[0_5px_0_#161426] flex items-center justify-center group-hover:scale-105 transition-transform">
-              <GameController weight="fill" className="w-7 h-7 text-[#ffca3a]" />
+            <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#ff595e] border-4 border-[#161426] shadow-[0_5px_0_#161426] flex items-center justify-center -rotate-3 group-hover:rotate-3 transition-transform">
+              {/* Sahra (late-night hangout) mark: crescent and star */}
+              <svg viewBox="0 0 64 64" className="w-9 h-9" aria-hidden="true">
+                <path
+                  d="M37 7a26 26 0 1 0 20 39A22 22 0 0 1 37 7z"
+                  fill="#ffca3a"
+                  stroke="#161426"
+                  strokeWidth="5"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M47 15l2.8 6.2 6.7.8-5 4.5 1.4 6.6-5.9-3.4-5.9 3.4 1.4-6.6-5-4.5 6.7-.8z"
+                  fill="#fff9ec"
+                  stroke="#161426"
+                  strokeWidth="3"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#fff9ec] drop-shadow-[0_3px_0_#161426] leading-none">
+            <div className={room ? 'hidden sm:block' : ''}>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#fff9ec] drop-shadow-[0_3px_0_#161426] leading-none whitespace-nowrap">
                 {t.appTitle}
               </h1>
-              <span className="text-xs font-bold text-[#ffca3a] block mt-0.5">
+              <span className="text-sm font-bold text-[#ffca3a] hidden sm:block mt-1">
                 {t.appSubtitle}
               </span>
             </div>
@@ -1572,14 +1553,16 @@ export function App() {
           <div className="flex items-center gap-2">
             <AudioControlPanel lang={lang} />
 
-            <button
-              type="button"
-              onClick={() => openHowToPlayFor(room ? activeGameId : homeSelectedGame)}
-              className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
-            >
-              <Question weight="fill" className="w-5 h-5" />
-              <span className="hidden sm:inline">{t.howToPlay}</span>
-            </button>
+            {room && (
+              <button
+                type="button"
+                onClick={() => openHowToPlayFor(activeGameId)}
+                className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
+              >
+                <Question weight="fill" className="w-5 h-5" />
+                <span className="hidden sm:inline">{t.howToPlay}</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -1587,7 +1570,7 @@ export function App() {
               className="cartoon-btn bg-[#00bbf9] text-[#161426] px-3.5 py-2 text-sm md:text-base flex items-center gap-1.5"
             >
               <Globe weight="bold" className="w-5 h-5" />
-              <span>{t.langToggle}</span>
+              <span className={room ? 'hidden sm:inline' : ''}>{t.langToggle}</span>
             </button>
 
             {room && (
@@ -1624,354 +1607,27 @@ export function App() {
         } [overflow-anchor:none]`}
       >
         {!room ? (
-          /* ================= REDESIGNED 14-GAME ARCADE HUB HOME PAGE ================= */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start py-2">
-            {/* STICKY PLAYER & ROOM LAUNCHPAD CARD (4 Cols on Desktop) */}
-            <div className="lg:col-span-4 lg:sticky lg:top-4 order-1 lg:order-2">
-              <div className="cartoon-card p-5 sm:p-6 space-y-4">
-                {/* Active Selected Game Ticket */}
-                <div
-                  style={{ backgroundColor: homeSelectedMeta.bgTint }}
-                  className="border-3 border-[#161426] shadow-[0_4px_0_#161426] rounded-2xl p-3.5 flex items-center justify-between gap-2"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-white border-3 border-[#161426] flex items-center justify-center shrink-0">
-                      <PartyGameSvgIcon gameId={homeSelectedGame} className="w-8 h-8" />
-                    </div>
-                    <div className="min-w-0 leading-tight">
-                      <span className="text-[11px] font-extrabold text-[#3f3b5c] block">
-                        {lang === 'ar' ? 'اللعبة المختارة للبدء:' : 'Starting Game:'}
-                      </span>
-                      <span className="text-base font-extrabold text-[#161426] truncate block">
-                        {lang === 'ar' ? homeSelectedMeta.name_ar : homeSelectedMeta.name_en}
-                      </span>
-                      <span className="text-[11px] font-bold text-[#3f3b5c]">
-                        {lang === 'ar' ? homeSelectedMeta.players_ar : homeSelectedMeta.players_en}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => openHowToPlayFor(homeSelectedGame)}
-                    title={t.howToPlay}
-                    className="cartoon-btn bg-[#ffca3a] text-[#161426] p-2 shrink-0"
-                  >
-                    <Question weight="fill" className="w-5 h-5" />
-                  </button>
-                </div>
-
-                {errorMsg && (
-                  <div className="p-3 rounded-2xl bg-[#ff595e] text-white border-3 border-[#161426] font-extrabold text-sm text-center">
-                    {errorMsg}
-                  </div>
-                )}
-
-                {/* Player Avatar + Name */}
-                <div className="space-y-2.5">
-                  <label className="block text-sm font-extrabold text-[#161426]">
-                    {t.yourName}
-                  </label>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-12 h-12 rounded-2xl bg-white border-3 border-[#161426] p-1 shrink-0">
-                      <CartoonAvatarSvg
-                        index={CARTOON_AVATAR_COLORS.indexOf(playerColor)}
-                        color={playerColor}
-                      />
-                    </div>
-                    <input
-                      type="text"
-                      maxLength={18}
-                      value={playerName}
-                      onChange={(e) => setPlayerName(e.target.value)}
-                      placeholder={t.namePlaceholder}
-                      className="cartoon-input min-w-0 flex-1 px-4 py-2.5 bg-white text-[#161426] text-base focus:outline-none focus:ring-4 focus:ring-[#ffca3a]"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-8 gap-1.5 place-items-center pt-1">
-                    {CARTOON_AVATAR_COLORS.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => {
-                          setPlayerColor(c);
-                          setLocalPlayerColor(c);
-                        }}
-                        style={{ backgroundColor: c }}
-                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-3 border-[#161426] transition-transform cursor-pointer ${
-                          playerColor === c
-                            ? 'scale-115 shadow-[0_3px_0_#161426] ring-2 ring-[#161426]'
-                            : 'opacity-80 hover:opacity-100'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Create Online Room */}
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={handleCreateRoom}
-                  className="cartoon-btn w-full py-3.5 px-5 bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] text-lg flex items-center justify-center gap-2"
-                >
-                  <GameController weight="fill" className="w-6 h-6" />
-                  <span>{loading ? '...' : t.createRoom}</span>
-                </button>
-
-                {/* Divider */}
-                <div className="flex items-center gap-3">
-                  <div className="h-0.5 bg-[#161426]/20 flex-1 rounded-full" />
-                  <span className="font-extrabold text-[11px] text-[#161426]/65 uppercase">
-                    {lang === 'ar' ? 'أو فوت بكود الغرفة' : 'OR JOIN BY CODE'}
-                  </span>
-                  <div className="h-0.5 bg-[#161426]/20 flex-1 rounded-full" />
-                </div>
-
-                {/* Join Room Form */}
-                <form onSubmit={handleJoinRoom} className="flex items-stretch gap-2 w-full">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={joinCodeInput}
-                    onChange={(e) => setJoinCodeInput(e.target.value.toUpperCase())}
-                    placeholder={lang === 'ar' ? 'كود (WAVE)' : 'Code (WAVE)'}
-                    className="cartoon-input min-w-0 flex-1 px-3 py-2.5 bg-white text-[#161426] text-center font-extrabold text-base focus:outline-none focus:ring-4 focus:ring-[#ffca3a]"
-                  />
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="cartoon-btn bg-[#ffca3a] hover:bg-[#ffd55a] text-[#161426] px-4 py-2.5 text-sm sm:text-base shrink-0 whitespace-nowrap"
-                  >
-                    {t.joinBtn}
-                  </button>
-                </form>
-
-                {/* Pass & Play Same Device Mode */}
-                <button
-                  type="button"
-                  onClick={handleStartPassAndPlay}
-                  className="cartoon-btn w-full py-3 px-4 bg-[#00bbf9] hover:bg-[#33c9fa] text-[#161426] text-sm sm:text-base flex items-center justify-center gap-2"
-                >
-                  <DeviceMobile weight="fill" className="w-5 h-5" />
-                  <span>{t.passAndPlay}</span>
-                </button>
-
-                <p className="text-[11px] font-bold text-[#3f3b5c] text-center leading-relaxed">
-                  {lang === 'ar'
-                    ? `غرفة واحدة تجمع كل الـ ${PARTY_GAMES_CATALOG.length} لعبة! فيكم تبدلوا اللعبة بأي وقت مع نفس الأصحاب ونفس لوحة النقاط.`
-                    : `One room, ${PARTY_GAMES_CATALOG.length} games! Switch games anytime with the same group & shared Leaderboard.`}
-                </p>
-              </div>
-            </div>
-
-            {/* CATEGORIZED 14-GAME ARCADE SHELF (8 Cols on Desktop) */}
-            <div className="lg:col-span-8 space-y-5 order-2 lg:order-1">
-              {/* Featured Selected Game Spotlight Banner + Live SVG Tutorial Stage */}
-              <div className="cartoon-panel-dark p-4 sm:p-6 relative overflow-hidden">
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                  {/* Spotlight Text */}
-                  <div className="md:col-span-6 space-y-2.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        style={{ backgroundColor: homeSelectedMeta.accent }}
-                        className="cartoon-badge text-white px-3 py-0.5 text-xs"
-                      >
-                        {lang === 'ar' ? homeSelectedMeta.tag_ar : homeSelectedMeta.tag_en}
-                      </span>
-                      <span className="cartoon-badge bg-[#191636] text-[#ffca3a] px-3 py-0.5 text-xs flex items-center gap-1">
-                        <Users weight="fill" className="w-3.5 h-3.5" />
-                        <span>
-                          {lang === 'ar' ? homeSelectedMeta.players_ar : homeSelectedMeta.players_en}
-                        </span>
-                      </span>
-                    </div>
-
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-[#ffca3a] flex items-center gap-2.5">
-                      <PartyGameSvgIcon gameId={homeSelectedGame} className="w-9 h-9 shrink-0" />
-                      <span>
-                        {lang === 'ar' ? homeSelectedMeta.name_ar : homeSelectedMeta.name_en}
-                      </span>
-                    </h2>
-
-                    <p className="text-sm font-bold text-[#d9d4f7] leading-relaxed">
-                      {lang === 'ar' ? homeSelectedMeta.longDesc_ar : homeSelectedMeta.longDesc_en}
-                    </p>
-
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => openHowToPlayFor(homeSelectedGame)}
-                        className="cartoon-btn bg-[#ffca3a] text-[#161426] px-4 py-2 text-xs sm:text-sm flex items-center gap-1.5"
-                      >
-                        <FilmStrip weight="fill" className="w-4 h-4 text-[#161426]" />
-                        <span>
-                          {lang === 'ar' ? 'تكبير الشرح المتحرك' : 'Full Animated Guide'}
-                        </span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={pickRandomHomeGame}
-                        className="cartoon-btn bg-[#9b5de5] text-white px-4 py-2 text-xs sm:text-sm flex items-center gap-1.5"
-                      >
-                        <Shuffle weight="bold" className="w-4 h-4" />
-                        <span>{lang === 'ar' ? 'اقترحلي لعبة عشوائية!' : 'Surprise Me!'}</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Live 4-Step Animated SVG Tutorial Preview for ANY Selected Game! */}
-                  <div className="md:col-span-6">
-                    <GameTutorialPlayer
-                      gameId={homeSelectedGame}
-                      lang={lang}
-                      compact={true}
-                      onExpandModal={() => openHowToPlayFor(homeSelectedGame)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Category Filter Pills & Instant Search */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-                <div className="flex flex-wrap gap-2">
-                  {homeCategories.map((c) => {
-                    const active = homeCategory === c.id;
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setHomeCategory(c.id)}
-                        className={`cartoon-badge px-3.5 py-1.5 text-xs sm:text-sm cursor-pointer transition-all ${
-                          active
-                            ? 'bg-[#ffca3a] text-[#161426] -translate-y-0.5'
-                            : 'bg-[#25204d] text-[#fff9ec] hover:bg-[#322b66]'
-                        }`}
-                      >
-                        {lang === 'ar' ? c.ar : c.en}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="relative sm:w-56">
-                  <MagnifyingGlass
-                    weight="bold"
-                    className="w-4 h-4 text-[#3f3b5c] absolute top-1/2 -translate-y-1/2 start-3.5 pointer-events-none"
-                  />
-                  <input
-                    type="text"
-                    value={homeSearch}
-                    onChange={(e) => setHomeSearch(e.target.value)}
-                    placeholder={
-                      lang === 'ar'
-                        ? `ابحث في الـ ${PARTY_GAMES_CATALOG.length} لعبة...`
-                        : `Search ${PARTY_GAMES_CATALOG.length} games...`
-                    }
-                    className="cartoon-input w-full ps-9 pe-3 py-2 bg-[#fff9ec] text-[#161426] text-xs sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* 20-GAME ARCADE POSTER CARDS GRID */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredHomeGames.map((g) => {
-                  const isPicked = homeSelectedGame === g.id;
-                  return (
-                    <div
-                      key={g.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setHomeSelectedGame(g.id)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          setHomeSelectedGame(g.id);
-                        }
-                      }}
-                      className={`group rounded-3xl border-4 border-[#161426] overflow-hidden transition-all cursor-pointer flex flex-col ${
-                        isPicked
-                          ? 'bg-[#ffca3a] text-[#161426] shadow-[0_7px_0_#161426] -translate-y-1'
-                          : 'bg-[#fff9ec] hover:bg-white text-[#161426] shadow-[0_5px_0_#161426] hover:-translate-y-1'
-                      }`}
-                    >
-                      {/* Big Illustrated Art Stage */}
-                      <div
-                        style={{ backgroundColor: g.bgTint }}
-                        className="relative h-32 sm:h-36 w-full border-b-4 border-[#161426] flex items-center justify-center overflow-hidden"
-                      >
-                        <div className="absolute inset-0 bg-[radial-gradient(#161426_1.2px,transparent_1.2px)] [background-size:12px_12px] opacity-15 pointer-events-none" />
-
-                        {/* Top-Start Corner Badge (Picked Check or New Sparkle) */}
-                        <div className="absolute top-2.5 start-2.5 z-10 flex items-center gap-1.5">
-                          {isPicked ? (
-                            <span className="w-7 h-7 rounded-full bg-[#8ac926] text-[#161426] border-2 border-[#161426] shadow-[0_2px_0_#161426] flex items-center justify-center">
-                              <Check weight="bold" className="w-4 h-4" />
-                            </span>
-                          ) : g.isNew ? (
-                            <span className="cartoon-badge bg-[#ff595e] text-white px-2.5 py-0.5 text-[11px] flex items-center gap-1 shadow-[0_2px_0_#161426]">
-                              <Sparkle weight="fill" className="w-3 h-3 text-[#ffca3a]" />
-                              <span>{lang === 'ar' ? 'جديد' : 'NEW'}</span>
-                            </span>
-                          ) : null}
-                        </div>
-
-                        {/* Top-End Corner Guide Button */}
-                        <div className="absolute top-2.5 end-2.5 z-10">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setHomeSelectedGame(g.id);
-                              openHowToPlayFor(g.id);
-                            }}
-                            title={lang === 'ar' ? 'شاهد الشرح المتحرك' : 'Watch Animated Guide'}
-                            className="cartoon-badge bg-white/95 hover:bg-white text-[#161426] px-2.5 py-1 text-[11px] flex items-center gap-1 cursor-pointer shadow-[0_2px_0_#161426]"
-                          >
-                            <FilmStrip weight="fill" className="w-3.5 h-3.5 text-[#1982c4]" />
-                            <span>{lang === 'ar' ? 'شرح' : 'Guide'}</span>
-                          </button>
-                        </div>
-
-                        {/* Large Game Artwork */}
-                        <div className="relative z-0 transform transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3 drop-shadow-[0_4px_0_rgba(22,20,38,0.18)]">
-                          <PartyGameSvgIcon gameId={g.id} className="w-22 h-22 sm:w-24 sm:h-24" />
-                        </div>
-                      </div>
-
-                      {/* Clean Poster Footer: Title + Cute Players Pill ONLY */}
-                      <div className="p-3.5 flex flex-col items-center justify-center text-center gap-2 flex-1">
-                        <h3 className="font-extrabold text-lg sm:text-xl text-[#161426] leading-tight">
-                          {lang === 'ar' ? g.name_ar : g.name_en}
-                        </h3>
-
-                        <div
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-[#161426] shadow-[0_2px_0_#161426] text-xs font-extrabold text-[#161426] ${
-                            isPicked ? 'bg-white' : 'bg-[#fef3c7]'
-                          }`}
-                        >
-                          <span className="inline-flex items-center -space-x-1.5 rtl:space-x-reverse">
-                            <span className="w-4 h-4 rounded-full bg-[#ff595e] border-2 border-[#161426] flex items-center justify-center">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                            </span>
-                            <span className="w-4 h-4 rounded-full bg-[#00bbf9] border-2 border-[#161426] flex items-center justify-center">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                            </span>
-                            <span className="w-4 h-4 rounded-full bg-[#8ac926] border-2 border-[#161426] flex items-center justify-center">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-                            </span>
-                          </span>
-                          <span>{lang === 'ar' ? g.players_ar : g.players_en}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          /* ================= ARCADE HUB HOME PAGE ================= */
+          <HomePage
+            lang={lang}
+            selectedGame={homeSelectedGame}
+            onSelectGame={setHomeSelectedGame}
+            onOpenGuide={openHowToPlayFor}
+            playerName={playerName}
+            onPlayerNameChange={setPlayerName}
+            playerColor={playerColor}
+            onPlayerColorChange={(c) => {
+              setPlayerColor(c);
+              setLocalPlayerColor(c);
+            }}
+            joinCode={joinCodeInput}
+            onJoinCodeChange={setJoinCodeInput}
+            loading={loading}
+            errorMsg={errorMsg}
+            onCreateRoom={handleCreateRoom}
+            onJoinRoom={handleJoinRoom}
+            onPassAndPlay={handleStartPassAndPlay}
+          />
         ) : room.status === 'lobby' ? (
           /* ================= ONLINE ROOM LOBBY ================= */
           <div className="max-w-4xl mx-auto w-full space-y-5 my-auto">
@@ -2326,7 +1982,9 @@ export function App() {
                   className="cartoon-btn bg-[#00bbf9] text-[#161426] px-3 py-1.5 text-xs sm:text-sm flex items-center gap-1.5"
                 >
                   <FilmStrip weight="fill" className="w-4 h-4" />
-                  <span>{lang === 'ar' ? 'شرح متحرك' : 'Guide'}</span>
+                  <span className={isImmersiveTable ? 'hidden sm:inline' : ''}>
+                    {lang === 'ar' ? 'شرح متحرك' : 'Guide'}
+                  </span>
                 </button>
 
                 {/* Switch Game Modal Button (For Host / Pass & Play) */}
@@ -2337,7 +1995,7 @@ export function App() {
                     className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-1.5 text-xs sm:text-sm flex items-center gap-1.5"
                   >
                     <SquaresFour weight="fill" className="w-4 h-4" />
-                    <span>
+                    <span className={isImmersiveTable ? 'hidden sm:inline' : ''}>
                       {lang === 'ar'
                         ? `تبديل اللعبة (${PARTY_GAMES_CATALOG.length})`
                         : `Switch Game (${PARTY_GAMES_CATALOG.length})`}
@@ -2385,7 +2043,8 @@ export function App() {
                 <div className="cartoon-badge bg-[#8ac926] text-[#161426] px-3.5 py-1 text-xs sm:text-sm flex items-center gap-1.5">
                   <Trophy weight="fill" className="w-4 h-4" />
                   <span>
-                    {t.totalScore}: {room.coop_score}
+                    <span className={isImmersiveTable ? 'hidden sm:inline' : ''}>{t.totalScore}: </span>
+                    {room.coop_score}
                   </span>
                 </div>
 
@@ -2819,7 +2478,6 @@ export function App() {
                     isPassAndPlay={isPassAndPlay}
                     lang={lang}
                     onUpdateGameData={handleUpdateMiniGameData}
-                    onStartNewRound={() => handleSelectPartyGame('boomdeck')}
                   />
                 ) : (
                   /* WAVELENGTH GAME BOARD */

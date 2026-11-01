@@ -78,6 +78,141 @@
   font-weight: 800;
 }
 
+/* Home page: stage rays, poster halftone, hand-placed card tilt */
+.home-rays {
+  width: 1400px;
+  height: 1400px;
+  top: calc(50% - 700px);
+  inset-inline-end: calc(25% - 700px);
+  background: repeating-conic-gradient(rgba(255, 255, 255, 0.16) 0deg 12deg, transparent 12deg 24deg);
+  animation: homeRaysSpin 90s linear infinite;
+}
+
+@media (max-width: 639.98px) {
+  .home-rays {
+    top: calc(35% - 700px);
+    inset-inline-end: calc(76px - 700px);
+  }
+}
+
+@keyframes homeRaysSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes homeTextIn {
+  from { opacity: 0; transform: translateY(8px); }
+}
+
+@keyframes homeArtPop {
+  0% { opacity: 0; transform: scale(0.6) rotate(-14deg); }
+  70% { opacity: 1; transform: scale(1.06) rotate(-2deg); }
+  100% { transform: scale(1) rotate(-4deg); }
+}
+
+.home-text-in {
+  animation: homeTextIn 0.18s ease-out;
+}
+
+.home-art-pop {
+  transform: rotate(-4deg);
+  animation: homeArtPop 0.32s ease-out;
+}
+
+/* Boom Deck table: turn glow, ready pile, fuse spark, explosion shake */
+@keyframes boomTurnGlow {
+  0%, 100% { box-shadow: 0 0 0 3px #ffca3a, 0 0 8px 2px rgba(255, 202, 58, 0.5); }
+  50% { box-shadow: 0 0 0 4px #ffca3a, 0 0 22px 8px rgba(255, 202, 58, 0.75); }
+}
+
+@keyframes boomPileReady {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes boomFuseSpark {
+  0%, 100% { transform: scale(0.8); opacity: 0.85; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+
+@keyframes boomTableShake {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  12% { transform: translate(-14px, 8px) rotate(-1.4deg); }
+  26% { transform: translate(13px, -9px) rotate(1.2deg); }
+  40% { transform: translate(-10px, -6px) rotate(-0.9deg); }
+  56% { transform: translate(8px, 6px) rotate(0.7deg); }
+  72% { transform: translate(-4px, 3px) rotate(-0.3deg); }
+  86% { transform: translate(2px, -2px) rotate(0.1deg); }
+}
+
+@keyframes boomTableNudge {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(7px); }
+  60% { transform: translateY(-3px); }
+}
+
+.boom-table-nudge {
+  animation: boomTableNudge 0.32s ease-out;
+}
+
+.boom-turn-glow {
+  animation: boomTurnGlow 1.4s ease-in-out infinite;
+}
+
+.boom-pile-ready {
+  animation: boomPileReady 1.6s ease-in-out infinite;
+}
+
+.boom-fuse-spark {
+  animation: boomFuseSpark 0.45s ease-in-out infinite;
+}
+
+.boom-table-shake {
+  animation: boomTableShake 0.7s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boom-turn-glow,
+  .boom-pile-ready,
+  .boom-fuse-spark,
+  .boom-table-nudge,
+  .boom-table-shake {
+    animation: none;
+  }
+}
+
+.home-halftone {
+  background-image: radial-gradient(rgba(22, 20, 38, 0.2) 1.5px, transparent 1.5px);
+  background-size: 11px 11px;
+}
+
+.home-card {
+  rotate: var(--tilt, 0deg);
+  transition: rotate 0.15s ease;
+}
+
+.home-card:hover,
+.home-card:focus-within {
+  rotate: 0deg;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #fff9ec;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-rays,
+  .home-text-in,
+  .home-art-pop {
+    animation: none;
+  }
+
+  .home-card {
+    rotate: 0deg;
+  }
+}
+
 @keyframes floatSlow {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-6px) rotate(1.5deg); }

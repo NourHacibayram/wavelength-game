@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import confetti from 'canvas-confetti';
 import { soundManager } from '../utils/soundManager';
 import {
   Flame,
@@ -125,7 +127,6 @@ interface BoomDeckGameProps {
     nextData: BoomDeckGameState,
     scoreAwards?: Record<string, number>
   ) => void;
-  onStartNewRound: () => void;
 }
 
 export const BOOM_CARD_META: Record<
@@ -163,7 +164,7 @@ export const BOOM_CARD_META: Record<
   },
   defuse: {
     name_ar: 'مقص الإنقاذ',
-    name_en: 'Defuse',
+    name_en: 'Wire Cutters',
     short_ar: 'ينقذك من القنبلة تلقائياً',
     short_en: 'Saves you from a Bomb',
     desc_ar: 'يشتغل تلقائياً عند سحب القنبلة! ينقذك ويخليك تزرعها بأي مكان بالكومة بالسر!',
@@ -2864,9 +2865,19 @@ export interface SeatCoord {
   isBottomViewer: boolean;
 }
 
-const DRAW_PILE_COORD = { x: 415, y: 270 };
-const DISCARD_PILE_COORD = { x: 585, y: 270 };
-const TABLE_CENTER_COORD = { x: 500, y: 270 };
+const DEFAULT_DRAW_PILE_COORD = { x: 415, y: 270 };
+const DEFAULT_DISCARD_PILE_COORD = { x: 585, y: 270 };
+const DEFAULT_TABLE_CENTER_COORD = { x: 500, y: 270 };
+
+/** Live positions measured off the table, so effects land on the real seats at any size */
+export interface ArenaFxGeometry {
+  viewW: number;
+  viewH: number;
+  seats: Record<string, SeatCoord>;
+  draw: { x: number; y: number };
+  discard: { x: number; y: number };
+  center: { x: number; y: number };
+}
 
 export function computeTableSeatCoords(
   players: { id: string }[],
@@ -2967,18 +2978,26 @@ export const ArenaSpatialFXLayer: React.FC<{
   cinematic: BoomCinematicEvent | null;
   suppressSelfDrawFlight?: boolean;
   ar: boolean;
-}> = ({ seatCoords, cinematic, suppressSelfDrawFlight = false, ar }) => {
+  geometry?: ArenaFxGeometry | null;
+}> = ({ seatCoords: fallbackSeats, cinematic, suppressSelfDrawFlight = false, ar, geometry }) => {
   const uid = React.useId().replace(/:/g, '');
   if (!cinematic) return null;
 
-  const actorSeat = seatCoords[cinematic.actorId] || { x: 500, y: 475 };
+  const seatCoords = geometry?.seats ?? fallbackSeats;
+  const DRAW_PILE_COORD = geometry?.draw ?? DEFAULT_DRAW_PILE_COORD;
+  const DISCARD_PILE_COORD = geometry?.discard ?? DEFAULT_DISCARD_PILE_COORD;
+  const TABLE_CENTER_COORD = geometry?.center ?? DEFAULT_TABLE_CENTER_COORD;
+  const viewW = geometry?.viewW ?? 1000;
+  const viewH = geometry?.viewH ?? 560;
+
+  const actorSeat = seatCoords[cinematic.actorId] || { x: viewW / 2, y: viewH * 0.85 };
   const targetSeat =
     (cinematic.targetId && seatCoords[cinematic.targetId]) ||
     DISCARD_PILE_COORD;
 
   return (
     <svg
-      viewBox="0 0 1000 560"
+      viewBox={`0 0 ${viewW} ${viewH}`}
       className="absolute inset-0 w-full h-full pointer-events-none z-40 overflow-visible"
       preserveAspectRatio="xMidYMid meet"
     >
@@ -3323,7 +3342,7 @@ export const ArenaSpatialFXLayer: React.FC<{
         {/* ==================== REVERSE: SINGLE 180-DEGREE COMPASS ROTATION (NO INFINITE SPIN!) ==================== */}
         {cinematic.type === 'reverse' && (
           <g
-            transform="translate(500, 270)"
+            transform={`translate(${TABLE_CENTER_COORD.x}, ${TABLE_CENTER_COORD.y})`}
             filter={`url(#cardDropShadow_${uid})`}
           >
             <g>
@@ -3490,11 +3509,11 @@ export const ArenaSpatialFXLayer: React.FC<{
               <animateTransform
                 attributeName="transform"
                 type="scale"
-                values="1.45;1"
-                keyTimes="0; 1"
+                values="3.4;0.86;1.12"
+                keyTimes="0; 0.55; 1"
                 calcMode="spline"
-                keySplines="0.22 1 0.36 1"
-                dur="0.45s"
+                keySplines="0.55 0 1 0.45; 0.22 1 0.36 1"
+                dur="0.5s"
                 fill="freeze"
               />
               <polygon
@@ -3706,6 +3725,372 @@ export const ArenaSpatialFXLayer: React.FC<{
 /* ============================================================================
  * MAIN BOOM DECK ("الفتيل الملعون") FULL-SCREEN TABLETOP ARENA COMPONENT
  * ========================================================================== */
+/* ============================================================================
+ * RESPONSIVE TABLE GEOMETRY + DRAW SUSPENSE + BURNING FUSE
+ * ========================================================================== */
+const MIN_TABLE_H = 540;
+const HAND_CARD_W = 136;
+const HAND_CARD_H = 192;
+const CONSOLE_W = 500;
+const CONSOLE_H = 286;
+const DRAW_REVEAL_MS = 1000;
+
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+
+/** Where card `idx` of `n` sits in a hand fan that always fits `width` */
+function computeHandFan(idx: number, n: number, width: number, cardH: number) {
+  const scale = cardH / HAND_CARD_H;
+  const cardW = HAND_CARD_W * scale;
+  const usable = Math.max(width, cardW);
+  const step = n <= 1 ? 0 : Math.min(cardW * 0.88, (usable - cardW - 8) / (n - 1));
+  const total = cardW + step * (n - 1);
+  const center = (usable - total) / 2 + cardW / 2 + step * idx;
+  const offset = idx - (n - 1) / 2;
+  return {
+    scale,
+    x: center - HAND_CARD_W / 2,
+    y: Math.min(16, offset * offset * 1.3 * scale),
+    rotate: offset * Math.min(4, 26 / Math.max(1, n)),
+  };
+}
+
+/** The drawn card rises face-down, trembles, flips — and only then do you know */
+const DrawRevealCard: React.FC<{ card: BoomCard; ar: boolean; reduceMotion: boolean }> = ({
+  card,
+  ar,
+  reduceMotion,
+}) => {
+  const isBomb = card.type === 'bomb';
+  const times = [0, 0.36, 0.62, 1];
+  const duration = reduceMotion ? 0 : DRAW_REVEAL_MS / 1000;
+  return (
+    <motion.div
+      style={{ perspective: 900 }}
+      className="absolute inset-0 z-50 pointer-events-none"
+      initial={{ y: 0, scale: 1, rotate: 0, opacity: 1 }}
+      animate={
+        isBomb
+          ? { y: [0, -30, -30, -18], scale: [1, 1.08, 1.12, 1.3], rotate: [0, -2.5, 0, 2], opacity: 1 }
+          : { y: [0, -30, -30, 190], scale: [1, 1.08, 1.12, 0.86], rotate: [0, -2.5, 0, 0], opacity: [1, 1, 1, 0] }
+      }
+      transition={{ duration, times, ease: 'easeOut' }}
+    >
+      <motion.div
+        style={{ transformStyle: 'preserve-3d' }}
+        className="relative w-full h-full"
+        initial={{ rotateY: 180 }}
+        animate={{ rotateY: [180, 180, 0, 0] }}
+        transition={{ duration, times, ease: 'easeInOut' }}
+      >
+        <div className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden]">
+          <BoomPlayingCard
+            type={card.type}
+            ar={ar}
+            size="lg"
+            actionLabel={
+              isBomb
+                ? ar
+                  ? 'لغم مشتعل!'
+                  : 'LIT BOMB!'
+                : ar
+                ? 'تم سحب الكرت ليدك!'
+                : 'Drawn to Hand!'
+            }
+          />
+        </div>
+        <div
+          style={{ transform: 'rotateY(180deg)' }}
+          className="absolute inset-0 [backface-visibility:hidden]"
+        >
+          <BoomCardBackSvg className="w-full h-full" />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+/** Danger as a fuse burning toward the bomb, instead of a bare percentage */
+const BurningFuse: React.FC<{ riskPercent: number; ar: boolean }> = ({ riskPercent, ar }) => {
+  const burned = clamp(riskPercent * 2, 4, 100);
+  return (
+    <div
+      dir="ltr"
+      role="img"
+      aria-label={ar ? `خطر القنبلة ${riskPercent}%` : `Bomb risk ${riskPercent}%`}
+      className="absolute bottom-0 inset-x-6 h-5 flex items-center gap-2"
+    >
+      <div className="relative flex-1 h-2 rounded-full bg-[#161426]/80 border border-[#161426]">
+        <div
+          style={{ width: `${burned}%` }}
+          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#ffca3a] via-[#ff924c] to-[#e11d48] transition-[width] duration-700"
+        />
+        <span
+          style={{ left: `${burned}%` }}
+          className="boom-fuse-spark absolute top-1/2 w-4 h-4 -mt-2 -ml-2 rounded-full bg-[#fff9ec] shadow-[0_0_10px_4px_#ffca3a] transition-[left] duration-700"
+        />
+      </div>
+      <span className="text-sm font-black text-[#ffca3a] tabular-nums">{riskPercent}%</span>
+    </div>
+  );
+};
+
+/** Slide the lit bomb along the deck and bury it exactly where it hurts most */
+const PlantBombVault: React.FC<{
+  deckCount: number;
+  plantingName: string;
+  ar: boolean;
+  reduceMotion: boolean;
+  onPlant: (position: number) => void;
+}> = ({ deckCount, plantingName, ar, reduceMotion, onPlant }) => {
+  const [slot, setSlot] = useState<number>(0);
+  const [isPlanting, setIsPlanting] = useState<boolean>(false);
+  const [trackW, setTrackW] = useState<number>(340);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const draggingRef = useRef<boolean>(false);
+
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const measure = () => setTrackW(track.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, []);
+
+  const lastSlot = deckCount;
+  const cardW = 44;
+  const cardH = 62;
+  const gap = cardW + 6;
+  const step =
+    deckCount <= 1 ? 0 : Math.min(26, Math.max(2, (trackW - cardW - gap - 8) / (deckCount - 1)));
+  const rowW = deckCount > 0 ? cardW + step * (deckCount - 1) + gap : gap;
+  const start = (trackW - rowW) / 2;
+  // The next card to be drawn sits at the reading start of the row (right side in Arabic)
+  const toScreenX = (x: number) => (ar ? trackW - x - cardW : x);
+
+  const moveTo = (next: number) => {
+    const clamped = clamp(next, 0, lastSlot);
+    if (clamped !== slot) navigator.vibrate?.(8);
+    setSlot(clamped);
+  };
+  const slotFromPointer = (clientX: number) => {
+    const rect = trackRef.current?.getBoundingClientRect();
+    if (!rect) return slot;
+    const raw = ar ? rect.right - clientX : clientX - rect.left;
+    return step > 0 ? Math.round((raw - start - gap / 2) / step) : raw > trackW / 2 ? lastSlot : 0;
+  };
+  const confirmPlant = () => {
+    if (isPlanting) return;
+    setIsPlanting(true);
+    setTimeout(() => onPlant(slot), reduceMotion ? 0 : 420);
+  };
+
+  const hint =
+    slot === 0
+      ? ar
+        ? 'اللي بعدك رح يسحبها فوراً!'
+        : 'The next player draws it right away!'
+      : slot === lastSlot
+      ? ar
+        ? 'بآخر الكومة: لسا بعيدة عن الكل'
+        : 'At the very bottom: a long way off'
+      : ar
+      ? `رح تنفجر بعد ${slot} ${slot === 1 ? 'سحبة' : 'سحبات'}`
+      : `It goes off after ${slot} ${slot === 1 ? 'draw' : 'draws'}`;
+
+  return (
+    <div className="space-y-2.5">
+      <h3 className="text-base sm:text-lg font-black text-[#161426] leading-tight">
+        {ar ? `يا ${plantingName}، وين بدك تخبّي القنبلة؟` : `${plantingName}, where will you hide the bomb?`}
+      </h3>
+
+      <div className="flex items-center justify-between text-[11px] font-black text-[#3f3b5c] px-1">
+        <span>{ar ? 'الكرت الجاي' : 'Next card'}</span>
+        <span>{ar ? 'آخر الكومة' : 'Bottom'}</span>
+      </div>
+
+      <div
+        ref={trackRef}
+        role="slider"
+        tabIndex={0}
+        aria-label={ar ? 'مكان القنبلة بالكومة' : 'Bomb position in the deck'}
+        aria-valuemin={1}
+        aria-valuemax={lastSlot + 1}
+        aria-valuenow={slot + 1}
+        aria-valuetext={hint}
+        dir="ltr"
+        style={{ height: cardH + 46, touchAction: 'none' }}
+        onPointerDown={(e) => {
+          if (isPlanting) return;
+          draggingRef.current = true;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          moveTo(slotFromPointer(e.clientX));
+        }}
+        onPointerMove={(e) => {
+          if (draggingRef.current && !isPlanting) moveTo(slotFromPointer(e.clientX));
+        }}
+        onPointerUp={() => {
+          draggingRef.current = false;
+        }}
+        onPointerCancel={() => {
+          draggingRef.current = false;
+        }}
+        onKeyDown={(e) => {
+          if (isPlanting) return;
+          const forward = ar ? 'ArrowLeft' : 'ArrowRight';
+          const back = ar ? 'ArrowRight' : 'ArrowLeft';
+          if (e.key === forward) moveTo(slot + 1);
+          else if (e.key === back) moveTo(slot - 1);
+          else if (e.key === 'Home') moveTo(0);
+          else if (e.key === 'End') moveTo(lastSlot);
+          else if (e.key === 'Enter') confirmPlant();
+          else return;
+          e.preventDefault();
+        }}
+        className="relative rounded-2xl bg-[#191636] border-3 border-[#161426] cursor-grab active:cursor-grabbing overflow-hidden select-none"
+      >
+        {Array.from({ length: deckCount }).map((_, i) => {
+          const closed = isPlanting ? 0 : gap;
+          const baseX = start + i * step + (i >= slot ? closed : 0);
+          return (
+            <motion.div
+              key={i}
+              className="absolute pointer-events-none drop-shadow-[0_3px_0_#120f29]"
+              style={{ width: cardW, height: cardH, bottom: 6, left: 0, zIndex: 5 + i }}
+              initial={false}
+              animate={{ x: toScreenX(baseX) }}
+              transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 480, damping: 34 }}
+            >
+              <BoomCardBackSvg className="w-full h-full" />
+            </motion.div>
+          );
+        })}
+
+        <motion.div
+          className="absolute pointer-events-none"
+          style={{ width: cardW + 10, height: cardH + 14, bottom: 6, left: 0, zIndex: slot + 5 }}
+          initial={false}
+          animate={{
+            x: toScreenX(start + slot * step + (gap - cardW) / 2) - 5,
+            y: isPlanting ? 8 : -26,
+            scale: isPlanting ? 0.74 : 1,
+            rotate: isPlanting ? 0 : ar ? 4 : -4,
+            opacity: isPlanting ? 0 : 1,
+          }}
+          transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 460, damping: 28 }}
+        >
+          <div className="w-full h-full rounded-xl bg-[#e11d48] border-3 border-[#161426] shadow-[0_0_16px_4px_rgba(255,202,58,0.75)] flex items-center justify-center overflow-hidden">
+            <PartyGameSvgIcon gameId="boomdeck" className="w-11 h-11" />
+          </div>
+        </motion.div>
+      </div>
+
+      <p aria-live="polite" className="text-sm font-black text-[#e11d48] min-h-5">
+        {hint}
+      </p>
+
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={isPlanting}
+          onClick={() => moveTo(Math.floor(Math.random() * (lastSlot + 1)))}
+          className="cartoon-btn bg-white text-[#161426] px-3 py-2 text-sm cursor-pointer flex items-center gap-1.5 shrink-0"
+        >
+          <Shuffle weight="bold" className="w-4 h-4" />
+          <span>{ar ? 'عشوائي' : 'Random'}</span>
+        </button>
+        <button
+          type="button"
+          disabled={isPlanting}
+          onClick={confirmPlant}
+          className="cartoon-btn bg-[#ffca3a] hover:bg-[#fde047] text-[#161426] flex-1 py-2 text-base cursor-pointer"
+        >
+          {ar ? 'ازرعها هون' : 'Plant it here'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/** Last survivor: the winner's moment, with how everybody finished */
+const BoomChampionCard: React.FC<{
+  winner?: PlayerInfo;
+  winnerIndex: number;
+  ranking: { id: string; name: string; points: number }[];
+  isMeWinner: boolean;
+  ar: boolean;
+  reduceMotion: boolean;
+  canStartNew: boolean;
+  onStartNewRound: () => void;
+}> = ({ winner, winnerIndex, ranking, isMeWinner, ar, reduceMotion, canStartNew, onStartNewRound }) => (
+  <motion.div
+    initial={reduceMotion ? false : { scale: 0.5, y: 40, opacity: 0, rotate: -3 }}
+    animate={{ scale: 1, y: 0, opacity: 1, rotate: 0 }}
+    transition={{ type: 'spring', stiffness: 320, damping: 19, delay: reduceMotion ? 0 : 0.5 }}
+    className="absolute inset-x-3 top-1/2 -mt-[150px] z-[60] mx-auto max-w-md rounded-[28px] overflow-hidden border-4 border-[#161426] shadow-[0_12px_0_#161426] bg-[#ffca3a] text-[#161426] text-center"
+  >
+    <div className="home-rays absolute pointer-events-none" />
+    <div className="relative p-4 space-y-2.5">
+      <motion.div
+        initial={reduceMotion ? false : { scale: 0, rotate: -30 }}
+        animate={{ scale: 1, rotate: -4 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 13, delay: reduceMotion ? 0 : 0.75 }}
+        className="relative w-20 h-20 mx-auto rounded-3xl bg-white border-4 border-[#161426] shadow-[0_5px_0_#161426]"
+      >
+        <div className="w-full h-full rounded-[20px] overflow-hidden">
+          <CartoonAvatarSvg index={winnerIndex} color={winner?.avatar_color} />
+        </div>
+        <Trophy
+          weight="fill"
+          className="absolute -top-3 -end-3 w-9 h-9 text-[#e11d48] drop-shadow-[0_2px_0_#161426]"
+        />
+      </motion.div>
+
+      <h3 className="text-2xl font-black leading-tight">
+        {isMeWinner
+          ? ar
+            ? 'نجيت! إنت البطل!'
+            : 'You survived! You win!'
+          : ar
+          ? `${winner?.name || ''} هو الناجي الأخير!`
+          : `${winner?.name || ''} is the last survivor!`}
+      </h3>
+
+      <ol className="space-y-1 text-sm font-black">
+        {ranking.map((row, idx) => (
+          <li
+            key={row.id}
+            className={`flex items-center justify-between gap-2 px-3 py-1 rounded-xl border-2 border-[#161426] ${
+              idx === 0 ? 'bg-white' : 'bg-[#fff9ec]/70'
+            }`}
+          >
+            <span className="min-w-0 truncate">
+              {idx + 1}. {row.name}
+            </span>
+            <span dir="ltr" className="shrink-0 text-[#15803d]">
+              {row.points > 0 ? `+${row.points}` : idx === 0 ? '' : '0'}
+            </span>
+          </li>
+        ))}
+      </ol>
+
+      {canStartNew ? (
+        <button
+          type="button"
+          onClick={onStartNewRound}
+          className="cartoon-btn bg-[#8ac926] text-[#161426] w-full py-2 text-base inline-flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <Flame weight="fill" className="w-5 h-5 text-[#e11d48]" />
+          <span>{ar ? 'جولة تانية!' : 'Another round!'}</span>
+        </button>
+      ) : (
+        <p className="text-xs font-black">{ar ? 'بانتظار المضيف...' : 'Waiting for the host...'}</p>
+      )}
+    </div>
+  </motion.div>
+);
+
 export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   gameData,
   players,
@@ -3714,7 +4099,6 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   isPassAndPlay,
   lang,
   onUpdateGameData,
-  onStartNewRound,
 }) => {
   const ar = lang === 'ar';
   const arenaRef = useRef<HTMLDivElement>(null);
@@ -3746,7 +4130,56 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     card: BoomCard;
     targetPlayerId: string;
   } | null>(null);
-  const [customBombSlot, setCustomBombSlot] = useState<number>(1);
+  const [nudgeId, setNudgeId] = useState<string | null>(null);
+  const [fxGeometry, setFxGeometry] = useState<ArenaFxGeometry | null>(null);
+  const celebratedRoundRef = useRef<string>('');
+  const reduceMotion = !!useReducedMotion();
+  const tableRef = useRef<HTMLDivElement>(null);
+  const centerRef = useRef<HTMLDivElement>(null);
+  const handSlotRef = useRef<HTMLDivElement>(null);
+  const [tableFitH, setTableFitH] = useState<number>(MIN_TABLE_H);
+  const [arenaSize, setArenaSize] = useState({ tableW: 900, tableH: 640, centerW: 700, centerH: 280, handW: 800 });
+  const [focusedCardId, setFocusedCardId] = useState<string | null>(null);
+  const [isTouchUi, setIsTouchUi] = useState<boolean>(false);
+  const [impactId, setImpactId] = useState<string | null>(null);
+  const handDealRef = useRef<{ key: string; until: number }>({ key: '', until: 0 });
+
+  // The whole table always fits the screen: measure what is left below the top bars
+  useLayoutEffect(() => {
+    const measure = () => {
+      const table = tableRef.current;
+      if (!table) return;
+      const top = table.getBoundingClientRect().top + window.scrollY;
+      setTableFitH(Math.max(MIN_TABLE_H, Math.round(window.innerHeight - top - 16)));
+      const next = {
+        tableW: table.clientWidth,
+        tableH: table.clientHeight,
+        centerW: centerRef.current?.clientWidth ?? 0,
+        centerH: centerRef.current?.clientHeight ?? 0,
+        handW: handSlotRef.current?.clientWidth ?? 0,
+      };
+      setArenaSize((prev) =>
+        (Object.keys(next) as (keyof typeof next)[]).every((k) => prev[k] === next[k]) ? prev : next
+      );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    [tableRef, centerRef, handSlotRef].forEach((r) => r.current && observer.observe(r.current));
+    window.addEventListener('resize', measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [isFullscreen, showQuickRules]);
+
+  // Overlapped cards are too small to read on touch: first tap lifts, second tap plays
+  useEffect(() => {
+    const query = window.matchMedia('(hover: none), (max-width: 767.98px)');
+    const sync = () => setIsTouchUi(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
 
   const activeViewerId = isPassAndPlay ? gameData.turnPlayerId : myPlayerId;
   const rawHand = gameData.hands?.[activeViewerId] || [];
@@ -3821,13 +4254,84 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     soundManager.playDefuseShowdownSequence();
   }, [defuseShowdown?.defuseCard?.id]);
 
+  // Measure the live table each time an effect plays, so it lands on the real seats
+  useLayoutEffect(() => {
+    const table = tableRef.current;
+    if (!activeCinematic || !table) return;
+    const rect = table.getBoundingClientRect();
+    if (!rect.width) return;
+    const viewW = Math.max(640, rect.width);
+    const unit = viewW / rect.width;
+    const toView = (el: Element | null) => {
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return {
+        x: Math.round((r.left + r.width / 2 - rect.left) * unit),
+        y: Math.round((r.top + r.height / 2 - rect.top) * unit),
+      };
+    };
+    const seats: Record<string, SeatCoord> = {};
+    table.querySelectorAll<HTMLElement>('[data-boom-seat]').forEach((el) => {
+      const pos = toView(el);
+      const id = el.dataset.boomSeat;
+      if (pos && id) seats[id] = { id, ...pos, isBottomViewer: false };
+    });
+    const hand = toView(handSlotRef.current);
+    if (hand) seats[activeViewerId] = { id: activeViewerId, ...hand, isBottomViewer: true };
+    setFxGeometry({
+      viewW,
+      viewH: Math.round(rect.height * unit),
+      seats,
+      draw: toView(table.querySelector('[data-boom-draw]')) ?? DEFAULT_DRAW_PILE_COORD,
+      discard: toView(table.querySelector('[data-boom-discard]')) ?? DEFAULT_DISCARD_PILE_COORD,
+      center: toView(centerRef.current) ?? DEFAULT_TABLE_CENTER_COORD,
+    });
+  }, [activeCinematic?.id]);
+
+  // Blocks and attacks land with a short thump on the table
+  useEffect(() => {
+    const cinematic = gameData.lastCinematic;
+    if (!cinematic || (cinematic.type !== 'block' && cinematic.type !== 'attack')) return;
+    if (Date.now() - cinematic.timestamp > 4000) return;
+    setNudgeId(cinematic.id);
+    navigator.vibrate?.(40);
+    const timer = setTimeout(() => setNudgeId(null), 340);
+    return () => clearTimeout(timer);
+  }, [gameData.lastCinematic?.id]);
+
+  // Confetti once per finished round, for everyone at the table
+  useEffect(() => {
+    if (gameData.phase !== 'round_over' || !gameData.winnerId) return;
+    const key = `${gameData.round}_${gameData.winnerId}`;
+    if (celebratedRoundRef.current === key || reduceMotion) return;
+    celebratedRoundRef.current = key;
+    const colors = ['#ffca3a', '#ff595e', '#8ac926', '#00bbf9', '#9b5de5', '#fff9ec'];
+    const timers = [
+      setTimeout(() => confetti({ particleCount: 110, spread: 90, origin: { y: 0.55 }, colors }), 650),
+      setTimeout(() => confetti({ particleCount: 70, angle: 60, spread: 70, origin: { x: 0, y: 0.7 }, colors }), 1000),
+      setTimeout(() => confetti({ particleCount: 70, angle: 120, spread: 70, origin: { x: 1, y: 0.7 }, colors }), 1000),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [gameData.phase, gameData.winnerId, gameData.round]);
+
+  // A bomb going off shakes the whole table for everyone watching
+  useEffect(() => {
+    const cinematic = gameData.lastCinematic;
+    if (!cinematic || cinematic.type !== 'exploded') return;
+    if (Date.now() - cinematic.timestamp > 4000) return;
+    setImpactId(cinematic.id);
+    navigator.vibrate?.([120, 40, 200]);
+    const timer = setTimeout(() => setImpactId(null), 900);
+    return () => clearTimeout(timer);
+  }, [gameData.lastCinematic?.id]);
+
   // Reset Pass-and-Play privacy lock when turn changes
   useEffect(() => {
     setPassAndPlayHandUnlocked(false);
     setSelectedCardId(null);
+    setFocusedCardId(null);
     setPickingMagnetTarget(false);
     setComboBuilder(null);
-    setCustomBombSlot(1);
   }, [gameData.turnPlayerId, gameData.phase]);
 
   // Reset Radar dismissal when a new Radar peek occurs
@@ -4365,7 +4869,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
     const drawerId = gameData.turnPlayerId;
     const drawerName = getPlayerName(drawerId);
 
-    // 1. Play physical local card-draw flight & flip animation first (680ms)!
+    // 1. Play the face-down rise, tremble & flip first, so the draw has real suspense!
     soundManager.playSfx('card_draw');
     setLocalDrawPreview({ card: topCard, drawerId });
 
@@ -4576,7 +5080,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
           ...(gameData.actionLog || []).slice(0, 7),
         ],
       });
-    }, 680);
+    }, DRAW_REVEAL_MS);
   };
 
   // Re-plant the defused bomb at ANY exact position (0 .. nextDeck.length) or random in the Draw Pile!
@@ -4641,8 +5145,8 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
         id: `cin_plant_${Date.now()}`,
         type: 'planted',
         actorId: planterId,
-        subtitle_ar: `${planterName} زرع الديناميت بمكان سري داخل الكومة!`,
-        subtitle_en: `${planterName} secretly planted the Dynamite back into the deck!`,
+        subtitle_ar: `${planterName} زرع القنبلة بمكان سري داخل الكومة!`,
+        subtitle_en: `${planterName} secretly planted the bomb back into the deck!`,
         timestamp: Date.now(),
       },
       actionLog: [
@@ -4673,6 +5177,32 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   ];
   const bottomPlayer = rotatedPlayers[0] || players[0];
   const rivalPlayers = rotatedPlayers.slice(1);
+  const compactSeats = arenaSize.tableW < 640 || rivalPlayers.length > 4;
+  const handCardH = clamp(Math.round(arenaSize.tableH * 0.27), 120, 215);
+  const consoleScale = clamp(
+    Math.min(arenaSize.centerW / CONSOLE_W, arenaSize.centerH / CONSOLE_H),
+    0.42,
+    1
+  );
+  const handDealKey = `${gameData.round}_${activeViewerId}_${passAndPlayHandUnlocked}`;
+  if (handDealRef.current.key !== handDealKey) {
+    handDealRef.current = { key: handDealKey, until: Date.now() + 700 };
+  }
+  const isDealing = Date.now() < handDealRef.current.until;
+
+  const isHandCardPlayable = (card: BoomCard) => {
+    const copies = handTypeCounts[card.type] || 1;
+    const isPassiveOnly = card.type === 'defuse' || (card.type === 'block' && copies < 2);
+    return (
+      gameData.phase === 'playing' &&
+      isMyTurn &&
+      !isPassiveOnly &&
+      (!isComboSetCard(card.type) || copies >= 2) &&
+      !localDrawPreview &&
+      !localPlayPreview
+    );
+  };
+  const focusedHandCard = myHand.find((c) => c.id === focusedCardId) || null;
 
   return (
     <div
@@ -4686,14 +5216,11 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
       {/* ====================================================================
           1. COMPACT BUNKER CONTROL BAR (With Fullscreen Arena Toggle + 10s Guide)
          ==================================================================== */}
-      <div className="rounded-3xl border-4 border-[#161426] bg-[#191636] px-4 py-2.5 shadow-[0_6px_0_#161426] flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-[#ffe4e6] border-3 border-[#161426] shadow-[0_3px_0_#161426] flex items-center justify-center shrink-0">
-            <PartyGameSvgIcon gameId="boomdeck" className="w-9 h-9" />
-          </div>
+      <div className="rounded-2xl border-3 border-[#161426] bg-[#191636] px-3 py-1.5 shadow-[0_4px_0_#161426] flex items-center justify-between gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base sm:text-lg font-black text-white">
+              <h2 className="hidden sm:block text-base font-black text-white">
                 {ar ? 'طاولة الفتيل الملعون' : 'Boom Deck Table'}
               </h2>
               <span className="cartoon-badge bg-[#ffca3a] text-[#161426] px-2.5 py-0.5 text-[11px]">
@@ -4704,17 +5231,12 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                   ? `الناجون: ${gameData.alivePlayerIds.length}/${players.length}`
                   : `Alive: ${gameData.alivePlayerIds.length}/${players.length}`}
               </span>
-              <span className="cartoon-badge bg-[#a855f7] text-white px-2.5 py-0.5 text-[11px] hidden md:inline-flex">
+              <span className="cartoon-badge bg-[#a855f7] text-white px-2.5 py-0.5 text-[11px] hidden lg:inline-flex">
                 {ar
                   ? getPlayerCountDeckSpec(players.length).tier_ar
                   : getPlayerCountDeckSpec(players.length).tier_en}
               </span>
             </div>
-            <p className="text-[11px] font-bold text-white/75 hidden md:block">
-              {ar
-                ? 'العب كروت القدرات من يدك أو اضغط على كومة السحب بالوسط لسحب كرت وإنهاء دورك.'
-                : 'Play ability cards from your hand or tap the center Draw Pile to draw 1 card.'}
-            </p>
           </div>
         </div>
 
@@ -4733,28 +5255,13 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
 
         {/* Right Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          <div
-            className={`cartoon-badge px-3 py-1 text-xs flex items-center gap-1.5 ${
-              bombRiskPercent >= 50
-                ? 'bg-[#e11d48] text-white'
-                : 'bg-[#25204d] text-white'
-            }`}
-          >
-            <Flame weight="fill" className="w-4 h-4 text-[#ffca3a]" />
-            <span>
-              {ar
-                ? `${bombsInDeckCount} قنابل (${bombRiskPercent}% خطر)`
-                : `${bombsInDeckCount} Bombs (${bombRiskPercent}% Risk)`}
-            </span>
-          </div>
-
           <button
             type="button"
             onClick={() => setShowQuickRules((v) => !v)}
             className="cartoon-btn bg-[#00bbf9] text-[#161426] px-3 py-1 text-xs flex items-center gap-1 cursor-pointer"
           >
             <Question weight="fill" className="w-4 h-4" />
-            <span>{ar ? 'دليل الكروت' : 'Cards Guide'}</span>
+            <span className="hidden sm:inline">{ar ? 'دليل الكروت' : 'Cards Guide'}</span>
           </button>
 
           <button
@@ -4765,12 +5272,12 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             {isFullscreen ? (
               <>
                 <CornersIn weight="bold" className="w-4 h-4" />
-                <span>{ar ? 'تصغير الشاشة' : 'Exit Fullscreen'}</span>
+                <span className="hidden sm:inline">{ar ? 'تصغير الشاشة' : 'Exit Fullscreen'}</span>
               </>
             ) : (
               <>
                 <CornersOut weight="bold" className="w-4 h-4" />
-                <span>{ar ? 'ملء الشاشة بالكامل' : 'Full Screen Table'}</span>
+                <span className="hidden sm:inline">{ar ? 'ملء الشاشة' : 'Full Screen'}</span>
               </>
             )}
           </button>
@@ -4822,7 +5329,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
               </div>
               <div className="font-bold text-[#3f3b5c]">
                 {ar
-                  ? 'مقص الأسلاك ينقذك من القنبلة ويخليك تزرعها بأي مكان بالكومة بالسر!'
+                  ? 'مقص الإنقاذ ينقذك من القنبلة ويخليك تزرعها بأي مكان بالكومة بالسر!'
                   : 'Wire Cutters save you and let you secretly hide the bomb in the deck!'}
               </div>
             </div>
@@ -4835,16 +5342,47 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
              - 100% LOCKED GEOMETRY (Fixed Height = Zero Growing/Shrinking!)
          ==================================================================== */}
       <div
-        className={`relative w-full rounded-[42px] border-[8px] border-[#3b2314] ring-4 ring-[#161426] shadow-[0_14px_0_#161426,inset_0_0_80px_rgba(0,0,0,0.75)] overflow-hidden flex flex-col justify-between p-3 sm:p-5 ${
-          isFullscreen ? 'flex-1 h-full' : 'h-[760px] sm:h-[800px]'
-        } ${
+        ref={tableRef}
+        style={isFullscreen ? undefined : { height: tableFitH }}
+        className={`relative w-full rounded-[26px] sm:rounded-[42px] border-[5px] sm:border-[8px] border-[#3b2314] ring-4 ring-[#161426] shadow-[0_8px_0_#161426,inset_0_0_80px_rgba(0,0,0,0.75)] overflow-hidden flex flex-col justify-between gap-1 p-2 sm:p-4 ${
+          isFullscreen ? 'flex-1 min-h-0' : ''
+        } ${impactId ? 'boom-table-shake' : nudgeId ? 'boom-table-nudge' : ''} ${
           gameData.phase === 'bomb_crisis' || bombRiskPercent >= 50
             ? 'bg-[radial-gradient(ellipse_at_center,#4c1122_0%,#250914_60%,#12040a_100%)]'
             : 'bg-[radial-gradient(ellipse_at_center,#1b4d3e_0%,#0f2e24_62%,#071712_100%)]'
         }`}
       >
+        {/* Felt heats up as the odds of drawing a bomb climb */}
+        <div
+          style={{ opacity: clamp(bombRiskPercent / 50, 0, 1) }}
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,#7f1d3a_0%,#3b0d1f_65%,#16050c_100%)] transition-opacity duration-700"
+        />
+
         {/* Decorative Inner Gold Casino Felt Rim Line */}
-        <div className="pointer-events-none absolute inset-3 sm:inset-5 rounded-[34px] border-2 border-[#ffca3a]/20" />
+        <div className="pointer-events-none absolute inset-1.5 sm:inset-3 rounded-[20px] sm:rounded-[34px] border-2 border-[#ffca3a]/20" />
+
+        {/* Explosion flash over the whole table */}
+        <AnimatePresence>
+          {impactId && (
+            <motion.div
+              key={impactId}
+              initial={{ opacity: 0.95 }}
+              animate={{ opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.75, ease: 'easeOut' }}
+              className="pointer-events-none absolute inset-0 z-[70] flex items-center justify-center bg-[radial-gradient(circle,#fff9ec_0%,#ffca3a_30%,#e11d48_70%)]"
+            >
+              <motion.span
+                initial={{ scale: 0.4, rotate: -8 }}
+                animate={{ scale: 1.25, rotate: 3 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 12 }}
+                className="text-6xl sm:text-8xl font-black text-[#161426]"
+              >
+                {ar ? 'بووووم!' : 'BOOM!'}
+              </motion.span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* BACKGROUND FELT TRACK & ACTIVE TURN GLOW (z-10) */}
         <ArenaTableFeltTrackSvg
@@ -4856,6 +5394,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
         <ArenaSpatialFXLayer
           seatCoords={seatCoords}
           cinematic={activeCinematic}
+          geometry={fxGeometry}
           suppressSelfDrawFlight={
             isPassAndPlay || activeCinematic?.actorId === myPlayerId
           }
@@ -4875,7 +5414,9 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
         {/* ==================================================================
             A) UPPER / PERIMETER SEATS: FIXED-HEIGHT RIVAL ROW (h-[132px])
            ================================================================== */}
-        <div className="relative z-30 h-[132px] shrink-0 flex items-start justify-around gap-3 pt-1">
+        <div className={`relative z-30 shrink-0 flex items-start pt-1 ${
+            compactSeats ? 'flex-wrap justify-center gap-x-2 gap-y-1' : 'justify-around gap-3'
+          }`}>
           {rivalPlayers.map((riv) => {
             const pIdx = getPlayerIndex(riv.id);
             const isTurn = riv.id === gameData.turnPlayerId;
@@ -4891,6 +5432,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             return (
               <div
                 key={riv.id}
+                data-boom-seat={riv.id}
                 onClick={() => {
                   if (isTargetable && selectedCard) {
                     const copies = handTypeCounts[selectedCard.type] || 1;
@@ -4918,6 +5460,39 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     : ''
                 }`}
               >
+                {compactSeats ? (
+                  <div className="flex flex-col items-center w-14">
+                    <div
+                      className={`relative w-11 h-11 rounded-xl border-3 border-[#161426] bg-white shadow-[0_3px_0_#161426] ${
+                        isTargetable ? 'ring-4 ring-[#f97316]' : isTurn && alive ? 'boom-turn-glow' : ''
+                      }`}
+                    >
+                      <div className="w-full h-full rounded-[9px] overflow-hidden">
+                        <CartoonAvatarSvg index={pIdx} color={riv.avatar_color} />
+                      </div>
+                      {alive ? (
+                        <span
+                          className="absolute -top-1.5 -end-1.5 min-w-5 h-5 px-1 rounded-full bg-[#881337] text-white border-2 border-[#161426] text-[10px] font-black flex items-center justify-center"
+                          aria-label={ar ? `${cardCount} كروت` : `${cardCount} cards`}
+                        >
+                          {cardCount}
+                        </span>
+                      ) : (
+                        <div className="absolute inset-0 rounded-[9px] bg-[#e11d48]/80 flex items-center justify-center">
+                          <Skull weight="fill" className="w-6 h-6 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className={`mt-1 max-w-full truncate text-[11px] font-black ${
+                        isTurn && alive ? 'text-[#ffca3a]' : 'text-white'
+                      }`}
+                    >
+                      {riv.name}
+                    </span>
+                  </div>
+                ) : (
+                  <>
                 {/* Seat Station Pod */}
                 <div
                   className={`relative px-3.5 py-2 rounded-2xl border-3 border-[#161426] shadow-[0_5px_0_#161426] flex items-center gap-2.5 min-w-[168px] transition-colors ${
@@ -4926,7 +5501,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                       : isTargetable
                       ? 'bg-[#ffedd5] text-[#161426] ring-4 ring-[#f97316]'
                       : isTurn
-                      ? 'bg-[#ffca3a] text-[#161426] ring-3 ring-[#ffca3a]/40'
+                      ? 'bg-[#ffca3a] text-[#161426] boom-turn-glow'
                       : 'bg-[#191636]/95 text-white'
                   }`}
                 >
@@ -5006,6 +5581,8 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     ))}
                   </div>
                 )}
+                  </>
+                )}
               </div>
             );
           })}
@@ -5017,17 +5594,33 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                - All Modals/Scanners/Banners float as absolute overlays so
                  the screen NEVER grows or shrinks!
            ================================================================== */}
-        <div className="relative flex-1 flex items-center justify-center">
+        <div
+          ref={centerRef}
+          onClick={() => setFocusedCardId(null)}
+          className="relative flex-1 min-h-0 flex items-center justify-center"
+        >
           {/* PERMANENT CENTER TABLE CONSOLE: 3D DRAW PILE (415,270) + COMPASS (500,270) + DISCARD PILE (585,270) */}
           <div
-            dir="ltr"
-            className={`relative ${
-              localDrawPreview || localPlayPreview ? 'z-50' : 'z-30'
-            } flex items-center justify-center gap-5 sm:gap-10`}
+            style={{ width: CONSOLE_W * consoleScale, height: CONSOLE_H * consoleScale }}
+            className="relative shrink-0"
           >
+          <div
+            dir="ltr"
+            style={{
+              width: CONSOLE_W,
+              height: CONSOLE_H,
+              transform: `scale(${consoleScale})`,
+              transformOrigin: 'top left',
+            }}
+            className={`absolute top-0 left-0 ${
+              localDrawPreview || localPlayPreview ? 'z-50' : 'z-30'
+            } flex items-start justify-center gap-10`}
+          >
+            <BurningFuse riskPercent={bombRiskPercent} ar={ar} />
+
             {/* 1. 3D STACKED COLLECTIBLE DRAW PILE (Always Fill 100% of Card Height — Zero White Gap!) */}
             <div className="flex flex-col items-center">
-              <div className="relative">
+              <div className="relative" data-boom-draw>
                 {totalDeckCount > 8 && (
                   <div className="absolute inset-0 translate-x-3 translate-y-3 rounded-[24px] bg-[#4c0519] border-[3.5px] border-[#161426]" />
                 )}
@@ -5037,28 +5630,11 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
 
                 {/* PHYSICAL DRAWN CARD LIFTING & FLIPPING OUT OF THE DECK! */}
                 {localDrawPreview && (
-                  <div
-                    style={{
-                      animation:
-                        'boomDrawCardFlight 0.68s cubic-bezier(0.22, 1, 0.36, 1) forwards',
-                    }}
-                    className="absolute inset-0 z-50 pointer-events-none flex items-center justify-center"
-                  >
-                    <BoomPlayingCard
-                      type={localDrawPreview.card.type}
-                      ar={ar}
-                      size="lg"
-                      actionLabel={
-                        localDrawPreview.card.type === 'bomb'
-                          ? ar
-                            ? 'لغم مشتعل!'
-                            : 'LIT BOMB!'
-                          : ar
-                          ? 'تم سحب الكرت ليدك!'
-                          : 'Drawn to Hand!'
-                      }
-                    />
-                  </div>
+                  <DrawRevealCard
+                    card={localDrawPreview.card}
+                    ar={ar}
+                    reduceMotion={reduceMotion}
+                  />
                 )}
 
                 <div
@@ -5098,7 +5674,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     isMyTurn &&
                     !localDrawPreview &&
                     !localPlayPreview
-                      ? 'shadow-[0_10px_0_#161426] hover:-translate-y-1.5 hover:shadow-[0_14px_0_#161426] cursor-pointer ring-4 ring-[#ffca3a]'
+                      ? 'boom-pile-ready shadow-[0_10px_0_#161426] hover:-translate-y-1.5 hover:shadow-[0_14px_0_#161426] cursor-pointer ring-4 ring-[#ffca3a]'
                       : 'opacity-90 shadow-[0_7px_0_#161426] cursor-not-allowed'
                   }`}
                 >
@@ -5109,20 +5685,9 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     }}
                     className="w-full h-full rounded-[16px] bg-gradient-to-b from-[#9f1239] via-[#881337] to-[#4c0519] border-2 border-[#f59e0b] p-2.5 items-center justify-items-center text-white overflow-hidden"
                   >
-                    <div className="w-full flex items-center justify-between">
-                      <span className="px-2.5 py-0.5 rounded-md bg-[#161426] text-[#ffca3a] border border-[#f59e0b]/50 text-[11px] font-black">
-                        {ar ? `${totalDeckCount} كرت` : `${totalDeckCount} left`}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-black border border-[#161426] ${
-                          bombRiskPercent >= 50
-                            ? 'bg-[#ffca3a] text-[#161426]'
-                            : 'bg-[#161426] text-white'
-                        }`}
-                      >
-                        {bombRiskPercent}% {ar ? 'خطر' : 'Risk'}
-                      </span>
-                    </div>
+                    <span className="px-3 py-0.5 rounded-lg bg-[#161426] text-[#ffca3a] border border-[#f59e0b]/50 text-lg font-black">
+                      {ar ? `${totalDeckCount} كرت` : `${totalDeckCount} left`}
+                    </span>
 
                     <div className="w-20 h-20 rounded-2xl bg-[#fffbeb] border-3 border-[#161426] shadow-[0_4px_0_#161426] flex items-center justify-center group-hover:scale-105 transition-transform">
                       <PartyGameSvgIcon
@@ -5132,20 +5697,20 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     </div>
 
                     <span
-                      className={`w-full py-2 rounded-xl border-2 border-[#161426] font-black text-xs flex items-center justify-center gap-1.5 shadow-[0_3px_0_#161426] transition-colors ${
+                      className={`w-full py-2 rounded-xl border-2 border-[#161426] font-black text-lg flex items-center justify-center gap-1.5 shadow-[0_3px_0_#161426] transition-colors ${
                         gameData.phase === 'playing' && isMyTurn
                           ? 'bg-[#ffca3a] text-[#161426] group-hover:bg-[#fde047]'
                           : 'bg-[#161426]/70 text-white/75'
                       }`}
                     >
-                      <HandGrabbing weight="fill" className="w-4 h-4 shrink-0" />
+                      <HandGrabbing weight="fill" className="w-5 h-5 shrink-0" />
                       <span>
                         {isMyTurn
                           ? ar
-                            ? 'اسحب كرتاً (إنهاء الدور)'
-                            : 'Draw 1 Card (End Turn)'
+                            ? 'اسحب كرت'
+                            : 'Draw a Card'
                           : ar
-                          ? 'كومة السحب'
+                          ? 'الكومة'
                           : 'Draw Pile'}
                       </span>
                     </span>
@@ -5166,7 +5731,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                     gameData.direction === -1 ? '-scale-x-100' : ''
                   }`}
                 />
-                <span className="text-[10px] font-black text-white mt-0.5">
+                <span className={`text-[10px] font-black text-white mt-0.5 ${consoleScale < 0.8 ? 'hidden' : ''}`}>
                   {gameData.direction === 1
                     ? ar
                       ? 'مع العقارب'
@@ -5186,7 +5751,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             </div>
 
             {/* 3. COLLECTIBLE DISCARD PILE (WITH SMOOTH PHYSICAL FLIGHT & LANDING TRANSITION!) */}
-            <div className="flex flex-col items-center relative">
+            <div className="flex flex-col items-center relative" data-boom-discard>
               {/* PHYSICAL CARD FLYING SMOOTHLY FROM PLAYER'S HAND ONTO THE DISCARD PILE! */}
               {localPlayPreview && (
                 <div
@@ -5283,6 +5848,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                 </div>
               )}
             </div>
+          </div>
           </div>
 
           {/* ==================================================================
@@ -5889,20 +6455,6 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
             </div>
           )}
           <style>{`
-            @keyframes boomDrawCardFlight {
-              0% {
-                transform: perspective(900px) translateY(0px) scale(0.92) rotateY(90deg);
-                opacity: 0.9;
-              }
-              45% {
-                transform: perspective(900px) translateY(-34px) scale(1.08) rotateY(0deg);
-                opacity: 1;
-              }
-              100% {
-                transform: perspective(900px) translateY(138px) scale(0.96) rotateY(0deg);
-                opacity: 0.98;
-              }
-            }
             @keyframes boomPlayCardToCenter {
               0% {
                 transform: perspective(900px) translateY(155px) scale(0.88);
@@ -5988,7 +6540,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
 
           {/* ULTRA-CLEAN 1-CLICK CARD PICKER (Only appears for 3× Combo after clicking a rival!) */}
           {comboBuilder && (
-            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-[#161426] space-y-3 shadow-[0_12px_0_#161426] max-w-md w-full">
+            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-[#161426] space-y-3 shadow-[0_12px_0_#161426] max-w-md">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm sm:text-base font-black text-[#161426]">
                   {ar
@@ -6283,85 +6835,19 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
 
           {/* ABSOLUTE CENTER OVERLAY 3: SECRET BOMB RE-PLANTING VAULT */}
           {gameData.phase === 'planting_bomb' && (
-            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-4 bg-[#fffdf7] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-md w-full">
+            <div className="absolute inset-x-2 sm:inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-3 sm:p-4 bg-[#fffdf7] border-4 border-[#161426] text-center shadow-[0_12px_0_#161426] max-w-md">
               {isCrisisMine || isPassAndPlay ? (
-                <>
-                  <h3 className="text-base sm:text-lg font-black text-[#161426]">
-                    {ar
-                      ? `يا ${getPlayerName(
-                          crisisPlayerId
-                        )}، وين بدك تزرع الديناميت؟`
-                      : `${getPlayerName(
-                          crisisPlayerId
-                        )}, where do you want to hide the Dynamite?`}
-                  </h3>
-
-                  {/* Clean Tactile Cartoon Number Stepper (Pick ANY Exact Card #1 .. #N+1) */}
-                  <div className="px-3.5 py-2.5 rounded-2xl bg-[#191636] border-3 border-[#161426] shadow-[0_4px_0_#161426] flex items-center justify-between gap-2 text-white">
-                    <span className="text-xs font-extrabold text-white/90">
-                      {ar ? 'اختر رقم الكرت:' : 'Pick card #:'}
-                    </span>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setCustomBombSlot((prev) => Math.max(1, prev - 1))
-                        }
-                        className="w-8 h-8 rounded-xl bg-[#2d2852] hover:bg-[#ffca3a] hover:text-[#161426] border-2 border-[#161426] font-black text-base flex items-center justify-center cursor-pointer transition-colors"
-                      >
-                        -
-                      </button>
-
-                      <span className="min-w-[82px] px-3 py-1 rounded-xl bg-[#110e24] border-2 border-[#ffca3a] text-[#ffca3a] font-black text-xs text-center">
-                        {ar
-                          ? `كرت #${Math.min(
-                              customBombSlot,
-                              totalDeckCount + 1
-                            )} / ${totalDeckCount + 1}`
-                          : `#${Math.min(
-                              customBombSlot,
-                              totalDeckCount + 1
-                            )} / ${totalDeckCount + 1}`}
-                      </span>
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setCustomBombSlot((prev) =>
-                            Math.min(totalDeckCount + 1, prev + 1)
-                          )
-                        }
-                        className="w-8 h-8 rounded-xl bg-[#2d2852] hover:bg-[#ffca3a] hover:text-[#161426] border-2 border-[#161426] font-black text-base flex items-center justify-center cursor-pointer transition-colors"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handlePlantBombAt(
-                          Math.min(customBombSlot, totalDeckCount + 1) - 1
-                        )
-                      }
-                      className="cartoon-btn bg-[#ffca3a] hover:bg-[#fde047] text-[#161426] px-4 py-1.5 text-xs font-black shrink-0 cursor-pointer"
-                    >
-                      {ar
-                        ? `ازرع في #${Math.min(
-                            customBombSlot,
-                            totalDeckCount + 1
-                          )}`
-                        : `Plant #${Math.min(
-                            customBombSlot,
-                            totalDeckCount + 1
-                          )}`}
-                    </button>
-                  </div>
-                </>
+                <PlantBombVault
+                  key={`${gameData.round}_${crisisPlayerId}_${totalDeckCount}`}
+                  deckCount={totalDeckCount}
+                  plantingName={getPlayerName(crisisPlayerId)}
+                  ar={ar}
+                  reduceMotion={reduceMotion}
+                  onPlant={(position) => handlePlantBombAt(position)}
+                />
               ) : (
-                <div className="py-2 flex items-center justify-center gap-3">
-                  <BoomPlayingCard type="bomb" ar={ar} size="sm" />
+                <div className="py-3 flex items-center justify-center gap-3">
+                  <PartyGameSvgIcon gameId="boomdeck" className="w-14 h-14 shrink-0" />
                   <h3 className="text-base font-black text-[#161426]">
                     {ar
                       ? `${getPlayerName(
@@ -6378,33 +6864,25 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
 
           {/* ABSOLUTE CENTER OVERLAY 4: ROUND OVER CHAMPION PODIUM */}
           {gameData.phase === 'round_over' && (
-            <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 z-[60] mx-auto cartoon-card p-5 bg-gradient-to-b from-[#fef9c3] to-[#fde047] border-4 border-[#161426] text-center space-y-3 shadow-[0_12px_0_#161426] max-w-lg w-full">
-              <div className="w-16 h-16 rounded-3xl bg-white border-4 border-[#161426] shadow-[0_4px_0_#161426] flex items-center justify-center mx-auto">
-                <Trophy weight="fill" className="w-10 h-10 text-[#eab308]" />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-black text-[#161426]">
-                {ar
-                  ? `الناجي الأخير والبطل: ${getPlayerName(gameData.winnerId)}!`
-                  : `Last Survivor Champion: ${getPlayerName(gameData.winnerId)}!`}
-              </h3>
-              <p className="text-xs font-bold text-[#3f3b5c]">
-                {ar
-                  ? 'نجا من كل الألغام والفخاخ وحصد +4 نقاط في صدارة الغرفة!'
-                  : 'Outsmarted every dynamite trap and earned +4 victory points!'}
-              </p>
-              {(isHost || isPassAndPlay) && (
-                <button
-                  type="button"
-                  onClick={onStartNewRound}
-                  className="cartoon-btn bg-[#8ac926] text-[#161426] px-6 py-2 text-sm inline-flex items-center gap-2 cursor-pointer"
-                >
-                  <Flame weight="fill" className="w-5 h-5 text-[#e11d48]" />
-                  <span>
-                    {ar ? 'جولة جديدة على الطاولة!' : 'Play Another Round!'}
-                  </span>
-                </button>
-              )}
-            </div>
+            <BoomChampionCard
+              winner={players.find((p) => p.id === gameData.winnerId)}
+              winnerIndex={getPlayerIndex(gameData.winnerId)}
+              ranking={[
+                gameData.winnerId || '',
+                ...[...(gameData.eliminatedPlayerIds || [])].reverse(),
+              ].map((id, idx) => ({
+                id,
+                name: getPlayerName(id),
+                points: idx === 0 ? 4 : idx === 1 ? 1 : 0,
+              }))}
+              isMeWinner={!isPassAndPlay && gameData.winnerId === myPlayerId}
+              ar={ar}
+              reduceMotion={reduceMotion}
+              canStartNew={isHost || isPassAndPlay}
+              onStartNewRound={() =>
+                onUpdateGameData(buildInitialBoomDeckState(players, (gameData.round || 1) + 1))
+              }
+            />
           )}
         </div>
 
@@ -6413,40 +6891,36 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                - Never changes height whether locked, unlocked, or eliminated!
                - Cards are 100% upright, straight, and neatly sorted!
            ================================================================== */}
-        <div className="relative z-30 h-[290px] shrink-0 flex flex-col justify-end items-center">
+        <div className="relative z-30 shrink-0 flex flex-col justify-end items-center">
           {/* Active Player's Table Seat Bar */}
-          <div className="mb-1.5 px-4 py-1 rounded-2xl bg-[#161426]/95 border-3 border-[#ffca3a] shadow-[0_4px_0_#161426] flex flex-wrap items-center justify-center gap-3 text-white shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-xl border-2 border-[#ffca3a] bg-white overflow-hidden shrink-0">
-                <CartoonAvatarSvg
-                  index={getPlayerIndex(bottomPlayer?.id)}
-                  color={bottomPlayer?.avatar_color}
-                />
-              </div>
-              <span className="font-black text-xs sm:text-sm text-[#ffca3a]">
-                {isPassAndPlay
-                  ? ar
-                    ? `مقعد (${bottomPlayer?.name}) الحالي`
-                    : `${bottomPlayer?.name}’s Seat`
-                  : ar
-                  ? `مقعدك (${bottomPlayer?.name})`
-                  : `Your Seat (${bottomPlayer?.name})`}
-              </span>
+          <motion.div
+            key={gameData.turnPlayerId}
+            initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 22 }}
+            className="mb-1 max-w-full px-2.5 py-1 rounded-full bg-[#161426]/95 border-2 border-[#ffca3a] shadow-[0_3px_0_#161426] flex items-center justify-center gap-2 text-white shrink-0"
+          >
+            <div className="w-6 h-6 rounded-lg border-2 border-[#ffca3a] bg-white overflow-hidden shrink-0">
+              <CartoonAvatarSvg
+                index={getPlayerIndex(bottomPlayer?.id)}
+                color={bottomPlayer?.avatar_color}
+              />
             </div>
-
             <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-black ${
-                isMyTurn
-                  ? 'bg-[#8ac926] text-[#161426]'
-                  : 'bg-[#25204d] text-white/80'
+              className={`min-w-0 truncate px-2.5 py-0.5 rounded-full text-xs font-black ${
+                isMyTurn ? 'bg-[#8ac926] text-[#161426]' : 'bg-[#25204d] text-white/80'
               }`}
             >
               {isMyTurn
-                ? ar
-                  ? 'دورك الآن! العب قدرة أو اسحب كرتاً'
-                  : 'YOUR TURN! Play a card or draw'
+                ? isPassAndPlay
+                  ? ar
+                    ? `دور ${bottomPlayer?.name}: العب قدرة أو اسحب`
+                    : `${bottomPlayer?.name}: play a card or draw`
+                  : ar
+                  ? 'دورك! العب قدرة أو اسحب'
+                  : 'Your turn! Play a card or draw'
                 : ar
-                ? `بانتظار دور ${getPlayerName(gameData.turnPlayerId)}`
+                ? `بانتظار ${getPlayerName(gameData.turnPlayerId)}`
                 : `Waiting on ${getPlayerName(gameData.turnPlayerId)}`}
             </span>
 
@@ -6454,195 +6928,204 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
               <button
                 type="button"
                 onClick={() => setPassAndPlayHandUnlocked(false)}
-                className="px-2.5 py-0.5 rounded-full bg-[#e11d48] text-white text-[11px] font-black flex items-center gap-1 cursor-pointer"
+                aria-label={ar ? 'إخفاء أوراقي' : 'Hide Hand'}
+                className="shrink-0 px-2 py-0.5 rounded-full bg-[#e11d48] text-white text-[11px] font-black flex items-center gap-1 cursor-pointer"
               >
                 <EyeSlash weight="bold" className="w-3.5 h-3.5" />
-                <span>{ar ? 'إخفاء أوراقي' : 'Hide Hand'}</span>
+                <span className="hidden sm:inline">{ar ? 'إخفاء أوراقي' : 'Hide Hand'}</span>
               </button>
             )}
-          </div>
+          </motion.div>
 
-          {/* FIXED-HEIGHT STRAIGHT HAND SLOT (h-[250px] — Dynamic Overlap Guarantees ALL Cards Fit Inside Table!) */}
-          <div className="relative w-full h-[250px] flex items-end justify-center overflow-hidden pb-1 pt-4 px-3">
-            {!isAmAlive ? (
-              <div className="my-auto px-6 py-3 rounded-2xl bg-[#ffe4e6] border-3 border-[#161426] text-center font-black text-xs sm:text-sm text-[#e11d48] flex items-center gap-2">
-                <Skull weight="fill" className="w-5 h-5" />
+          {/* HAND FAN: every card fits any screen width, and springs into its new spot */}
+          <div
+            ref={handSlotRef}
+            dir="ltr"
+            style={{ height: handCardH + 22 }}
+            className="relative w-full"
+          >
+            {gameData.phase === 'round_over' ? null : !isAmAlive ? (
+              <div
+                dir={ar ? 'rtl' : 'ltr'}
+                className="absolute inset-x-2 top-1/2 -translate-y-1/2 mx-auto max-w-lg px-6 py-3 rounded-2xl bg-[#ffe4e6] border-3 border-[#161426] text-center font-black text-xs sm:text-sm text-[#e11d48] flex items-center justify-center gap-2"
+              >
+                <Skull weight="fill" className="w-5 h-5 shrink-0" />
                 <span>
                   {ar
                     ? 'لقد انفجرت في هذه الجولة! شاهد المعركة الحية على الطاولة!'
                     : 'You exploded this round! Watch the live battle on the table!'}
                 </span>
               </div>
-            ) : isPassAndPlay && !passAndPlayHandUnlocked ? (
-              /* Upright Face-Down Cards at Exact Same Height + Centered Reveal Button! */
-              (() => {
-                const handCount = myHand.length;
-                const cardW = handCount >= 7 ? 136 : 148;
-                const maxRowW = 920;
-                const step =
-                  handCount <= 1
-                    ? cardW
-                    : Math.min(
-                        cardW + 10,
-                        Math.floor((maxRowW - cardW) / (handCount - 1))
-                      );
-                const overlapPx = step - cardW;
-
-                return (
-                  <div className="relative flex items-end justify-center w-full h-full">
-                    <div
-                      dir="ltr"
-                      className="inline-flex items-end justify-center opacity-55 pointer-events-none"
-                    >
-                      {myHand.map((card, idx) => (
-                        <div
-                          key={card.id}
-                          style={{
-                            marginLeft: idx === 0 ? '0px' : `${overlapPx}px`,
-                          }}
-                        >
-                          <BoomCardBackSvg
-                            className={
-                              handCount >= 7
-                                ? 'w-[136px] h-[192px]'
-                                : 'w-[148px] h-[214px]'
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="absolute inset-x-4 top-1/2 -translate-y-1/2 mx-auto max-w-md px-5 py-3.5 rounded-3xl bg-[#191636]/95 border-3 border-[#ffca3a] text-center space-y-2 shadow-[0_8px_0_#161426]">
-                      <p className="text-xs sm:text-sm font-extrabold text-[#fff9ec]">
-                        {ar
-                          ? `مرّر الجهاز إلى (${getPlayerName(
-                              activeViewerId
-                            )}) ثم اكشف أوراقه السرية:`
-                          : `Pass device to (${getPlayerName(
-                              activeViewerId
-                            )}) and tap to reveal their hand:`}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setPassAndPlayHandUnlocked(true)}
-                        className="cartoon-btn bg-[#ffca3a] text-[#161426] px-6 py-2 text-xs sm:text-sm inline-flex items-center gap-2 cursor-pointer"
-                      >
-                        <Eye weight="fill" className="w-4 h-4" />
-                        <span>
-                          {ar
-                            ? `اكشف أوراق ${getPlayerName(activeViewerId)} (${
-                                myHand.length
-                              } كروت)`
-                            : `Reveal ${getPlayerName(activeViewerId)}’s Hand (${
-                                myHand.length
-                              })`}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })()
             ) : (
-              /* NEATLY ALIGNED, STRAIGHT UPRIGHT CARDS IN HAND (0deg tilt, sorted by type, auto-overlapping when 7+ cards so 100% stay visible!) */
-              (() => {
-                const handCount = myHand.length;
-                const useCompactSize = handCount >= 7;
-                const cardW = useCompactSize ? 136 : 152;
-                const maxRowW = 930;
-                const step =
-                  handCount <= 1
-                    ? cardW
-                    : Math.min(
-                        cardW + 10,
-                        Math.floor((maxRowW - cardW) / (handCount - 1))
-                      );
-                const overlapPx = step - cardW;
+              <>
+                <AnimatePresence initial={true}>
+                  {myHand.map((card, idx) => {
+                    const fan = computeHandFan(idx, myHand.length, arenaSize.handW, handCardH);
+                    const isLocked = isPassAndPlay && !passAndPlayHandUnlocked;
+                    const isFocused = !isLocked && focusedCardId === card.id;
+                    const focusScale = clamp(fan.scale * 1.45, fan.scale, 1.05);
+                    const focusHalfW = (HAND_CARD_W * focusScale) / 2;
+                    const focusX =
+                      clamp(
+                        fan.x + HAND_CARD_W / 2,
+                        focusHalfW,
+                        Math.max(focusHalfW, arenaSize.handW - focusHalfW)
+                      ) -
+                      HAND_CARD_W / 2;
+                    const spring = reduceMotion
+                      ? { duration: 0 }
+                      : {
+                          type: 'spring' as const,
+                          stiffness: 340,
+                          damping: 27,
+                          delay: isDealing ? idx * 0.05 : 0,
+                        };
 
-                return (
-                  <div
-                    dir="ltr"
-                    className="inline-flex items-end justify-center px-2"
-                  >
-                    {myHand.map((card, idx) => {
-                      const isComboCard = isComboSetCard(card.type);
-                      const copyCount = handTypeCounts[card.type] || 1;
-                      const canPlayCombo = copyCount >= 2 && card.type !== 'defuse';
-                      const isPassiveOnly =
-                        card.type === 'defuse' ||
-                        (card.type === 'block' && copyCount < 2);
+                    const isComboCard = isComboSetCard(card.type);
+                    const copyCount = handTypeCounts[card.type] || 1;
+                    const canPlayNow = isHandCardPlayable(card);
 
-                      const canPlayNow =
-                        gameData.phase === 'playing' &&
-                        isMyTurn &&
-                        !isPassiveOnly &&
-                        (!isComboCard || canPlayCombo) &&
-                        !localDrawPreview &&
-                        !localPlayPreview;
+                    const isPickedForMagnet =
+                      (pickingMagnetTarget && selectedCardId === card.id) ||
+                      comboBuilder?.card.id === card.id;
+                    const isBeingPlayedNow =
+                      localPlayPreview?.card.id === card.id ||
+                      defuseShowdown?.defuseCard.id === card.id;
 
-                      const isPickedForMagnet =
-                        (pickingMagnetTarget && selectedCardId === card.id) ||
-                        comboBuilder?.card.id === card.id;
-                      const isBeingPlayedNow =
-                        localPlayPreview?.card.id === card.id ||
-                        defuseShowdown?.defuseCard.id === card.id;
-
-                      const actionLabel = isComboCard
-                        ? copyCount >= 3
-                          ? ar
-                            ? 'العب 3× (اطلب كرت بالاسم)'
-                            : 'Play 3× (Name a Card)'
-                          : copyCount === 2
-                          ? ar
-                            ? 'العب 2× (اسرق كرت عشوائي)'
-                            : 'Play 2× (Steal Random)'
-                          : ar
-                          ? 'اجمع 2 أو 3 للسرقة'
-                          : 'Collect 2 or 3 to steal'
-                        : isPickedForMagnet
+                    const actionLabel = isComboCard
+                      ? copyCount >= 3
                         ? ar
-                          ? 'اختر خصماً فوق أو العب 1×'
-                          : 'Pick Rival or Play 1×'
-                        : undefined;
+                          ? 'العب 3× (اطلب كرت بالاسم)'
+                          : 'Play 3× (Name a Card)'
+                        : copyCount === 2
+                        ? ar
+                          ? 'العب 2× (اسرق كرت عشوائي)'
+                          : 'Play 2× (Steal Random)'
+                        : ar
+                        ? 'اجمع 2 أو 3 للسرقة'
+                        : 'Collect 2 or 3 to steal'
+                      : isPickedForMagnet
+                      ? ar
+                        ? 'اختر خصماً فوق أو العب 1×'
+                        : 'Pick Rival or Play 1×'
+                      : undefined;
 
-                      return (
-                        <BoomPlayingCard
-                          key={card.id}
-                          type={card.type}
-                          ar={ar}
-                          size={useCompactSize ? 'sm' : 'md'}
-                          canPlay={canPlayNow}
-                          isSelected={isPickedForMagnet}
-                          actionLabel={actionLabel}
-                          style={{
-                            transform: 'none',
-                            marginLeft: idx === 0 ? '0px' : `${overlapPx}px`,
-                          }}
-                          onClick={() => {
-                            if (!canPlayNow) return;
-                            // If player holds 2+ copies of ANY playable card (Combo OR Special), open the top targeting bar so they can either click a rival for 2x/3x Combo OR play 1x normal ability!
-                            if (copyCount >= 2 && card.type !== 'defuse') {
-                              handleInitiateCardPlay(
-                                card,
-                                undefined,
-                                copyCount >= 3 ? 3 : 2
-                              );
-                            } else {
-                              handleInitiateCardPlay(card);
-                            }
-                          }}
-                          className={
-                            isBeingPlayedNow
-                              ? 'opacity-0 pointer-events-none'
-                              : isComboCard && copyCount < 2
-                              ? 'opacity-90'
-                              : ''
-                          }
-                        />
-                      );
-                    })}
+                    return (
+                      <motion.div
+                        key={isLocked ? `back_${card.id}` : card.id}
+                        style={{
+                          width: HAND_CARD_W,
+                          height: HAND_CARD_H,
+                          transformOrigin: 'bottom center',
+                          zIndex: isFocused ? 60 : 10 + idx,
+                        }}
+                        className={`absolute bottom-0 left-0 ${isLocked ? 'pointer-events-none' : ''}`}
+                        initial={{
+                          x: arenaSize.handW / 2 - HAND_CARD_W / 2,
+                          y: -220,
+                          rotate: -14,
+                          scale: fan.scale * 0.7,
+                          opacity: 0,
+                        }}
+                        animate={{
+                          x: isFocused ? focusX : fan.x,
+                          y: isFocused ? -6 : fan.y,
+                          rotate: isFocused ? 0 : fan.rotate,
+                          scale: isFocused ? focusScale : fan.scale,
+                          opacity: isBeingPlayedNow ? 0 : isLocked ? 0.6 : 1,
+                        }}
+                        exit={{
+                          y: -240,
+                          scale: fan.scale * 0.8,
+                          opacity: 0,
+                          transition: { duration: reduceMotion ? 0 : 0.2 },
+                        }}
+                        whileHover={
+                          isTouchUi || isLocked || reduceMotion
+                            ? undefined
+                            : {
+                                y: fan.y - 30 * fan.scale,
+                                rotate: 0,
+                                scale: fan.scale * 1.1,
+                                zIndex: 60,
+                              }
+                        }
+                        transition={spring}
+                      >
+                        {isLocked ? (
+                          <BoomCardBackSvg className="w-full h-full" />
+                        ) : (
+                          <BoomPlayingCard
+                            type={card.type}
+                            ar={ar}
+                            size="sm"
+                            canPlay={canPlayNow}
+                            isSelected={isPickedForMagnet}
+                            actionLabel={actionLabel}
+                            onClick={() => {
+                              if (isTouchUi && !isFocused) {
+                                setFocusedCardId(card.id);
+                                return;
+                              }
+                              setFocusedCardId(null);
+                              if (!canPlayNow) return;
+                              // If player holds 2+ copies of ANY playable card (Combo OR Special), open the top targeting bar so they can either click a rival for 2x/3x Combo OR play 1x normal ability!
+                              if (copyCount >= 2 && card.type !== 'defuse') {
+                                handleInitiateCardPlay(
+                                  card,
+                                  undefined,
+                                  copyCount >= 3 ? 3 : 2
+                                );
+                              } else {
+                                handleInitiateCardPlay(card);
+                              }
+                            }}
+                            className={isComboCard && copyCount < 2 ? 'opacity-90' : ''}
+                          />
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+
+                {isPassAndPlay && !passAndPlayHandUnlocked && gameData.phase !== 'planting_bomb' && (
+                  <div
+                    dir={ar ? 'rtl' : 'ltr'}
+                    className="absolute z-[65] inset-x-3 top-1/2 -translate-y-1/2 mx-auto max-w-md px-4 py-3 rounded-3xl bg-[#191636]/95 border-3 border-[#ffca3a] text-center space-y-2 shadow-[0_8px_0_#161426]"
+                  >
+                    <p className="text-xs sm:text-sm font-extrabold text-[#fff9ec]">
+                      {ar
+                        ? `مرّر الجهاز لـ${getPlayerName(activeViewerId)}`
+                        : `Pass the device to ${getPlayerName(activeViewerId)}`}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setPassAndPlayHandUnlocked(true)}
+                      className="cartoon-btn bg-[#ffca3a] text-[#161426] px-5 py-2 text-sm inline-flex items-center gap-2 cursor-pointer"
+                    >
+                      <Eye weight="fill" className="w-4 h-4" />
+                      <span>
+                        {ar ? `اكشف الكروت (${myHand.length})` : `Reveal Cards (${myHand.length})`}
+                      </span>
+                    </button>
                   </div>
-                );
-              })()
+                )}
+
+                {focusedHandCard && !(isPassAndPlay && !passAndPlayHandUnlocked) && (
+                  <span
+                    dir={ar ? 'rtl' : 'ltr'}
+                    className="absolute z-[66] top-0 left-1/2 -translate-x-1/2 -translate-y-[calc(100%+34px)] whitespace-nowrap px-3 py-1 rounded-full bg-[#161426] border-2 border-[#ffca3a] text-[#ffca3a] text-xs font-black pointer-events-none"
+                  >
+                    {isHandCardPlayable(focusedHandCard)
+                      ? ar
+                        ? 'اضغط الكرت كمان مرة لتلعبه'
+                        : 'Tap the card again to play it'
+                      : ar
+                      ? 'ما بينلعب هلق'
+                      : 'Can’t be played right now'}
+                  </span>
+                )}
+              </>
             )}
           </div>
         </div>

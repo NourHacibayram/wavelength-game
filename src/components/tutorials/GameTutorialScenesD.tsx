@@ -1936,7 +1936,7 @@ export const BoomDeckTutorialScene: React.FC<TutorialSceneProps> = ({
             text={
               ar
                 ? 'معك 6 كروت قدرات ومقص أسلاك — والقنابل مزروعة بالكومة!'
-                : 'Start with 6 Ability Cards + Wire Cutters — Dynamite lurks in the deck!'
+                : 'Start with 6 Ability Cards + Wire Cutters — Bombs lurk in the deck!'
             }
           />
           {/* Center Draw Pile with Bomb Risk */}
@@ -1946,7 +1946,7 @@ export const BoomDeckTutorialScene: React.FC<TutorialSceneProps> = ({
             <circle cx="0" cy="0" r="18" fill="#161426" />
             <circle cx="0" cy="0" r="7" fill="#ffca3a" />
           </g>
-          <SvgPill x={125} y={118} w={135} h={34} bg="#dcfce7" scale={b * pulse} text={ar ? 'مقص الأسلاك' : 'Wire Cutters'} />
+          <SvgPill x={125} y={118} w={135} h={34} bg="#dcfce7" scale={b * pulse} text={ar ? 'مقص الإنقاذ' : 'Wire Cutters'} />
           <SvgPill x={395} y={118} w={135} h={34} bg="#fce7f3" scale={b} text={ar ? 'رادار الكومة' : 'X-Ray Radar'} />
           <SvgPill
             x={260}
@@ -2009,8 +2009,8 @@ export const BoomDeckTutorialScene: React.FC<TutorialSceneProps> = ({
             fg="#fff9ec"
             text={
               ar
-                ? 'سحبت الديناميت؟ قصّ السلك وازرع القنبلة بأي مكان بالكومة بالسر!'
-                : 'Drew Lit Dynamite? Snip the wire & secretly plant it anywhere!'
+                ? 'سحبت القنبلة؟ قصّ السلك وازرع القنبلة بأي مكان بالكومة بالسر!'
+                : 'Drew a Lit Bomb? Snip the wire & secretly plant it anywhere!'
             }
           />
           <SvgPill x={155} y={115} w={175} h={42} bg="#dcfce7" scale={b * pulse} text={ar ? 'قصّ السلك ونجاة!' : 'Snip Wire & Survive!'} />
