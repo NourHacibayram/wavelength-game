@@ -6,3 +6,7 @@ dist-ssr
 .env.*
 !.env.example
 .DS_Store
+
+# music renderer sample cache
+tools/music/.cache/
+tools/music/__pycache__/

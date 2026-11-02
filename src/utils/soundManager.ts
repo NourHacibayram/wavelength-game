@@ -1,6 +1,11 @@
 import { PartyGameId } from '../data/partyGamesData';
+import { MUSIC_LOOPS } from '../data/musicLoops';
 
 export type MusicTrackId =
+  | 'lobby'
+  | 'boomdeck'
+  | 'wavelength'
+  | 'trix'
   | 'sneaky_snitch'
   | 'scheming_weasel'
   | 'lobby_time'
@@ -41,7 +46,45 @@ export interface MusicTrackMeta {
   color: string;
 }
 
+const themeUrl = (id: string) => `/audio/music/themes/${id}.mp3?v=1`;
+
 export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrackMeta> = {
+  lobby: {
+    id: 'lobby',
+    url: themeUrl('lobby'),
+    title_ar: 'سهرة الشلّة',
+    title_en: 'Shilla Night',
+    mood_ar: 'نهاوند ودربكة',
+    mood_en: 'Nahawand & darbuka',
+    color: '#ff924c',
+  },
+  boomdeck: {
+    id: 'boomdeck',
+    url: themeUrl('boomdeck'),
+    title_ar: 'الفتيل الملعون',
+    title_en: 'Cursed Fuse',
+    mood_ar: 'حجاز وتكتكة',
+    mood_en: 'Hijaz & ticking',
+    color: '#f15bb5',
+  },
+  wavelength: {
+    id: 'wavelength',
+    url: themeUrl('wavelength'),
+    title_ar: 'عَ نفس الموجة',
+    title_en: 'Tune In',
+    mood_ar: 'حالمة وهادية',
+    mood_en: 'Dreamy lo-fi',
+    color: '#4cc9f0',
+  },
+  trix: {
+    id: 'trix',
+    url: themeUrl('trix'),
+    title_ar: 'تركس الملوك',
+    title_en: 'Trix Royal',
+    mood_ar: 'بياتي وأكورديون',
+    mood_en: 'Bayati & accordion',
+    color: '#d97706',
+  },
   sneaky_snitch: {
     id: 'sneaky_snitch',
     url: '/audio/music/sneaky-snitch.mp3?v=2',
@@ -246,7 +289,11 @@ export function getRecommendedTrackForGame(
   gameId: PartyGameId | 'lobby'
 ): MusicTrackId {
   switch (gameId) {
+    case 'lobby':
     case 'boomdeck':
+    case 'wavelength':
+    case 'trix':
+      return gameId;
     case 'sheriff':
     case 'skull':
     case 'cashnguns':
@@ -265,19 +312,16 @@ export function getRecommendedTrackForGame(
     case 'themind':
     case 'ito':
       return 'investigations';
-    case 'wavelength':
     case 'snakes':
     case 'wordbomb':
     case 'taboo':
     case 'soclover':
       return 'monkeys';
-    case 'trix':
     case 'monopoly':
     case 'artauction':
     case 'splitsteal':
     case 'dixit':
     case 'wits':
-    case 'lobby':
     default:
       return 'lobby_time';
   }
@@ -299,7 +343,12 @@ class SoundManager {
   private musicMode: MusicSelectionMode = 'auto';
   private currentContextGame: PartyGameId | 'lobby' = 'lobby';
   private activeTrackId: MusicTrackId | null = null;
-  private bgAudio: HTMLAudioElement | null = null;
+  // Music runs through Web Audio so loops circle without a gap
+  private audioCtx: AudioContext | null = null;
+  private musicBus: GainNode | null = null;
+  private musicVoice: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
+  private musicBuffers: Map<string, Promise<AudioBuffer>> = new Map();
+  private musicRequest = 0;
   private sfxPreloadCache: Map<string, HTMLAudioElement> = new Map();
   private sfxVariationCursor: Map<SfxId, number> = new Map();
   private activeLoopSfx: Map<SfxId, HTMLAudioElement> = new Map();
@@ -406,8 +455,8 @@ class SoundManager {
   public setMusicVolume(vol: number) {
     this.musicVolume = Math.max(0, Math.min(1, vol));
     localStorage.setItem(STORAGE_KEYS.musicVolume, String(this.musicVolume));
-    if (this.bgAudio) {
-      this.bgAudio.volume = this.musicVolume;
+    if (this.musicBus && this.audioCtx) {
+      this.musicBus.gain.setTargetAtTime(this.musicVolume, this.audioCtx.currentTime, 0.05);
     }
     this.notify();
   }
@@ -433,45 +482,94 @@ class SoundManager {
     this.notify();
   }
 
+  private ensureAudioContext(): AudioContext | null {
+    if (this.audioCtx) return this.audioCtx;
+    const Ctor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctor) return null;
+    this.audioCtx = new Ctor();
+    this.musicBus = this.audioCtx.createGain();
+    this.musicBus.gain.value = this.musicVolume;
+    this.musicBus.connect(this.audioCtx.destination);
+    return this.audioCtx;
+  }
+
+  private loadMusicBuffer(ctx: AudioContext, url: string): Promise<AudioBuffer> {
+    let pending = this.musicBuffers.get(url);
+    if (!pending) {
+      pending = fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((data) => ctx.decodeAudioData(data));
+      pending.catch(() => this.musicBuffers.delete(url));
+      this.musicBuffers.set(url, pending);
+    }
+    return pending;
+  }
+
+  private fadeOutMusicVoice(seconds = 0.6) {
+    const voice = this.musicVoice;
+    if (!voice || !this.audioCtx) return;
+    const now = this.audioCtx.currentTime;
+    voice.gain.gain.cancelScheduledValues(now);
+    voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+    voice.gain.gain.linearRampToValueAtTime(0, now + seconds);
+    voice.source.stop(now + seconds + 0.05);
+    this.musicVoice = null;
+  }
+
   public syncBackgroundMusic(forceRestart = false) {
     if (typeof window === 'undefined') return;
     if (!this.musicEnabled) {
-      if (this.bgAudio) {
-        this.bgAudio.pause();
-      }
+      this.musicRequest++;
+      this.fadeOutMusicVoice(0.3);
+      this.activeTrackId = null;
       return;
     }
+    // Browsers only allow audio after the first tap or key press
+    if (!this.unlocked) return;
 
     const targetTrackId: MusicTrackId =
       this.musicMode === 'auto'
         ? getRecommendedTrackForGame(this.currentContextGame)
         : this.musicMode;
-
     const trackMeta = MUSIC_TRACKS[targetTrackId];
     if (!trackMeta) return;
 
-    if (
-      !this.bgAudio ||
-      this.activeTrackId !== targetTrackId ||
-      forceRestart
-    ) {
-      if (this.bgAudio) {
-        this.bgAudio.pause();
-      }
-      const nextAudio = new Audio(trackMeta.url);
-      nextAudio.loop = true;
-      nextAudio.volume = this.musicVolume;
-      this.bgAudio = nextAudio;
-      this.activeTrackId = targetTrackId;
-    } else {
-      this.bgAudio.volume = this.musicVolume;
-    }
+    const ctx = this.ensureAudioContext();
+    if (!ctx || !this.musicBus) return;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    this.musicBus.gain.setTargetAtTime(this.musicVolume, ctx.currentTime, 0.05);
 
-    if (this.bgAudio.paused) {
-      this.bgAudio.play().catch(() => {
-        // Browser autoplay policy waiting for first click
+    if (this.musicVoice && this.activeTrackId === targetTrackId && !forceRestart) return;
+
+    this.activeTrackId = targetTrackId;
+    const request = ++this.musicRequest;
+    this.loadMusicBuffer(ctx, trackMeta.url)
+      .then((buffer) => {
+        if (request !== this.musicRequest || !this.musicBus) return;
+        this.fadeOutMusicVoice();
+
+        const loop = MUSIC_LOOPS[targetTrackId];
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        const loopStart = loop ? loop.loopStart : 0;
+        if (loop) {
+          source.loopStart = loop.loopStart;
+          source.loopEnd = Math.min(loop.loopEnd, buffer.duration);
+        }
+        const gain = ctx.createGain();
+        const now = ctx.currentTime;
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(1, now + 0.6);
+        source.connect(gain).connect(this.musicBus);
+        source.start(now, loopStart);
+        this.musicVoice = { source, gain };
+      })
+      .catch(() => {
+        if (request === this.musicRequest) this.activeTrackId = null;
       });
-    }
   }
 
   public playSfx(id: SfxId, customDurationMs?: number) {
