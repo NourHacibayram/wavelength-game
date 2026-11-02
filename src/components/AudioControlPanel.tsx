@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   SpeakerHigh,
   SpeakerSlash,
   MusicNotes,
+  MusicNotesSimple,
+  Waveform,
   Play,
-  SlidersHorizontal,
   X,
   Check,
   Sparkle,
@@ -12,10 +14,8 @@ import {
 import {
   soundManager,
   MUSIC_TRACKS,
-  SFX_CATALOG,
   MusicTrackId,
   MusicSelectionMode,
-  SfxId,
 } from '../utils/soundManager';
 
 interface AudioControlPanelProps {
@@ -23,27 +23,89 @@ interface AudioControlPanelProps {
   compact?: boolean;
 }
 
-const FEATURED_SFX_IDS: SfxId[] = [
-  'card_draw',
-  'card_play',
-  'card_shuffle',
-  'card_shove',
-  'clock_tick',
-  'wire_snip',
-  'explosion',
-  'heavy_slam',
-  'metal_click',
-  'dice_roll',
-  'chip_place',
-  'coins_jingle',
-  'applause_win',
-];
+/** Three bouncing bars that mark the track currently playing */
+const PlayingBars: React.FC = () => (
+  <span className="sound-eq" aria-hidden="true">
+    <span />
+    <span />
+    <span />
+  </span>
+);
+
+interface VolumeRowProps {
+  ar: boolean;
+  label: string;
+  tone: string;
+  enabled: boolean;
+  volume: number;
+  step: number;
+  onIcon: React.ReactNode;
+  onToggle: () => void;
+  onVolume: (v: number) => void;
+  extra?: React.ReactNode;
+}
+
+const VolumeRow: React.FC<VolumeRowProps> = ({
+  ar,
+  label,
+  tone,
+  enabled,
+  volume,
+  step,
+  onIcon,
+  onToggle,
+  onVolume,
+  extra,
+}) => (
+  <div className="flex items-center gap-3">
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-pressed={enabled}
+      aria-label={enabled ? (ar ? `اكتم ${label}` : `Mute ${label}`) : ar ? `شغّل ${label}` : `Unmute ${label}`}
+      style={{ backgroundColor: enabled ? tone : '#e7e2d6' }}
+      className="w-12 h-12 rounded-2xl border-3 border-[#161426] shadow-[0_3px_0_#161426] active:translate-y-0.5 active:shadow-[0_1px_0_#161426] flex items-center justify-center shrink-0 cursor-pointer transition-colors"
+    >
+      {enabled ? onIcon : <SpeakerSlash weight="fill" className="w-6 h-6 text-[#6b6580]" />}
+    </button>
+    <div className="flex-1 min-w-0 space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-black text-sm">{label}</span>
+        <span className="flex items-center gap-2">
+          {extra}
+          <span className="text-xs font-black tabular-nums text-[#3f3b5c]" dir="ltr">
+            {enabled ? `${Math.round(volume * 100)}%` : ar ? 'مكتوم' : 'Muted'}
+          </span>
+        </span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={1}
+        step={step}
+        value={volume}
+        disabled={!enabled}
+        aria-label={label}
+        onChange={(e) => onVolume(parseFloat(e.target.value))}
+        className="sound-range"
+        style={
+          {
+            '--tone': tone,
+            '--fill': `${volume * 100}%`,
+            '--fill-side': ar ? 'left' : 'right',
+          } as React.CSSProperties
+        }
+      />
+    </div>
+  </div>
+);
 
 export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
   lang,
   compact = false,
 }) => {
   const ar = lang === 'ar';
+  const reduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [audioState, setAudioState] = useState(() => soundManager.getState());
 
@@ -53,11 +115,25 @@ export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
     });
   }, []);
 
-  const currentTrackMeta = MUSIC_TRACKS[audioState.resolvedTrackId];
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
+  const pickMode = (mode: MusicSelectionMode) => {
+    if (!audioState.musicEnabled) soundManager.setMusicEnabled(true);
+    soundManager.setMusicMode(mode);
+  };
+
+  const trackIds = Object.keys(MUSIC_TRACKS) as MusicTrackId[];
+  const autoTrack = MUSIC_TRACKS[audioState.resolvedTrackId];
 
   return (
     <>
-      {/* Top Bar Quick Audio Pill */}
       <div className="inline-flex items-center gap-1">
         <button
           type="button"
@@ -70,7 +146,7 @@ export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
               ? 'px-2.5 py-1 text-xs'
               : 'px-3.5 py-2 text-sm md:text-base'
           } flex items-center gap-1.5 cursor-pointer`}
-          title={ar ? 'إعدادات واستوديو الصوت والموسيقى' : 'Audio & Music Studio'}
+          title={ar ? 'الصوت' : 'Sound'}
         >
           {audioState.musicEnabled || audioState.sfxEnabled ? (
             <SpeakerHigh weight="fill" className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
@@ -78,318 +154,201 @@ export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
             <SpeakerSlash weight="fill" className={compact ? 'w-4 h-4' : 'w-5 h-5'} />
           )}
           <span className="hidden sm:inline font-extrabold">
-            {ar ? 'الصوت والموسيقى' : 'Audio'}
+            {ar ? 'الصوت' : 'Sound'}
           </span>
         </button>
       </div>
 
-      {/* Interactive Audio & Music Studio Modal */}
-      {open && (
-        <div
-          className="fixed inset-0 z-[120] bg-[#0b0914]/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            dir={ar ? 'rtl' : 'ltr'}
-            onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[28px] bg-[#fff9ec] text-[#161426] border-4 border-[#161426] shadow-[0_12px_0_#161426] p-4 sm:p-6 space-y-5"
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="sound-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[120] bg-[#0b0914]/75 backdrop-blur-xs flex items-end sm:items-center justify-center sm:p-4"
+            onClick={() => setOpen(false)}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between gap-3 border-b-3 border-[#161426]/15 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#a855f7] text-white border-3 border-[#161426] shadow-[0_3px_0_#161426] flex items-center justify-center shrink-0">
-                  <MusicNotes weight="fill" className="w-6 h-6" />
-                </div>
-                <div>
-                  <h2 className="text-lg sm:text-xl font-black text-[#161426]">
-                    {ar
-                      ? 'استوديو الصوت والموسيقى الحقيقية'
-                      : 'Real Audio & Music Studio'}
-                  </h2>
-                  <p className="text-xs font-bold text-[#3f3b5c]">
-                    {ar
-                      ? 'اسمع وجرّب كل الموسيقى والمؤثرات المسجّلة واختَر اللي بيعجبك!'
-                      : 'Listen, preview, and customize real recorded music & Foley SFX!'}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="w-9 h-9 rounded-xl bg-[#ff595e] text-white border-3 border-[#161426] shadow-[0_3px_0_#161426] flex items-center justify-center cursor-pointer"
-              >
-                <X weight="bold" className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* 1. Master Toggles & Volume Sliders */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Music Box */}
-              <div className="rounded-2xl bg-white border-3 border-[#161426] p-3.5 space-y-2.5 shadow-[0_4px_0_#161426]">
-                <div className="flex items-center justify-between">
-                  <span className="font-black text-sm flex items-center gap-1.5">
-                    <MusicNotes weight="fill" className="w-4 h-4 text-[#9333ea]" />
-                    <span>{ar ? 'موسيقى الخلفية' : 'Background Music'}</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      soundManager.setMusicEnabled(!audioState.musicEnabled)
-                    }
-                    className={`px-3 py-1 rounded-full border-2 border-[#161426] text-xs font-black cursor-pointer ${
-                      audioState.musicEnabled
-                        ? 'bg-[#8ac926] text-[#161426]'
-                        : 'bg-[#e2e8f0] text-[#475569]'
-                    }`}
-                  >
-                    {audioState.musicEnabled
-                      ? ar
-                        ? 'شغّال ✓'
-                        : 'ON ✓'
-                      : ar
-                      ? 'مكتوم'
-                      : 'OFF'}
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.02}
-                    value={audioState.musicVolume}
-                    onChange={(e) =>
-                      soundManager.setMusicVolume(parseFloat(e.target.value))
-                    }
-                    className="w-full accent-[#9333ea] cursor-pointer"
-                  />
-                  <span className="text-xs font-black w-10 text-end">
-                    {Math.round(audioState.musicVolume * 100)}%
-                  </span>
-                </div>
-                <div className="text-[11px] font-bold text-[#3f3b5c] truncate">
-                  {ar ? 'تعمل الآن: ' : 'Playing: '}
-                  <span className="font-black text-[#9333ea]">
-                    {ar ? currentTrackMeta.title_ar : currentTrackMeta.title_en}
-                  </span>
-                </div>
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label={ar ? 'الصوت' : 'Sound'}
+              dir={ar ? 'rtl' : 'ltr'}
+              onClick={(e) => e.stopPropagation()}
+              initial={reduceMotion ? { opacity: 0 } : { y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={reduceMotion ? { opacity: 0 } : { y: 40, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+              className="sound-panel w-full sm:max-w-md max-h-[88dvh] overflow-y-auto overscroll-contain rounded-t-[28px] sm:rounded-[28px] bg-[#fff9ec] text-[#161426] border-4 border-b-0 sm:border-b-4 border-[#161426] sm:shadow-[0_10px_0_#161426]"
+            >
+              <div className="sm:hidden flex justify-center pt-2.5">
+                <span className="w-12 h-1.5 rounded-full bg-[#161426]/25" />
               </div>
 
-              {/* SFX Box */}
-              <div className="rounded-2xl bg-white border-3 border-[#161426] p-3.5 space-y-2.5 shadow-[0_4px_0_#161426]">
-                <div className="flex items-center justify-between">
-                  <span className="font-black text-sm flex items-center gap-1.5">
-                    <SlidersHorizontal
-                      weight="fill"
-                      className="w-4 h-4 text-[#0284c7]"
-                    />
-                    <span>{ar ? 'المؤثرات الصوتية (SFX)' : 'Sound Effects (SFX)'}</span>
+              <div className="flex items-center justify-between gap-3 px-5 pt-3 sm:pt-5 pb-3">
+                <h2 className="text-2xl font-black flex items-center gap-2.5">
+                  <span className="w-10 h-10 rounded-2xl bg-[#a855f7] text-white border-3 border-[#161426] shadow-[0_3px_0_#161426] flex items-center justify-center">
+                    <SpeakerHigh weight="fill" className="w-5 h-5" />
                   </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      soundManager.setSfxEnabled(!audioState.sfxEnabled)
-                    }
-                    className={`px-3 py-1 rounded-full border-2 border-[#161426] text-xs font-black cursor-pointer ${
-                      audioState.sfxEnabled
-                        ? 'bg-[#8ac926] text-[#161426]'
-                        : 'bg-[#e2e8f0] text-[#475569]'
-                    }`}
-                  >
-                    {audioState.sfxEnabled
-                      ? ar
-                        ? 'شغّال ✓'
-                        : 'ON ✓'
-                      : ar
-                      ? 'مكتوم'
-                      : 'OFF'}
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={audioState.sfxVolume}
-                    onChange={(e) => {
-                      soundManager.setSfxVolume(parseFloat(e.target.value));
-                    }}
-                    className="w-full accent-[#0284c7] cursor-pointer"
-                  />
-                  <span className="text-xs font-black w-10 text-end">
-                    {Math.round(audioState.sfxVolume * 100)}%
-                  </span>
-                </div>
-                <div className="text-[11px] font-bold text-[#3f3b5c]">
-                  {ar
-                    ? 'أصوات ورق، نرد، مقص، فتيل، وانفجار حقيقية (Foley)'
-                    : 'Real studio-recorded cards, dice, wire snip & explosion'}
-                </div>
-              </div>
-            </div>
-
-            {/* 2. Music Track Mode Picker (Auto Per Game vs Lock Favorite Track!) */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <h3 className="font-black text-sm sm:text-base text-[#161426]">
-                  {ar
-                    ? '١. اختر نظام الموسيقى (تلقائي لكل لعبة أو تثبيت مقطوعة واحدة):'
-                    : '1. Choose Music Mode (Auto per game mood or lock one track):'}
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 gap-2">
-                {/* Auto Per-Game Mood Option */}
+                  {ar ? 'الصوت' : 'Sound'}
+                </h2>
                 <button
                   type="button"
-                  onClick={() => soundManager.setMusicMode('auto')}
-                  className={`w-full text-start p-3 rounded-2xl border-3 border-[#161426] transition-all flex items-center justify-between gap-3 cursor-pointer ${
-                    audioState.musicMode === 'auto'
-                      ? 'bg-[#ffca3a] shadow-[0_4px_0_#161426]'
-                      : 'bg-white hover:bg-[#fef3c7]'
-                  }`}
+                  onClick={() => setOpen(false)}
+                  aria-label={ar ? 'سكّر' : 'Close'}
+                  className="w-10 h-10 rounded-xl bg-[#ff595e] text-white border-3 border-[#161426] shadow-[0_3px_0_#161426] active:translate-y-0.5 active:shadow-[0_1px_0_#161426] flex items-center justify-center cursor-pointer"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="w-8 h-8 rounded-xl bg-[#161426] text-[#ffca3a] flex items-center justify-center shrink-0">
-                      <Sparkle weight="fill" className="w-4 h-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="font-black text-sm text-[#161426]">
-                        {ar
-                          ? 'تلقائي حسب أجواء كل لعبة (موصى به)'
-                          : 'Auto-Match Each Game Atmosphere (Recommended)'}
-                      </div>
-                      <div className="text-[11px] font-bold text-[#3f3b5c]">
-                        {ar
-                          ? 'يشغّل «خطوة عالساكت» بالفتيل الملعون وتفتيش الشريف، ومقطوعة خاصة لكل لعبة تلقائياً!'
-                          : 'Plays "Silent Tiptoe" in BoomDeck/Sheriff, and matches each game automatically!'}
-                      </div>
-                    </div>
-                  </div>
-                  {audioState.musicMode === 'auto' && (
-                    <span className="w-6 h-6 rounded-full bg-[#8ac926] border-2 border-[#161426] flex items-center justify-center shrink-0">
-                      <Check weight="bold" className="w-3.5 h-3.5" />
-                    </span>
-                  )}
+                  <X weight="bold" className="w-5 h-5" />
                 </button>
+              </div>
 
-                {/* Individual Real Kevin MacLeod MP3 Tracks */}
-                {(Object.keys(MUSIC_TRACKS) as MusicTrackId[]).map((trackId) => {
-                  const tr = MUSIC_TRACKS[trackId];
-                  const isSelected = audioState.musicMode === trackId;
-                  const isCurrentlyPlaying =
-                    audioState.musicEnabled &&
-                    audioState.resolvedTrackId === trackId;
-                  return (
-                    <button
-                      key={trackId}
-                      type="button"
-                      onClick={() => {
-                        if (!audioState.musicEnabled) {
-                          soundManager.setMusicEnabled(true);
-                        }
-                        soundManager.setMusicMode(trackId as MusicSelectionMode);
-                      }}
-                      className={`w-full text-start p-2.5 sm:p-3 rounded-2xl border-3 border-[#161426] transition-all flex items-center justify-between gap-3 cursor-pointer ${
-                        isSelected
-                          ? 'bg-[#e9d5ff] shadow-[0_4px_0_#161426]'
-                          : 'bg-white hover:bg-[#f3e8ff]'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span
-                          className={`w-8 h-8 rounded-xl border-2 border-[#161426] flex items-center justify-center shrink-0 ${
-                            isCurrentlyPlaying
-                              ? 'bg-[#8ac926] text-[#161426]'
-                              : 'bg-[#161426] text-white'
+              <div className="px-5 pb-5 space-y-5">
+                <div className="rounded-3xl bg-white border-3 border-[#161426] p-4 space-y-4">
+                  <VolumeRow
+                    ar={ar}
+                    label={ar ? 'الموسيقى' : 'Music'}
+                    tone="#a855f7"
+                    enabled={audioState.musicEnabled}
+                    volume={audioState.musicVolume}
+                    step={0.02}
+                    onIcon={<MusicNotes weight="fill" className="w-6 h-6 text-white" />}
+                    onToggle={() => soundManager.setMusicEnabled(!audioState.musicEnabled)}
+                    onVolume={(v) => soundManager.setMusicVolume(v)}
+                  />
+                  <VolumeRow
+                    ar={ar}
+                    label={ar ? 'المؤثرات' : 'Effects'}
+                    tone="#00bbf9"
+                    enabled={audioState.sfxEnabled}
+                    volume={audioState.sfxVolume}
+                    step={0.05}
+                    onIcon={<Waveform weight="bold" className="w-6 h-6 text-[#161426]" />}
+                    onToggle={() => soundManager.setSfxEnabled(!audioState.sfxEnabled)}
+                    onVolume={(v) => {
+                      soundManager.setSfxVolume(v);
+                    }}
+                    extra={
+                      audioState.sfxEnabled && (
+                        <button
+                          type="button"
+                          onClick={() => soundManager.playSfx('card_draw')}
+                          className="px-2 py-0.5 rounded-lg border-2 border-[#161426] bg-[#fff9ec] text-[11px] font-black flex items-center gap-1 cursor-pointer hover:bg-[#e0f2fe]"
+                        >
+                          <Play weight="fill" className="w-3 h-3" />
+                          {ar ? 'جرّب' : 'Test'}
+                        </button>
+                      )
+                    }
+                  />
+                </div>
+
+                <section className="space-y-2.5">
+                  <h3 className="font-black text-sm text-[#3f3b5c]">
+                    {ar ? 'شو نسمع؟' : 'What plays?'}
+                  </h3>
+
+                  <div
+                    role="radiogroup"
+                    aria-label={ar ? 'الموسيقى' : 'Music'}
+                    className={`space-y-2 transition-opacity ${
+                      audioState.musicEnabled ? '' : 'opacity-60'
+                    }`}
+                  >
+                    {(() => {
+                      const selected = audioState.musicMode === 'auto';
+                      return (
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          onClick={() => pickMode('auto')}
+                          className={`w-full text-start px-3 py-2.5 rounded-2xl border-3 border-[#161426] flex items-center gap-3 cursor-pointer transition-[background-color,box-shadow,transform] ${
+                            selected
+                              ? 'bg-[#161426] text-[#fff9ec] shadow-[0_3px_0_#a855f7]'
+                              : 'bg-white hover:bg-[#f3e8ff]'
                           }`}
                         >
-                          <Play weight="fill" className="w-4 h-4" />
-                        </span>
-                        <div className="min-w-0">
-                          <div className="font-black text-xs sm:text-sm text-[#161426] flex items-center gap-1.5">
-                            <span>{ar ? tr.title_ar : tr.title_en}</span>
-                            {isCurrentlyPlaying && (
-                              <span className="px-2 py-0.5 rounded-full bg-[#8ac926] text-[#161426] border border-[#161426] text-[10px] font-black">
-                                {ar ? 'شغّالة الآن' : 'Playing'}
+                          <span className="w-10 h-10 rounded-xl bg-[#ffca3a] text-[#161426] border-2 border-[#161426] flex items-center justify-center shrink-0">
+                            <Sparkle weight="fill" className="w-5 h-5" />
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className="block font-black text-sm">
+                              {ar ? 'حسب اللعبة' : 'Match the game'}
+                            </span>
+                            <span
+                              className={`block text-xs font-bold truncate ${
+                                selected ? 'text-[#fff9ec]/70' : 'text-[#3f3b5c]'
+                              }`}
+                            >
+                              {selected && audioState.musicEnabled
+                                ? ar
+                                  ? `هلأ: ${autoTrack.title_ar}`
+                                  : `Now: ${autoTrack.title_en}`
+                                : ar
+                                ? 'كل لعبة إلها لحنها'
+                                : 'Each game gets its own tune'}
+                            </span>
+                          </span>
+                          {selected && (
+                            <Check weight="bold" className="w-5 h-5 text-[#ffca3a] shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })()}
+
+                    <div className="grid grid-cols-2 gap-2">
+                      {trackIds.map((trackId) => {
+                        const tr = MUSIC_TRACKS[trackId];
+                        const selected = audioState.musicMode === trackId;
+                        const playing =
+                          audioState.musicEnabled && audioState.resolvedTrackId === trackId;
+                        return (
+                          <button
+                            key={trackId}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            onClick={() => pickMode(trackId as MusicSelectionMode)}
+                            className={`w-full text-start p-2 sm:p-2.5 rounded-2xl border-3 last:odd:col-span-2 border-[#161426] flex items-center gap-2 cursor-pointer transition-[background-color,box-shadow] ${
+                              selected
+                                ? 'bg-[#161426] text-[#fff9ec] shadow-[0_3px_0_#a855f7]'
+                                : 'bg-white hover:bg-[#f3e8ff]'
+                            }`}
+                          >
+                            <span
+                              style={{ backgroundColor: tr.color }}
+                              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 border-[#161426] text-[#161426] flex items-center justify-center shrink-0"
+                            >
+                              {playing ? (
+                                <PlayingBars />
+                              ) : (
+                                <MusicNotesSimple weight="fill" className="w-4 h-4" />
+                              )}
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block font-black text-[13px] sm:text-sm truncate">
+                                {ar ? tr.title_ar : tr.title_en}
                               </span>
-                            )}
-                          </div>
-                          <div className="text-[11px] font-bold text-[#3f3b5c] truncate">
-                            {ar ? `مناسبة لـ: ${tr.vibe_ar}` : `Fits: ${tr.vibe_en}`}
-                          </div>
-                        </div>
-                      </div>
-                      <span className="text-[11px] font-black px-2.5 py-1 rounded-xl bg-[#161426] text-[#ffca3a] shrink-0">
-                        {isSelected
-                          ? ar
-                            ? 'مثبّتة ✓'
-                            : 'Locked ✓'
-                          : ar
-                          ? 'تشغيل وتثبيت'
-                          : 'Play & Lock'}
-                      </span>
-                    </button>
-                  );
-                })}
+                              <span
+                                className={`block text-xs font-bold truncate ${
+                                  selected ? 'text-[#fff9ec]/70' : 'text-[#3f3b5c]'
+                                }`}
+                              >
+                                {ar ? tr.mood_ar : tr.mood_en}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </section>
               </div>
-            </div>
-
-            {/* 3. Interactive SFX Soundboard (Audition Every Real Sound!) */}
-            <div className="space-y-2.5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h3 className="font-black text-sm sm:text-base text-[#161426]">
-                  {ar
-                    ? '٢. جرّب المؤثرات الصوتية الحقيقية (اضغط للاستماع):'
-                    : '2. Preview Real Recorded Sound Effects (Click to listen):'}
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!audioState.sfxEnabled) soundManager.setSfxEnabled(true);
-                    soundManager.playDefuseShowdownSequence();
-                  }}
-                  className="px-3 py-1 rounded-xl bg-[#22c55e] text-[#161426] border-2 border-[#161426] shadow-[0_2px_0_#161426] text-xs font-black flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Play weight="fill" className="w-3.5 h-3.5" />
-                  <span>
-                    {ar
-                      ? 'جرّب صوت «تكتكة القنبلة + قص المقص» معاً!'
-                      : 'Test Bomb Tick + Wire Snip Combo!'}
-                  </span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {FEATURED_SFX_IDS.map((sfxId) => {
-                  const sfx = SFX_CATALOG[sfxId];
-                  return (
-                    <button
-                      key={sfxId}
-                      type="button"
-                      onClick={() => {
-                        if (!audioState.sfxEnabled) {
-                          soundManager.setSfxEnabled(true);
-                        }
-                        soundManager.playSfx(sfxId);
-                      }}
-                      className="p-2.5 rounded-xl bg-white hover:bg-[#e0f2fe] border-2 border-[#161426] shadow-[0_3px_0_#161426] active:translate-y-0.5 flex items-center gap-2 text-start cursor-pointer"
-                    >
-                      <span className="w-6 h-6 rounded-lg bg-[#00bbf9] text-[#161426] border border-[#161426] flex items-center justify-center shrink-0">
-                        <Play weight="fill" className="w-3 h-3" />
-                      </span>
-                      <span className="text-xs font-black text-[#161426] leading-tight">
-                        {ar ? sfx.label_ar : sfx.label_en}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };

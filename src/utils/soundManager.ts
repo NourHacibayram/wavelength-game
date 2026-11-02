@@ -36,50 +36,56 @@ export interface MusicTrackMeta {
   url: string;
   title_ar: string;
   title_en: string;
-  vibe_ar: string;
-  vibe_en: string;
+  mood_ar: string;
+  mood_en: string;
+  color: string;
 }
 
 export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrackMeta> = {
   sneaky_snitch: {
     id: 'sneaky_snitch',
     url: '/audio/music/sneaky-snitch.mp3?v=2',
-    title_ar: 'خطوة عالساكت (تسلل ومقالب - تلحين خاص)',
-    title_en: 'Silent Tiptoe (Original Sneaky Heist)',
-    vibe_ar: 'الفتيل الملعون، مهرّب الجمارك، وردة ولا فخ؟، قسمة العصابة',
-    vibe_en: 'Boom Deck, Smuggler’s Run, Rose Trap, Loot Standoff',
+    title_ar: 'خطوة عالساكت',
+    title_en: 'Silent Tiptoe',
+    mood_ar: 'تسلل ومقالب',
+    mood_en: 'Sneaky heist',
+    color: '#ff595e',
   },
   scheming_weasel: {
     id: 'scheming_weasel',
     url: '/audio/music/scheming-weasel.mp3?v=2',
-    title_ar: 'همس الجواسيس (خداع وشكوك - تلحين خاص)',
-    title_en: 'Spy Whisper (Original Bluff Groove)',
-    vibe_ar: 'مين الدخيل؟، ليلة الذئب، المهمة السرية، مين الخربوط؟، ارسم حجّتك',
-    vibe_en: 'Who’s Clueless?, Wolf Night, Secret Mission, Odd Brush Out, Draw Your Alibi',
+    title_ar: 'همس الجواسيس',
+    title_en: 'Spy Whisper',
+    mood_ar: 'خداع وشكوك',
+    mood_en: 'Bluff & suspicion',
+    color: '#9b5de5',
   },
   lobby_time: {
     id: 'lobby_time',
     url: '/audio/music/lobby-time.mp3?v=2',
-    title_ar: 'طاولة السهرة (جاز كازينو - تلحين خاص)',
-    title_en: 'Velvet Table (Original Lounge Jazz)',
-    vibe_ar: 'تركس الملوك، حوت العقارات، مزاد الخربشات، شرف اللصوص، خيال الشلّة، الصالة الرئيسية',
-    vibe_en: 'Trix Royal, City Tycoon, Masterpiece Auction, Honor Among Thieves, Dream Tales, Main Lobby',
+    title_ar: 'طاولة السهرة',
+    title_en: 'Velvet Table',
+    mood_ar: 'جاز هادي',
+    mood_en: 'Lounge jazz',
+    color: '#ffca3a',
   },
   investigations: {
     id: 'investigations',
     url: '/audio/music/investigations.mp3?v=2',
-    title_ar: 'شفرة العقول (تحقيق وتخاطر - تلحين خاص)',
-    title_en: 'Mind Cipher (Original Detective Pulse)',
-    vibe_ar: 'نبض الصمت، تخاطر الأرقام، التقاء العقول',
-    vibe_en: 'Silent Pulse, Rank It!, Mind Meld',
+    title_ar: 'شفرة العقول',
+    title_en: 'Mind Cipher',
+    mood_ar: 'تحقيق وتخاطر',
+    mood_en: 'Detective pulse',
+    color: '#00bbf9',
   },
   monkeys: {
     id: 'monkeys',
     url: '/audio/music/monkeys-spinning-monkeys.mp3?v=2',
-    title_ar: 'سباق الأبطال (سهرة ومرح - تلحين خاص)',
-    title_en: 'Party Dash (Original Upbeat Groove)',
-    vibe_ar: 'الحيّة والسلّم، عَ نفس الموجة، قنبلة الحروف، الكلمات الممنوعة، شفرة الأربع كلمات',
-    vibe_en: 'Snakes & Ladders, Tune In, Word Bomb, Don’t Say It!, Link Board',
+    title_ar: 'سباق الأبطال',
+    title_en: 'Party Dash',
+    mood_ar: 'سهرة ومرح',
+    mood_en: 'Upbeat groove',
+    color: '#8ac926',
   },
 };
 
