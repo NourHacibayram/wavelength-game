@@ -76,21 +76,6 @@ import {
   buildInitialTheMindState,
 } from './components/TheMindGame';
 import {
-  TrixGame,
-  TrixGameState,
-  buildInitialTrixState,
-} from './components/TrixGame';
-import {
-  MonopolyGame,
-  MonopolyGameState,
-  buildInitialMonopolyState,
-} from './components/MonopolyGame';
-import {
-  SnakesAndLaddersGame,
-  SnakesGameState,
-  buildInitialSnakesState,
-} from './components/SnakesAndLaddersGame';
-import {
   SkullGame,
   SkullGameState,
   buildInitialSkullState,
@@ -616,18 +601,6 @@ export function App() {
 
       case 'themind': {
         return buildInitialTheMindState(pIds);
-      }
-
-      case 'trix': {
-        return buildInitialTrixState(pIds);
-      }
-
-      case 'monopoly': {
-        return buildInitialMonopolyState(pIds);
-      }
-
-      case 'snakes': {
-        return buildInitialSnakesState(pIds);
       }
 
       case 'skull': {
@@ -1428,9 +1401,6 @@ export function App() {
 
   const activeGameId: PartyGameId = room?.selected_game || 'wavelength';
   const isImmersiveTable =
-    activeGameId === 'trix' ||
-    activeGameId === 'monopoly' ||
-    activeGameId === 'snakes' ||
     activeGameId === 'boomdeck';
   const activeGameMeta =
     PARTY_GAMES_CATALOG.find((g) => g.id === activeGameId) || PARTY_GAMES_CATALOG[0];
@@ -1509,10 +1479,7 @@ export function App() {
         room &&
         room.status !== 'lobby' &&
         room.status !== 'finished' &&
-        (activeGameId === 'trix' ||
-          activeGameId === 'monopoly' ||
-          activeGameId === 'snakes' ||
-          activeGameId === 'boomdeck')
+        activeGameId === 'boomdeck'
       ) && (
         <header className="w-full max-w-7xl mx-auto px-4 pt-4 pb-2 flex items-center justify-between gap-2">
           <div
@@ -1594,10 +1561,7 @@ export function App() {
           room &&
           room.status !== 'lobby' &&
           room.status !== 'finished' &&
-          (activeGameId === 'trix' ||
-            activeGameId === 'monopoly' ||
-            activeGameId === 'snakes' ||
-            activeGameId === 'boomdeck')
+          activeGameId === 'boomdeck'
             ? 'max-w-[1680px] px-2 sm:px-4 my-1.5'
             : 'max-w-7xl px-4 my-3'
         } mx-auto flex-1 flex flex-col ${
@@ -2058,10 +2022,7 @@ export function App() {
                   </span>
                 </div>
 
-                {(activeGameId === 'trix' ||
-                  activeGameId === 'monopoly' ||
-                  activeGameId === 'snakes' ||
-                  activeGameId === 'boomdeck') && (
+                {activeGameId === 'boomdeck' && (
                   <>
                     <button
                       type="button"
@@ -2090,9 +2051,6 @@ export function App() {
               {/* Primary Game Column */}
               <div
                 className={`${
-                  activeGameId === 'trix' ||
-                  activeGameId === 'monopoly' ||
-                  activeGameId === 'snakes' ||
                   activeGameId === 'boomdeck'
                     ? 'lg:col-span-12'
                     : 'lg:col-span-8'
@@ -2307,52 +2265,6 @@ export function App() {
                     lang={lang}
                     onUpdateGameData={handleUpdateMiniGameData}
                     onStartNewRound={() => handleSelectPartyGame('themind')}
-                  />
-                ) : activeGameId === 'trix' ? (
-                  <TrixGame
-                    gameData={
-                      Array.isArray(room.game_data?.seats) &&
-                      room.game_data?.rulesVersion === 3
-                        ? room.game_data
-                        : (buildInitialGameData('trix', players) as TrixGameState)
-                    }
-                    players={players}
-                    myPlayerId={playerId}
-                    isHost={isHost}
-                    isPassAndPlay={isPassAndPlay}
-                    lang={lang}
-                    onUpdateGameData={handleUpdateMiniGameData}
-                    onStartNewRound={() => handleSelectPartyGame('trix')}
-                  />
-                ) : activeGameId === 'monopoly' ? (
-                  <MonopolyGame
-                    gameData={
-                      room.game_data?.cash && Array.isArray(room.game_data?.playerOrder)
-                        ? room.game_data
-                        : (buildInitialGameData('monopoly', players) as MonopolyGameState)
-                    }
-                    players={players}
-                    myPlayerId={playerId}
-                    isHost={isHost}
-                    isPassAndPlay={isPassAndPlay}
-                    lang={lang}
-                    onUpdateGameData={handleUpdateMiniGameData}
-                    onStartNewRound={() => handleSelectPartyGame('monopoly')}
-                  />
-                ) : activeGameId === 'snakes' ? (
-                  <SnakesAndLaddersGame
-                    gameData={
-                      room.game_data?.boardType === 'snakes'
-                        ? room.game_data
-                        : (buildInitialGameData('snakes', players) as SnakesGameState)
-                    }
-                    players={players}
-                    myPlayerId={playerId}
-                    isHost={isHost}
-                    isPassAndPlay={isPassAndPlay}
-                    lang={lang}
-                    onUpdateGameData={handleUpdateMiniGameData}
-                    onStartNewRound={() => handleSelectPartyGame('snakes')}
                   />
                 ) : activeGameId === 'skull' ? (
                   <SkullGame
@@ -2814,9 +2726,6 @@ export function App() {
               {/* LEADERBOARD SIDEBAR (Drops to a sleek full-width bar when playing full-screen board/tabletop games) */}
               <aside
                 className={`${
-                  activeGameId === 'trix' ||
-                  activeGameId === 'monopoly' ||
-                  activeGameId === 'snakes' ||
                   activeGameId === 'boomdeck'
                     ? 'lg:col-span-12'
                     : 'lg:col-span-4 lg:sticky lg:top-4'

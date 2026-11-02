@@ -28,11 +28,6 @@ import {
   TheMindTutorialScene,
 } from './GameTutorialScenesB';
 import {
-  TrixTutorialScene,
-  MonopolyTutorialScene,
-  SnakesTutorialScene,
-} from './GameTutorialScenesC';
-import {
   SkullTutorialScene,
   SheriffTutorialScene,
   CashNGunsTutorialScene,
@@ -99,12 +94,6 @@ export const GameTutorialSvgScene: React.FC<{
       return <WordBombTutorialScene {...props} />;
     case 'themind':
       return <TheMindTutorialScene {...props} />;
-    case 'trix':
-      return <TrixTutorialScene {...props} />;
-    case 'monopoly':
-      return <MonopolyTutorialScene {...props} />;
-    case 'snakes':
-      return <SnakesTutorialScene {...props} />;
     case 'skull':
       return <SkullTutorialScene {...props} />;
     case 'sheriff':

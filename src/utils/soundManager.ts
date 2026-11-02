@@ -5,7 +5,6 @@ export type MusicTrackId =
   | 'lobby'
   | 'boomdeck'
   | 'wavelength'
-  | 'trix'
   | 'sneaky_snitch'
   | 'scheming_weasel'
   | 'lobby_time'
@@ -75,15 +74,6 @@ export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrackMeta> = {
     mood_ar: 'حالمة وهادية',
     mood_en: 'Dreamy lo-fi',
     color: '#4cc9f0',
-  },
-  trix: {
-    id: 'trix',
-    url: themeUrl('trix'),
-    title_ar: 'تركس الملوك',
-    title_en: 'Trix Royal',
-    mood_ar: 'بياتي وأكورديون',
-    mood_en: 'Bayati & accordion',
-    color: '#d97706',
   },
   sneaky_snitch: {
     id: 'sneaky_snitch',
@@ -292,7 +282,6 @@ export function getRecommendedTrackForGame(
     case 'lobby':
     case 'boomdeck':
     case 'wavelength':
-    case 'trix':
       return gameId;
     case 'sheriff':
     case 'skull':
@@ -312,12 +301,10 @@ export function getRecommendedTrackForGame(
     case 'themind':
     case 'ito':
       return 'investigations';
-    case 'snakes':
     case 'wordbomb':
     case 'taboo':
     case 'soclover':
       return 'monkeys';
-    case 'monopoly':
     case 'artauction':
     case 'splitsteal':
     case 'dixit':
@@ -699,30 +686,8 @@ class SoundManager {
       return;
     }
 
-    // 2. Dice & Board Games (Snakes & Ladders, Monopoly)
-    if (gameId === 'snakes' || gameId === 'monopoly') {
-      if (
-        prevData?.lastRoll !== nextData?.lastRoll ||
-        prevData?.dice?.[0] !== nextData?.dice?.[0] ||
-        prevData?.dice?.[1] !== nextData?.dice?.[1]
-      ) {
-        this.playSfx('dice_roll');
-        return;
-      }
-      if (prevData?.cash && nextData?.cash) {
-        const cashChanged = Object.keys(nextData.cash).some(
-          (k) => prevData.cash[k] !== nextData.cash[k]
-        );
-        if (cashChanged) {
-          this.playSfx('coins_jingle');
-          return;
-        }
-      }
-    }
-
-    // 3. Card Games (Trix, Dixit, The Mind, Ito, Cockroach, Sheriff)
+    // 3. Card Games (Dixit, The Mind, Ito, Cockroach, Sheriff)
     if (
-      gameId === 'trix' ||
       gameId === 'dixit' ||
       gameId === 'themind' ||
       gameId === 'ito' ||

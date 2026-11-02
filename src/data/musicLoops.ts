@@ -4,5 +4,4 @@ export const MUSIC_LOOPS: Record<string, { loopStart: number; loopEnd: number }>
   lobby: { loopStart: 0.574694, loopEnd: 38.974694 },
   boomdeck: { loopStart: 0.574694, loopEnd: 31.059592 },
   wavelength: { loopStart: 0.574694, loopEnd: 43.232653 },
-  trix: { loopStart: 0.574694, loopEnd: 34.847347 },
 };

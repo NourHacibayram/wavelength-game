@@ -138,45 +138,8 @@ def wavelength() -> Song:
     return s
 
 
-# ---------------------------------------------------------------------------
-# Trix — "تركس الملوك": Levantine card table, maqam Bayati on D with quarter tones
-# ---------------------------------------------------------------------------
-
-def trix() -> Song:
-    s = Song(bpm=112, beats=64, swing=0.05, reverb=0.2)
-    harm = ['D5', 'D5', 'D5', 'G5', 'C5', 'D5', 'G5', 'D5',
-            'D5', 'G5', 'F5', 'D5', 'C5', 'Bb5', 'C5', 'D5']
-    for bar, c in enumerate(harm):
-        b = bar * 4
-        s.chord('acoustic_guitar_nylon', CH[c], b, 0.9, vel=0.5, pan=-0.3, strum=0.02)
-        s.chord('acoustic_guitar_nylon', CH[c][1:], b + 1.5, 0.45, vel=0.4, pan=-0.3)
-        s.chord('acoustic_guitar_nylon', CH[c][1:], b + 2, 0.9, vel=0.45, pan=-0.3)
-        s.chord('acoustic_guitar_nylon', CH[c][1:], b + 3, 0.45, vel=0.38, pan=-0.3)
-        r = CH[c][0].replace('3', '2') if CH[c][0].endswith('3') else CH[c][0]
-        s.note('acoustic_bass', r, b, 1, vel=0.85)
-        s.note('acoustic_bass', r, b + 1.5, 0.5, vel=0.6)
-        s.note('acoustic_bass', r, b + 2, 1, vel=0.75)
-
-    s.line('accordion', 'D4:.5 E~4:.5 F4:.5 G4:.5 A4:1 G4:.5 F4:.5 | E~4:.5 F4:.5 E~4:.5 D4:.5 D4:2 | '
-           'A4:.5 Bb4:.5 A4:.5 G4:.5 F4:.5 G4:.5 A4:1 | G4:.5 F4:.5 E~4:.5 F4:.5 G4:2 | '
-           'C5:.5 Bb4:.5 A4:.5 G4:.5 A4:1 Bb4:1 | A4:.5 G4:.5 F4:.5 G4:.5 A4:2 | '
-           'G4:.5 A4:.5 Bb4:.5 A4:.5 G4:.5 F4:.5 E~4:.5 F4:.5 | E~4:1 D4:3', 0, vel=0.7, pan=0.2)
-    s.line('orchestral_harp', 'A4:.25 Bb4:.25 C5:.25 D5:.25 C5:.5 Bb4:.5 A4:1 A4:1 | '
-           'G4:.25 A4:.25 Bb4:.25 C5:.25 Bb4:.5 A4:.5 G4:2 | '
-           'F4:.25 G4:.25 A4:.25 Bb4:.25 A4:.5 G4:.5 F4:1 G4:1 | A4:2 r:1 A4:.5 Bb4:.5 | '
-           'C5:.5 D5:.5 C5:.5 Bb4:.5 A4:.5 Bb4:.5 C5:1 | Bb4:.5 A4:.5 G4:.5 A4:.5 Bb4:2 | '
-           'A4:.5 G4:.5 F4:.5 E~4:.5 F4:.5 G4:.5 E~4:1 | D4:3 r:1', 32, vel=0.75, pan=0.25, octave=1)
-    s.line('accordion', 'D4:4 | D4:4 | F4:4 | A4:4 | G4:4 | F4:4 | A4:4 | A3:4', 32, vel=0.3, pan=-0.1)
-
-    s.pattern('D...T.T.D.D.T...', 0, 16, vel=0.8, pan=0.05, step=0.25)
-    s.pattern('.k.k...k.k.k...k', 0, 16, vel=0.55, pan=0.15, step=0.25)
-    s.pattern('R.r.R.r.R.r.R.r.', 0, 16, vel=0.42, pan=-0.25, step=0.25)
-    return s
-
-
 TRACKS = {
     'lobby': lobby,
     'boomdeck': boomdeck,
     'wavelength': wavelength,
-    'trix': trix,
 }
