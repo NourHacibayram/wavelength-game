@@ -220,7 +220,7 @@ export const WitsGame: React.FC<WitsGameProps> = ({
             <span>
               {lang === 'ar'
                 ? 'مزايدة التخمين — خمّن وراهن ع أقرب جواب!'
-                : 'Wits & Wagers — Guess & Bet Your Chips!'}
+                : 'Guess & Bet — Wager Your Chips!'}
             </span>
           </span>
 

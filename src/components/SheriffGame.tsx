@@ -1016,7 +1016,7 @@ export const SheriffGame: React.FC<SheriffGameProps> = ({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl sm:text-2xl font-black text-[#161426] tracking-tight">
-                  {isAr ? 'مهرّب الجمارك' : 'Sheriff of Customs'}
+                  {isAr ? 'مهرّب الجمارك' : 'Smuggler’s Run'}
                 </h2>
                 <span className="px-3 py-0.5 rounded-full bg-[#161426] text-[#fde047] text-xs font-black">
                   {isAr

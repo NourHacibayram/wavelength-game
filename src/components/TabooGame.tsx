@@ -244,7 +244,7 @@ export const TabooGame: React.FC<TabooGameProps> = ({
             <span>
               {lang === 'ar'
                 ? 'الكلمات الممنوعة — اشرح بدون زلّة لسان!'
-                : 'Taboo Rush — Describe Without Slipping!'}
+                : 'Don’t Say It! — Describe Without Slipping!'}
             </span>
           </div>
           <h2 className="text-2xl font-extrabold mt-0.5">
@@ -339,7 +339,7 @@ export const TabooGame: React.FC<TabooGameProps> = ({
             </div>
             <div className="cartoon-panel-dark p-3 text-center">
               <div className="text-xs font-bold text-[#ff595e]">
-                {lang === 'ar' ? 'زلّة ممنوعة' : 'Taboo Buzz'}
+                {lang === 'ar' ? 'زلّة ممنوعة' : 'Forbidden Buzz'}
               </div>
               <div className="text-2xl font-extrabold text-white">
                 {gameData.buzzedWords?.length || 0}
@@ -393,7 +393,7 @@ export const TabooGame: React.FC<TabooGameProps> = ({
                 <div className="text-xs font-extrabold uppercase text-[#ff595e] text-center flex items-center justify-center gap-1">
                   <Prohibit weight="fill" className="w-4 h-4" />
                   <span>
-                    {lang === 'ar' ? 'ممنوع نطق هذه الكلمات الـ 5:' : '5 Forbidden Taboo Words:'}
+                    {lang === 'ar' ? 'ممنوع نطق هذه الكلمات الـ 5:' : '5 Forbidden Words:'}
                   </span>
                 </div>
 
@@ -433,7 +433,7 @@ export const TabooGame: React.FC<TabooGameProps> = ({
                 >
                   <BellRinging weight="fill" className="w-6 h-6" />
                   <span>
-                    {lang === 'ar' ? 'جرس! قال كلمة ممنوعة' : 'BUZZ! Said Taboo Word'}
+                    {lang === 'ar' ? 'جرس! قال كلمة ممنوعة' : 'BUZZ! Said a Forbidden Word'}
                   </span>
                 </button>
 

@@ -600,7 +600,7 @@ export const ChameleonTutorialScene: React.FC<TutorialSceneProps> = ({
                     >
                       {p.imp
                         ? lang === 'ar'
-                          ? 'برّا السالفة!'
+                          ? 'الدخيل!'
                           : 'Impostor!'
                         : lang === 'ar'
                         ? 'شاورما'
@@ -695,7 +695,7 @@ export const ChameleonTutorialScene: React.FC<TutorialSceneProps> = ({
                   ? 'اسألوا بذكاء بدون ما تفضحوا الكلمة للجاسوس!'
                   : 'Ask subtle questions without giving away the word!'
                 : lang === 'ar'
-                ? 'صوّتوا معاً لكشف الشخص اللي برّا السالفة!'
+                ? 'صوّتوا معاً لكشف الدخيل!'
                 : 'Vote together on who you suspect is faking it!'
             }
           />

@@ -310,7 +310,7 @@ export const SkullTutorialScene: React.FC<TutorialSceneProps> = ({
             bg="#8ac926"
             text={
               ar
-                ? 'أول لاعب يحقق نقطتي فوز يتوّج ملك الجمجمة والورد!'
+                ? 'أول لاعب يحقق نقطتي فوز ياخد التاج!'
                 : 'First player to score 2 Challenge Points wins the crown!'
             }
           />

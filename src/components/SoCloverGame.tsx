@@ -194,7 +194,7 @@ export const SoCloverGame: React.FC<SoCloverGameProps> = ({
             <span>
               {lang === 'ar'
                 ? 'شفرة الأربع كلمات — بورد الروابط التعاوني!'
-                : 'Clover Code — 4 Intersecting Word Clues!'}
+                : 'Link Board — 4 Intersecting Word Clues!'}
             </span>
           </div>
           <h2 className="text-2xl font-extrabold mt-0.5">
@@ -211,7 +211,7 @@ export const SoCloverGame: React.FC<SoCloverGameProps> = ({
             className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-2 text-xs flex items-center gap-1.5"
           >
             <ArrowsClockwise weight="bold" className="w-4 h-4" />
-            <span>{lang === 'ar' ? 'زهرة جديدة' : 'New Clover'}</span>
+            <span>{lang === 'ar' ? 'زهرة جديدة' : 'New Board'}</span>
           </button>
         )}
       </div>
@@ -363,10 +363,10 @@ export const SoCloverGame: React.FC<SoCloverGameProps> = ({
               {gameData.phase === 'solving'
                 ? lang === 'ar'
                   ? 'اختار كلمة من الأسفل وحطها بالمربع اللي بيتقاطع مع الشفرتين تبعها!'
-                  : 'Click a word below, then click the Clover corner matching both edge clues!'
+                  : 'Click a word below, then click the board corner matching both edge clues!'
                 : lang === 'ar'
                 ? 'كشف البورد الحقيقي ومقارنة إجاباتكم!'
-                : 'Clover Solution Revealed!'}
+                : 'Board Solution Revealed!'}
             </h3>
           </div>
 
@@ -486,7 +486,7 @@ export const SoCloverGame: React.FC<SoCloverGameProps> = ({
                 <span>
                   {lang === 'ar'
                     ? 'افحص تطابق الزهرة واكشف النتيجة!'
-                    : 'Lock Clover & Reveal Score!'}
+                    : 'Lock Board & Reveal Score!'}
                 </span>
               </button>
             </div>
@@ -507,7 +507,7 @@ export const SoCloverGame: React.FC<SoCloverGameProps> = ({
                         (gameData.targetWordIds || []).filter(
                           (tid, i) => gameData.placedWordIds?.[i] === tid
                         ).length
-                      } / 4 Clover Words!`}
+                      } / 4 Board Words!`}
                 </span>
               </div>
 
@@ -517,7 +517,7 @@ export const SoCloverGame: React.FC<SoCloverGameProps> = ({
                 className="cartoon-btn bg-[#8ac926] text-[#161426] w-full py-3.5 text-xl flex items-center justify-center gap-2"
               >
                 <ArrowsClockwise weight="bold" className="w-6 h-6" />
-                <span>{lang === 'ar' ? 'جولة شفرة جديدة!' : 'Next Clover Round!'}</span>
+                <span>{lang === 'ar' ? 'جولة شفرة جديدة!' : 'Next Board Round!'}</span>
               </button>
             </div>
           )}

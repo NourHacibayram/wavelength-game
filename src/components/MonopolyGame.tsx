@@ -602,8 +602,8 @@ export function buildInitialMonopolyState(playerIds: string[]): MonopolyGameStat
     winnerId: null,
     eventLog: [
       {
-        ar: 'انطلقت بطولة مونوبولي الشلّة! كل لاعب يبدأ بـ $1,500.',
-        en: 'Shilla Monopoly started! Every tycoon begins with $1,500.',
+        ar: 'انطلقت بطولة حوت العقارات! كل لاعب يبدأ بـ $1,500.',
+        en: 'City Tycoon started! Every tycoon begins with $1,500.',
       },
     ],
   };
@@ -2076,7 +2076,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({
           </div>
           <div>
             <div className="text-base md:text-lg font-black text-[#161426] leading-tight">
-              {isAr ? 'مونوبولي الشلّة — عواصم العرب' : 'Shilla Monopoly — Arab Capitals'}
+              {isAr ? 'حوت العقارات — عواصم العرب' : 'City Tycoon — Arab Capitals'}
             </div>
             <div className="text-xs font-extrabold text-[#5e5a7d] flex flex-wrap items-center gap-2">
               <span>
@@ -2347,7 +2347,7 @@ export const MonopolyGame: React.FC<MonopolyGameProps> = ({
                       className="cartoon-btn bg-[#8ac926] text-[#161426] px-5 py-2.5 text-sm font-black inline-flex items-center gap-2"
                     >
                       <Play weight="fill" className="w-4 h-4" />
-                      <span>{isAr ? 'مباراة مونوبولي جديدة!' : 'Play Again!'}</span>
+                      <span>{isAr ? 'مباراة عقارات جديدة!' : 'Play Again!'}</span>
                     </button>
                   )}
                 </div>

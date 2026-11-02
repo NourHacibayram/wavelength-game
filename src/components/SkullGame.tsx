@@ -952,7 +952,7 @@ export const SkullGame: React.FC<SkullGameProps> = ({
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-xl sm:text-2xl font-black text-[#161426] tracking-tight">
-                {isAr ? 'الجمجمة والورد' : 'Skull & Roses'}
+                {isAr ? 'وردة ولا فخ؟' : 'Rose Trap'}
               </h2>
               <span className="px-2.5 py-0.5 text-xs font-black rounded-full bg-[#E11D48] text-white border-2 border-[#161426]">
                 {isAr ? `الجولة ${gameData.roundNumber || 1}` : `Round ${gameData.roundNumber || 1}`}
@@ -991,7 +991,7 @@ export const SkullGame: React.FC<SkullGameProps> = ({
         <div className="bg-[#1E1B2E] text-[#FFFBEB] border-4 border-[#161426] rounded-3xl p-5 shadow-[0_6px_0_#161426] flex flex-col gap-3">
           <div className="flex items-center justify-between border-b-2 border-white/15 pb-2">
             <h3 className="text-base sm:text-lg font-black text-[#FDE68A]">
-              {isAr ? 'القوانين الرسمية للعبة الجمجمة والورد (Skull)' : 'Official Skull & Roses Rules'}
+              {isAr ? 'قوانين لعبة وردة ولا فخ؟' : 'Rose Trap Rules'}
             </h3>
             <button
               type="button"

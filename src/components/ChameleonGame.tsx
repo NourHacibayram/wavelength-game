@@ -328,7 +328,7 @@ export const ChameleonGame: React.FC<ChameleonGameProps> = ({
                   isViewerChameleon ? (
                     <>
                       <Detective weight="fill" className="w-4 h-4 text-[#ffca3a]" />
-                      <span>{lang === 'ar' ? 'إنت برّا السالفة!' : 'Out of the Loop!'}</span>
+                      <span>{lang === 'ar' ? 'إنت الدخيل!' : 'You’re the Outsider!'}</span>
                       <EyeSlash weight="bold" className="w-4 h-4 opacity-80" />
                     </>
                   ) : (
@@ -607,8 +607,8 @@ export const ChameleonGame: React.FC<ChameleonGameProps> = ({
                   <Detective weight="fill" className="w-5 h-5" />
                   <span>
                     {lang === 'ar'
-                      ? 'يلا نصوّت مين برّا السالفة!'
-                      : 'Vote Who is Out of the Loop!'}
+                      ? 'يلا نصوّت مين الدخيل!'
+                      : 'Vote Who is the Outsider!'}
                   </span>
                 </button>
               )}
@@ -653,8 +653,8 @@ export const ChameleonGame: React.FC<ChameleonGameProps> = ({
             <Detective weight="fill" className="w-7 h-7 text-[#ff595e]" />
             <span>
               {lang === 'ar'
-                ? 'وقت التصويت! مين برأيكم الشخص اللي برّا السالفة؟'
-                : 'Voting Time! Who is Out of the Loop?'}
+                ? 'وقت التصويت! مين برأيكم الدخيل؟'
+                : 'Voting Time! Who is the Outsider?'}
             </span>
           </h3>
 
@@ -725,7 +725,7 @@ export const ChameleonGame: React.FC<ChameleonGameProps> = ({
               <Megaphone weight="fill" className="w-6 h-6" />
               <span>
                 {lang === 'ar'
-                  ? 'اكشف مين برّا السالفة واعطيه فرصة يحزر الكلمة!'
+                  ? 'اكشف مين الدخيل واعطيه فرصة يحزر الكلمة!'
                   : 'Reveal Impostor & Let Them Guess the Word!'}
               </span>
             </button>
@@ -744,7 +744,7 @@ export const ChameleonGame: React.FC<ChameleonGameProps> = ({
             <div className="text-2xl md:text-3xl font-extrabold flex items-center justify-center gap-2">
               <Detective weight="fill" className="w-8 h-8 text-[#ffca3a]" />
               <span>
-                {lang === 'ar' ? 'اللي كان برّا السالفة هو:' : 'Out of the Loop:'}{' '}
+                {lang === 'ar' ? 'الدخيل كان:' : 'The Outsider was:'}{' '}
                 <span className="text-[#ffca3a] underline">{chameleonPlayer?.name}</span>
               </span>
             </div>
@@ -798,7 +798,7 @@ export const ChameleonGame: React.FC<ChameleonGameProps> = ({
           <div className="text-2xl font-extrabold text-[#161426] flex items-center justify-center gap-2">
             <Detective weight="fill" className="w-7 h-7 text-[#ff595e]" />
             <span>
-              {lang === 'ar' ? 'اللي كان برّا السالفة:' : 'Out of the Loop:'}{' '}
+              {lang === 'ar' ? 'الدخيل كان:' : 'The Outsider was:'}{' '}
               <span className="text-[#ff595e]">{chameleonPlayer?.name}</span>
             </span>
           </div>

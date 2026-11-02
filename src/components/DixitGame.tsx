@@ -289,7 +289,7 @@ export const DixitGame: React.FC<DixitGameProps> = ({
             <span>
               {lang === 'ar'
                 ? 'خيال الشلّة — لوحات الأحلام والتلميحات الغامضة'
-                : 'Dixit Dreams — Surreal Art & Goldilocks Clues'}
+                : 'Dream Tales — Surreal Art & Goldilocks Clues'}
             </span>
           </div>
           <h2 className="text-xl md:text-2xl font-extrabold mt-0.5 flex items-center gap-2">

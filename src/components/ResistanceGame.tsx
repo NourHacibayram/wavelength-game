@@ -236,7 +236,7 @@ export const AgentBadgeSvg: React.FC<{ className?: string }> = ({
   <svg
     viewBox="0 0 80 80"
     className={`${className} select-none overflow-visible`}
-    aria-label="Resistance Agent Shield"
+    aria-label="Agent Shield"
   >
     {/* Outer Neo-Brutalist Shield */}
     <path
@@ -897,7 +897,7 @@ export const ResistanceGame: React.FC<ResistanceGameProps> = ({
           ? `Dramatic Twist! Despite 3 successful missions, the Spy identified Chief Intelligence (${
               commanderPlayer?.name || ''
             }) and stole the victory!`
-          : `Total Resistance Victory! The Spy targeted (${
+          : `Total Agent Victory! The Spy targeted (${
               targetedPlayer?.name || ''
             }) while Chief Intelligence (${
               commanderPlayer?.name || ''

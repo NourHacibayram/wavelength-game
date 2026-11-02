@@ -61,12 +61,12 @@ export const ARCHIVED_BOARD_GAMES_CATALOG: PartyGameCatalogItem[] = [
     players_en: '1–8 Players',
     tag_ar: 'إمبراطورية العقارات',
     tag_en: 'Property Tycoon',
-    name_ar: 'مونوبولي الشلّة (مدن العرب)',
-    name_en: 'Shilla Monopoly (Arab Cities)',
+    name_ar: 'حوت العقارات (مدن العرب)',
+    name_en: 'City Tycoon (Arab Cities)',
     desc_ar: 'اشترِ المدن العربية، ابنِ البيوت والفنادق، افتح المزادات وافلس خصومك!',
     desc_en: 'Buy iconic Arab cities, build houses & hotels, run auctions, and bankrupt rivals!',
     longDesc_ar:
-      'لوحة مونوبولي متكاملة من 24 مربعاً بأشهر المدن العربية (دمشق، القاهرة، بيروت، عمّان، القدس، الرياض، دبي...)! اشترِ، زايد بالمزاد العلني، بادل العقارات، وابنِ الفنادق الملكية!',
+      'لوحة عقارات متكاملة من 24 مربعاً بأشهر المدن العربية (دمشق، القاهرة، بيروت، عمّان، القدس، الرياض، دبي...)! اشترِ، زايد بالمزاد العلني، بادل العقارات، وابنِ الفنادق الملكية!',
     longDesc_en:
       'Full 24-space perimeter board featuring iconic Arab capitals! Roll 2 dice, buy or auction cities, trade deeds, complete color pairs to build houses & royal hotels, and claim the Jackpot!',
     rules_ar: [
@@ -127,7 +127,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     tag_ar: 'تخاطر ومقاييس',
     tag_en: 'Telepathy Dial',
     name_ar: 'عَ نفس الموجة',
-    name_en: 'Wavelength',
+    name_en: 'Tune In',
     desc_ar: 'تخاطر المؤشر السري بين طرفين متضادين!',
     desc_en: 'Read your friend’s mind on a hidden spectrum!',
     longDesc_ar:
@@ -187,8 +187,8 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     players_en: '2–10 Players',
     tag_ar: 'فخاخ ومزايدة',
     tag_en: 'Roses & Skulls',
-    name_ar: 'الجمجمة والورد',
-    name_en: 'Skull & Roses',
+    name_ar: 'وردة ولا فخ؟',
+    name_en: 'Rose Trap',
     desc_ar: '3 ورود وجمجمة قاتلة! ازرع الفخاخ وزايد ع قلب الأقراص بدون ما تنفجر الجمجمة بوجهك!',
     desc_en: '3 Roses & 1 deadly Skull! Bluff, bid high, and flip discs without hitting a hidden Skull!',
     longDesc_ar:
@@ -219,7 +219,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     tag_ar: 'تهريب ورشوة',
     tag_en: 'Customs & Bribes',
     name_ar: 'مهرّب الجمارك',
-    name_en: 'Contraband Sheriff',
+    name_en: 'Smuggler’s Run',
     desc_ar: 'خبّئ المهربات بالشنطة، احلف إنها تفاح، أو ارشِ الضابط ليمرّقك بدون تفتيش!',
     desc_en: 'Smuggle diamonds in your bag, claim it’s apples, or bribe the Customs Officer to look away!',
     longDesc_ar:
@@ -250,7 +250,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     tag_ar: 'مواجهة وغنيمة',
     tag_en: 'Heist Standoff',
     name_ar: 'قسمة العصابة',
-    name_en: 'Cash ’n Guns',
+    name_en: 'Loot Standoff',
     desc_ar: 'طلقة فاضية للتخويف ولا طلقة حقيقية؟ صوّب ع صاحبك، وقرر: تصمد عالكنز ولا تنسحب!',
     desc_en: 'Blank click or live foam dart? Aim at a friend, then decide: hold your ground for loot or duck!',
     longDesc_ar:
@@ -279,9 +279,9 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     players_ar: '3–10 لاعبين',
     players_en: '3–10 Players',
     tag_ar: 'مافيا وتبديل أدوار',
-    tag_en: '1-Night Werewolf',
+    tag_en: 'Night Swaps',
     name_ar: 'ليلة الذئب',
-    name_en: 'One Night Werewolf',
+    name_en: 'Wolf Night',
     desc_ar: 'مافيا بليلة واحدة بدون إقصاء! اللص والمشاغب يبدّلون كروتكم بالليل بدون علمكم!',
     desc_en: 'Fast 1-night Mafia with zero elimination! Robber & Troublemaker swap roles while you sleep!',
     longDesc_ar:
@@ -312,7 +312,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     tag_ar: 'مخابرات وخيانة',
     tag_en: 'Secret Missions',
     name_ar: 'المهمة السرية',
-    name_en: 'The Resistance',
+    name_en: 'Secret Mission',
     desc_ar: '5 مهمات مصيرية وجواسيس بينكم! صوّتوا عالفريق واكشفوا مين عم يكبس «تخريب المهمة» بالسر!',
     desc_en: '5 high-stakes missions & hidden Spies among you! Vote on teams and catch who secretly sabotages!',
     longDesc_ar:
@@ -435,22 +435,22 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     players_en: '3–10 Players',
     tag_ar: 'تحقيق وجاسوس',
     tag_en: 'Social Deduction',
-    name_ar: 'برّا السالفة',
-    name_en: 'Out of the Loop',
-    desc_ar: 'اسألوا بذكاء واكشفوا مين الجاسوس اللي برّا السالفة!',
+    name_ar: 'مين الدخيل؟',
+    name_en: 'Who’s Clueless?',
+    desc_ar: 'اسألوا بذكاء واكشفوا مين الدخيل اللي بيناتكم!',
     desc_en: 'Question each other & catch the hidden impostor!',
     longDesc_ar:
-      'الكل يعرف الكلمة السرية إلا واحد "برّا السالفة"! اسألوا بعض بالترتيب بدون ما تفضحوا الكلمة وصوّتوا عالجاسوس.',
+      'الكل يعرف الكلمة السرية إلا واحد: الدخيل! اسألوا بعض بالترتيب بدون ما تفضحوا الكلمة وصوّتوا عالجاسوس.',
     longDesc_en:
-      'Everyone knows the secret word except one Chameleon! Ask clever questions without giving away the word, then vote!',
+      'Everyone knows the secret word except one Outsider! Ask clever questions without giving away the word, then vote!',
     rules_ar: [
-      'تظهر الكلمة السرية لكل اللاعبين ما عدا لاعب واحد فقط يظهر له أنه "برّا السالفة".',
+      'تظهر الكلمة السرية لكل اللاعبين ما عدا لاعب واحد فقط يظهر له أنه الدخيل.',
       'يسأل اللاعبون بعضهم سؤالاً وجواباً واحداً بالترتيب حول الكلمة بحذر.',
-      'يصوّت الجميع على الشخص المشتبه بأنه برّا السالفة.',
+      'يصوّت الجميع على الشخص المشتبه بأنه الدخيل.',
       'إذا انكشف الجاسوس، يحصل على فرصة أخيرة لتخمين الكلمة السرية من الجدول وسرقة النقاط!',
     ],
     rules_en: [
-      'Everyone sees the secret word except one player who is Out of the Loop.',
+      'Everyone sees the secret word except one player: the Outsider.',
       'Take turns asking and answering subtle questions about the word.',
       'Vote together on who you suspect is faking it.',
       'If caught, the impostor gets one final shot to guess the secret word from the grid!',
@@ -466,7 +466,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     tag_ar: 'خيال ولوحات',
     tag_en: 'Surreal Art',
     name_ar: 'خيال الشلّة',
-    name_en: 'Dixit Dreams',
+    name_en: 'Dream Tales',
     desc_ar: 'لوحات خيالية ساحرة وتلميح غامض لا سهل ولا مستحيل!',
     desc_en: 'Dreamlike art cards & Goldilocks poetic clues!',
     longDesc_ar:
@@ -497,7 +497,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     tag_ar: 'تحدي شرح',
     tag_en: 'Forbidden Words',
     name_ar: 'الكلمات الممنوعة',
-    name_en: 'Taboo Rush',
+    name_en: 'Don’t Say It!',
     desc_ar: 'اشرح الكلمة للشلّة بدون ما تزلّ لسانك بالـ 5 كلمات الممنوعة!',
     desc_en: 'Describe the target word without saying the 5 taboo words!',
     longDesc_ar:
@@ -511,7 +511,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
       'كل كلمة صحيحة تعطي نقاطاً للشارح وللفريق قبل انتهاء الوقت!',
     ],
     rules_en: [
-      'The Describer sees the target word and 5 strictly forbidden Taboo words.',
+      'The Describer sees the target word and 5 strictly forbidden words.',
       'Beat the 60-second timer by explaining as many cards as possible.',
       'Watchers see the forbidden list too and can hit the Red Buzzer if you slip!',
       'Score points for every clean guess before the timer runs out!',
@@ -527,14 +527,14 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     players_en: '3–10 Players',
     tag_ar: 'رسم وجاسوس',
     tag_en: 'Shared Canvas',
-    name_ar: 'الفنان المزيّف',
-    name_en: 'Fake Artist',
+    name_ar: 'مين الخربوط؟',
+    name_en: 'Odd Brush Out',
     desc_ar: 'لوحة مشتركة! كل لاعب يرسم خطاً واحداً... ومين اللي عم يخبّص؟',
-    desc_en: 'One shared canvas, 1 stroke per turn — spot the Fake Artist!',
+    desc_en: 'One shared canvas, 1 stroke per turn — spot the Impostor!',
     longDesc_ar:
       'الكل يعرف شو عم نرسم إلا الفنان المزيّف يعرف التصنيف فقط! كل لاعب يرسم خطاً واحداً بلونه ليكمل اللوحة بدون ما يفضحها.',
     longDesc_en:
-      'Everyone knows the secret object except one Fake Artist! Each player adds ONE stroke in their own color across 2 rounds.',
+      'Everyone knows the secret object except one Impostor! Each player adds ONE stroke in their own color across 2 rounds.',
     rules_ar: [
       'يظهر عنوان التصنيف للجميع، وتظهر الكلمة السرية للرسامين الحقيقيين فقط (الفنان المزيف لا يراها!).',
       'يتناوب اللاعبون على لوحة واحدة: كل لاعب يرسم خطاً واحداً متصلاً بلونه الخاص في دوره (دورتان فقط).',
@@ -542,10 +542,10 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
       'بعد اكتمال الخطوط نصوّت لكشف الفنان المزيف، وإذا انكشف يحاول تخمين الرسمة!',
     ],
     rules_en: [
-      'Everyone sees the Category, and real artists see the Secret Word (Fake Artist doesn’t!).',
+      'Everyone sees the Category, and real artists see the Secret Word (the Impostor doesn’t!).',
       'Take turns drawing ONE single continuous stroke in your color on the shared canvas (2 strokes each).',
-      'Be subtle enough to hide the word from the Fake Artist, yet clear enough to look innocent!',
-      'Vote for the Fake Artist — if caught, they get one last guess at what the drawing is!',
+      'Be subtle enough to hide the word from the Impostor, yet clear enough to look innocent!',
+      'Vote for the Impostor — if caught, they get one last guess at what the drawing is!',
     ],
     isNew: true,
   },
@@ -559,7 +559,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     tag_ar: 'توقعات ورهان',
     tag_en: 'Trivia Betting',
     name_ar: 'مزايدة التخمين',
-    name_en: 'Wits & Wagers',
+    name_en: 'Guess & Bet',
     desc_ar: 'أسئلة أرقام مستحيلة! مو شرط تعرف الجواب... راهن ع صاحبك الصح!',
     desc_en: 'Wild number trivia — bet your chips on the closest guess!',
     longDesc_ar:
@@ -619,9 +619,9 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     players_ar: '2–10 لاعبين',
     players_en: '2–10 Players',
     tag_ar: 'روابط ذكية',
-    tag_en: 'Word Clover',
+    tag_en: 'Word Links',
     name_ar: 'شفرة الأربع كلمات',
-    name_en: 'Clover Code',
+    name_en: 'Link Board',
     desc_ar: 'اربط كل كلمتين متجاورتين بشفرة واحدة، وخلي الشلّة يركّبوا البورد!',
     desc_en: 'Link 4 word pairs on a clover & let friends reconstruct them!',
     longDesc_ar:
@@ -635,7 +635,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
       'يتعاون باقي اللاعبين لوضع كل كلمة في زاويتها الصحيحة لتطابق عقل صاحب الشفرة!',
     ],
     rules_en: [
-      '4 secret words sit on the corners of the Clue-Giver’s 2x2 Clover board.',
+      '4 secret words sit on the corners of the Clue-Giver’s 2x2 board.',
       'Write a 1-word clue on each of the 4 outer edges linking its two adjacent corner words.',
       'The 4 words are removed and shuffled with 1 sneaky decoy word!',
       'Friends work together to place the right 4 words back into their exact corner slots!',
@@ -652,7 +652,7 @@ export const PARTY_GAMES_CATALOG: PartyGameCatalogItem[] = [
     tag_ar: 'ترتيب تشاركي',
     tag_en: '1–100 Scale',
     name_ar: 'تخاطر الأرقام',
-    name_en: 'Ito (1–100)',
+    name_en: 'Rank It! (1–100)',
     desc_ar: 'أوصف رقمك السري (1–100) بمثال ورتّبوا بطاقاتكم تصاعدياً!',
     desc_en: 'Describe your secret 1–100 number & sort everyone in order!',
     longDesc_ar:

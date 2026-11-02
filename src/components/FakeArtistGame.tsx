@@ -344,8 +344,8 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
           </div>
           <h2 className="text-xl sm:text-2xl font-extrabold mt-0.5">
             {lang === 'ar'
-              ? 'الفنان المزيّف — خط واحد لكل لاعب!'
-              : 'Fake Artist — One Continuous Stroke Each!'}
+              ? 'مين الخربوط؟ — خط واحد لكل لاعب!'
+              : 'Odd Brush Out — One Continuous Stroke Each!'}
           </h2>
         </div>
 
@@ -558,7 +558,7 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
                 ? isPassAndPlay
                   ? `تصويت (${viewerPlayer?.name}): مين الفنان المزيّف صاحب الخط المريب؟`
                   : 'صوّتوا الآن: مين الفنان المزيّف بينكم؟'
-                : 'Vote Now: Who is the Fake Artist?'}
+                : 'Vote Now: Who is the Impostor?'}
             </h3>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
@@ -607,7 +607,7 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
               <span>
                 {lang === 'ar'
                   ? `لقطنا الفنان المزيّف (${fakePlayer?.name})!`
-                  : `Caught the Fake Artist (${fakePlayer?.name})!`}
+                  : `Caught the Impostor (${fakePlayer?.name})!`}
               </span>
             </div>
             <p className="text-sm font-bold text-[#161426]">
@@ -673,7 +673,7 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
             <div className="text-sm font-bold text-[#00bbf9]">
               {lang === 'ar'
                 ? `الكلمة السرية كانت: (${prompt.word_ar}) — والفنان المزيّف: (${fakePlayer?.name})`
-                : `Secret Word: (${prompt.word_en}) — Fake Artist: (${fakePlayer?.name})`}
+                : `Secret Word: (${prompt.word_en}) — Impostor: (${fakePlayer?.name})`}
             </div>
 
             <h3 className="text-2xl font-extrabold text-[#ffca3a]">
@@ -687,7 +687,7 @@ export const FakeArtistGame: React.FC<FakeArtistGameProps> = ({
                   : `${fakePlayer?.name} was caught, but guessed "${gameData.fakeGuessText}" correctly!`
                 : lang === 'ar'
                 ? `فاز الفنانون الحقيقيون (+2 لكل فنان)! خمن المزيف "${gameData.fakeGuessText}" خطأ!`
-                : `Real Artists Win (+2 pts each)! Fake Artist guessed "${gameData.fakeGuessText}"!`}
+                : `Real Artists Win (+2 pts each)! the Impostor guessed "${gameData.fakeGuessText}"!`}
             </h3>
 
             <button
