@@ -10,6 +10,7 @@ import {
   X,
   Check,
   Sparkle,
+  CaretDown,
 } from '@phosphor-icons/react';
 import {
   soundManager,
@@ -107,6 +108,9 @@ export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
   const ar = lang === 'ar';
   const reduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
+  const [showAllTracks, setShowAllTracks] = useState(
+    () => soundManager.getState().musicMode !== 'auto'
+  );
   const [audioState, setAudioState] = useState(() => soundManager.getState());
 
   useEffect(() => {
@@ -283,8 +287,8 @@ export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
                             >
                               {selected && audioState.musicEnabled
                                 ? ar
-                                  ? `هلأ: ${autoTrack.title_ar}`
-                                  : `Now: ${autoTrack.title_en}`
+                                  ? `هلأ: ${autoTrack.title_ar} · ${autoTrack.mood_ar}`
+                                  : `Now: ${autoTrack.title_en} · ${autoTrack.mood_en}`
                                 : ar
                                 ? 'كل لعبة إلها لحنها'
                                 : 'Each game gets its own tune'}
@@ -297,6 +301,24 @@ export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
                       );
                     })()}
 
+                    <button
+                      type="button"
+                      onClick={() => setShowAllTracks((v) => !v)}
+                      aria-expanded={showAllTracks}
+                      className="w-full flex items-center justify-between gap-2 px-1 py-1.5 text-sm font-black text-[#3f3b5c] cursor-pointer hover:text-[#161426]"
+                    >
+                      <span>
+                        {ar
+                          ? `أو ثبّت لحن وحدة (${trackIds.length})`
+                          : `Or pin one tune (${trackIds.length})`}
+                      </span>
+                      <CaretDown
+                        weight="bold"
+                        className={`w-4 h-4 transition-transform ${showAllTracks ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {showAllTracks && (
                     <div className="grid grid-cols-2 gap-2">
                       {trackIds.map((trackId) => {
                         const tr = MUSIC_TRACKS[trackId];
@@ -342,8 +364,15 @@ export const AudioControlPanel: React.FC<AudioControlPanelProps> = ({
                         );
                       })}
                     </div>
+                    )}
                   </div>
                 </section>
+
+                <p className="text-[11px] font-bold text-[#3f3b5c]/80 leading-snug">
+                  {ar
+                    ? 'ألحان أصلية لسهرة الشلّة. أصوات الآلات: FluidR3 GM من Frank Wen (CC BY 3.0).'
+                    : 'Original tunes for Shilla Party. Instrument samples: FluidR3 GM by Frank Wen (CC BY 3.0).'}
+                </p>
               </div>
             </motion.div>
           </motion.div>

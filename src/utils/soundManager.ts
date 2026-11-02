@@ -1,15 +1,30 @@
 import { PartyGameId } from '../data/partyGamesData';
 import { MUSIC_LOOPS } from '../data/musicLoops';
+import { PARTY_GAMES_CATALOG } from '../data/extraGamesData';
 
+// Every visible game has its own theme; 'lobby' plays on the home screen
 export type MusicTrackId =
   | 'lobby'
-  | 'boomdeck'
   | 'wavelength'
-  | 'sneaky_snitch'
-  | 'scheming_weasel'
-  | 'lobby_time'
-  | 'investigations'
-  | 'monkeys';
+  | 'boomdeck'
+  | 'skull'
+  | 'sheriff'
+  | 'cashnguns'
+  | 'onenight'
+  | 'resistance'
+  | 'artauction'
+  | 'alibi'
+  | 'splitsteal'
+  | 'chameleon'
+  | 'dixit'
+  | 'taboo'
+  | 'fakeartist'
+  | 'wits'
+  | 'medium'
+  | 'soclover'
+  | 'ito'
+  | 'wordbomb'
+  | 'themind';
 
 export type MusicSelectionMode = 'auto' | MusicTrackId;
 
@@ -45,82 +60,47 @@ export interface MusicTrackMeta {
   color: string;
 }
 
-const themeUrl = (id: string) => `/audio/music/themes/${id}.mp3?v=1`;
-
-export const MUSIC_TRACKS: Record<MusicTrackId, MusicTrackMeta> = {
-  lobby: {
-    id: 'lobby',
-    url: themeUrl('lobby'),
-    title_ar: 'سهرة الشلّة',
-    title_en: 'Shilla Night',
-    mood_ar: 'نهاوند ودربكة',
-    mood_en: 'Nahawand & darbuka',
-    color: '#ff924c',
-  },
-  boomdeck: {
-    id: 'boomdeck',
-    url: themeUrl('boomdeck'),
-    title_ar: 'الفتيل الملعون',
-    title_en: 'Cursed Fuse',
-    mood_ar: 'حجاز وتكتكة',
-    mood_en: 'Hijaz & ticking',
-    color: '#f15bb5',
-  },
-  wavelength: {
-    id: 'wavelength',
-    url: themeUrl('wavelength'),
-    title_ar: 'عَ نفس الموجة',
-    title_en: 'Tune In',
-    mood_ar: 'حالمة وهادية',
-    mood_en: 'Dreamy lo-fi',
-    color: '#4cc9f0',
-  },
-  sneaky_snitch: {
-    id: 'sneaky_snitch',
-    url: '/audio/music/sneaky-snitch.mp3?v=2',
-    title_ar: 'خطوة عالساكت',
-    title_en: 'Silent Tiptoe',
-    mood_ar: 'تسلل ومقالب',
-    mood_en: 'Sneaky heist',
-    color: '#ff595e',
-  },
-  scheming_weasel: {
-    id: 'scheming_weasel',
-    url: '/audio/music/scheming-weasel.mp3?v=2',
-    title_ar: 'همس الجواسيس',
-    title_en: 'Spy Whisper',
-    mood_ar: 'خداع وشكوك',
-    mood_en: 'Bluff & suspicion',
-    color: '#9b5de5',
-  },
-  lobby_time: {
-    id: 'lobby_time',
-    url: '/audio/music/lobby-time.mp3?v=2',
-    title_ar: 'طاولة السهرة',
-    title_en: 'Velvet Table',
-    mood_ar: 'جاز هادي',
-    mood_en: 'Lounge jazz',
-    color: '#ffca3a',
-  },
-  investigations: {
-    id: 'investigations',
-    url: '/audio/music/investigations.mp3?v=2',
-    title_ar: 'شفرة العقول',
-    title_en: 'Mind Cipher',
-    mood_ar: 'تحقيق وتخاطر',
-    mood_en: 'Detective pulse',
-    color: '#00bbf9',
-  },
-  monkeys: {
-    id: 'monkeys',
-    url: '/audio/music/monkeys-spinning-monkeys.mp3?v=2',
-    title_ar: 'سباق الأبطال',
-    title_en: 'Party Dash',
-    mood_ar: 'سهرة ومرح',
-    mood_en: 'Upbeat groove',
-    color: '#8ac926',
-  },
+// What each theme sounds like; titles and colours come from the game catalog
+const THEME_MOODS: Record<MusicTrackId, [ar: string, en: string]> = {
+  lobby: ['نهاوند ودربكة', 'Nahawand & darbuka'],
+  wavelength: ['حالمة وهادية', 'Dreamy lo-fi'],
+  boomdeck: ['حجاز وتكتكة', 'Hijaz & ticking'],
+  skull: ['فالس قوطي', 'Gothic waltz'],
+  sheriff: ['خبب ريفي', 'Border-town trot'],
+  cashnguns: ['جاز عصابات', 'Noir heist jazz'],
+  onenight: ['ليل وصندوق موسيقى', 'Moonlit music box'],
+  resistance: ['مطاردة جواسيس', 'Surf-guitar spy chase'],
+  artauction: ['بيانو راغتايم', 'Ragtime parlour'],
+  alibi: ['محقق متسلل', 'Tiptoe detective'],
+  splitsteal: ['توتر وثقة', 'Trust-or-betray tension'],
+  chameleon: ['تصفيق خليجي', 'Gulf claps'],
+  dixit: ['فالس حكايات', 'Fairy-tale waltz'],
+  taboo: ['فانك مسابقات', 'Game-show funk'],
+  fakeartist: ['أكورديون باريسي', 'Paris café accordion'],
+  wits: ['برنامج مسابقات', 'Quiz-show bounce'],
+  medium: ['هالة حالمة', 'Weightless shimmer'],
+  soclover: ['ماريمبا تفكير', 'Puzzle marimba'],
+  ito: ['صندوق موسيقى لطيف', 'Cute music box'],
+  wordbomb: ['سباق مع الفتيل', 'Race the fuse'],
+  themind: ['بيانو ونبض', 'Piano & heartbeat'],
 };
+
+export const MUSIC_TRACKS = Object.fromEntries(
+  (Object.keys(THEME_MOODS) as MusicTrackId[]).map((id) => {
+    const game = PARTY_GAMES_CATALOG.find((g) => g.id === id);
+    const [mood_ar, mood_en] = THEME_MOODS[id];
+    const meta: MusicTrackMeta = {
+      id,
+      url: `/audio/music/themes/${id}.mp3?v=2`,
+      title_ar: game?.name_ar ?? 'سهرة الشلّة',
+      title_en: game?.name_en ?? 'Shilla Night',
+      mood_ar,
+      mood_en,
+      color: game?.accent ?? '#ff924c',
+    };
+    return [id, meta];
+  })
+) as Record<MusicTrackId, MusicTrackMeta>;
 
 export interface SfxMeta {
   id: SfxId;
@@ -275,43 +255,19 @@ export const SFX_CATALOG: Record<SfxId, SfxMeta> = {
   },
 };
 
+// Games not in the picker borrow the theme of a game with a similar mood
+const BORROWED_THEMES: Partial<Record<PartyGameId, MusicTrackId>> = {
+  insider: 'chameleon',
+  decrypto: 'resistance',
+  witness: 'alibi',
+  cockroach: 'skull',
+};
+
 export function getRecommendedTrackForGame(
   gameId: PartyGameId | 'lobby'
 ): MusicTrackId {
-  switch (gameId) {
-    case 'lobby':
-    case 'boomdeck':
-    case 'wavelength':
-      return gameId;
-    case 'sheriff':
-    case 'skull':
-    case 'cashnguns':
-    case 'cockroach':
-      return 'sneaky_snitch';
-    case 'chameleon':
-    case 'onenight':
-    case 'resistance':
-    case 'insider':
-    case 'fakeartist':
-    case 'alibi':
-      return 'scheming_weasel';
-    case 'decrypto':
-    case 'witness':
-    case 'medium':
-    case 'themind':
-    case 'ito':
-      return 'investigations';
-    case 'wordbomb':
-    case 'taboo':
-    case 'soclover':
-      return 'monkeys';
-    case 'artauction':
-    case 'splitsteal':
-    case 'dixit':
-    case 'wits':
-    default:
-      return 'lobby_time';
-  }
+  if (gameId in THEME_MOODS) return gameId as MusicTrackId;
+  return BORROWED_THEMES[gameId as PartyGameId] ?? 'lobby';
 }
 
 const STORAGE_KEYS = {
@@ -484,12 +440,20 @@ class SoundManager {
 
   private loadMusicBuffer(ctx: AudioContext, url: string): Promise<AudioBuffer> {
     let pending = this.musicBuffers.get(url);
-    if (!pending) {
+    if (pending) {
+      // refresh its place so the least recently used theme is dropped first
+      this.musicBuffers.delete(url);
+    } else {
       pending = fetch(url)
         .then((r) => r.arrayBuffer())
         .then((data) => ctx.decodeAudioData(data));
       pending.catch(() => this.musicBuffers.delete(url));
-      this.musicBuffers.set(url, pending);
+    }
+    this.musicBuffers.set(url, pending);
+    // a decoded theme is ~10-20 MB, so keep only the last few
+    while (this.musicBuffers.size > 3) {
+      const oldest = this.musicBuffers.keys().next().value as string;
+      this.musicBuffers.delete(oldest);
     }
     return pending;
   }

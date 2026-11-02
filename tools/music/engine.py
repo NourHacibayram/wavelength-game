@@ -183,6 +183,7 @@ class Song:
     beats: float  # loop length in beats
     swing: float = 0.0  # delays off-beat eighths by this fraction of a beat
     reverb: float = 0.18  # wet level
+    seed: int = 1  # for the small timing/velocity variations that keep it human
     events: list = field(default_factory=list)
 
     @property
@@ -208,12 +209,16 @@ class Song:
     def hit(self, kind, beat, vel=0.8, pan=0.0):
         self.events.append(('d', kind, 0, beat, 0, vel, pan))
 
-    def line(self, inst, text, start, vel=0.8, pan=0.0, legato=0.95, octave=0):
-        """Write a phrase as 'D4:1 E4:.5 r:.5 F4:2' (pitch:beats, r = rest).
-        Returns the beat after the phrase."""
+    def line(self, inst, text, start, vel=0.8, pan=0.0, legato=0.95, octave=0, bar=4):
+        """Write a phrase as 'D4:1 E4:.5 r:.5 F4:2 | ...' (pitch:beats, r = rest,
+        | between bars; each bar must add up to `bar` beats). Returns the end beat."""
         b = start
+        bar_start = start
         for tok in text.split():
             if tok == '|':
+                if abs((b - bar_start) - bar) > 1e-6:
+                    raise ValueError(f'{inst} bar at beat {bar_start} lasts {b - bar_start}: {text!r}')
+                bar_start = b
                 continue
             p, _, d = tok.partition(':')
             d = float(d or 1)
@@ -250,8 +255,12 @@ class Song:
         tail = int(SR * 6)
         buf = np.zeros((L + tail, 2), dtype=np.float64)
 
+        rng = np.random.default_rng(self.seed)
         for kind, inst, pitch, beat, dur, vel, pan in self.events:
-            start = int(round(self.at(beat) * SR)) % L
+            # a few milliseconds of drift and a little velocity spread
+            jitter = rng.normal(0, 0.004 if kind == 'n' else 0.002)
+            vel = vel * float(np.clip(rng.normal(1, 0.06), 0.85, 1.15))
+            start = int(round((self.at(beat) + jitter) * SR)) % L
             ang = (pan + 1) * np.pi / 4
             gl, gr = np.cos(ang) * vel, np.sin(ang) * vel
             if kind == 'd':
