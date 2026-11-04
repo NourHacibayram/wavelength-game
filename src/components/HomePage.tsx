@@ -219,6 +219,109 @@ const LaunchPanel: React.FC<LaunchPanelProps> = ({
   );
 };
 
+/** Opened from a friend's room link: just a name and one button stand between you and the room */
+export const InviteJoinCard: React.FC<{
+  lang: Lang;
+  code: string;
+  playerName: string;
+  onPlayerNameChange: (name: string) => void;
+  playerColor: string;
+  onPlayerColorChange: (color: string) => void;
+  loading: boolean;
+  errorMsg: string | null;
+  onJoin: () => void;
+  onGoHome: () => void;
+}> = ({
+  lang,
+  code,
+  playerName,
+  onPlayerNameChange,
+  playerColor,
+  onPlayerColorChange,
+  loading,
+  errorMsg,
+  onJoin,
+  onGoHome,
+}) => {
+  const t = TRANSLATIONS[lang];
+  const ar = lang === 'ar';
+  const colorIndex = Math.max(0, CARTOON_AVATAR_COLORS.indexOf(playerColor));
+  const nextColor = () =>
+    onPlayerColorChange(CARTOON_AVATAR_COLORS[(colorIndex + 1) % CARTOON_AVATAR_COLORS.length]);
+
+  return (
+    <div className="w-full max-w-md mx-auto my-auto py-6">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          onJoin();
+        }}
+        className="cartoon-card p-6 space-y-5 text-center"
+      >
+        <div className="space-y-1.5">
+          <span className="cartoon-badge inline-block bg-[#ffca3a] text-[#161426] px-3 py-0.5 text-sm" dir="ltr">
+            #{code}
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-[#161426] leading-tight">
+            {ar ? 'الشلّة عم تستناك!' : 'Your friends are waiting!'}
+          </h2>
+          <p className="text-sm font-bold text-[#3f3b5c]">
+            {ar ? 'اكتب اسمك وفوت عالغرفة' : 'Type your name and jump in'}
+          </p>
+        </div>
+
+        {errorMsg && (
+          <div
+            role="alert"
+            className="p-3 rounded-2xl bg-[#ff595e] text-white border-3 border-[#161426] font-extrabold text-sm"
+          >
+            {errorMsg}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={nextColor}
+            aria-label={ar ? 'غيّر لون شخصيتك' : 'Change your avatar color'}
+            className="w-14 h-14 rounded-2xl bg-white border-3 border-[#161426] shadow-[0_3px_0_#161426] p-1 shrink-0 cursor-pointer hover:-translate-y-0.5 transition-transform"
+          >
+            <CartoonAvatarSvg index={colorIndex} color={playerColor} />
+          </button>
+          <input
+            type="text"
+            maxLength={18}
+            autoFocus
+            enterKeyHint="go"
+            value={playerName}
+            onChange={(e) => onPlayerNameChange(e.target.value)}
+            placeholder={t.namePlaceholder}
+            aria-label={t.yourName}
+            className="cartoon-input min-w-0 flex-1 px-4 py-3 bg-white text-[#161426] text-lg focus:outline-none focus:ring-4 focus:ring-[#ffca3a]"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || !playerName.trim()}
+          className="cartoon-btn w-full py-3.5 bg-[#8ac926] hover:bg-[#9be02f] text-[#161426] text-xl flex items-center justify-center gap-2 disabled:opacity-60"
+        >
+          <GameController weight="fill" className="w-6 h-6" />
+          <span>{loading ? '...' : ar ? 'فوت عالغرفة' : 'Join the room'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onGoHome}
+          className="text-sm font-extrabold text-[#3f3b5c] underline underline-offset-4 cursor-pointer"
+        >
+          {ar ? 'لا، خدني عالصفحة الرئيسية' : 'No thanks, take me home'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
 export interface HomePageProps {
   lang: Lang;
   selectedGame: PartyGameId;

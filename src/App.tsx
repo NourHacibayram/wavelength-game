@@ -33,7 +33,9 @@ import {
   WITS_QUESTIONS,
   INSIDER_WORDS,
 } from './data/extraGamesData';
-import { HomePage } from './components/HomePage';
+import { HomePage, InviteJoinCard } from './components/HomePage';
+import { RoomMenu } from './components/RoomMenu';
+import { makeRoomStamp, mergeJson, sameRoomStamp } from './utils/roomSync';
 import { WavelengthWheel } from './components/WavelengthWheel';
 import { SpectrumCard } from './components/SpectrumCard';
 import {
@@ -182,6 +184,7 @@ interface RoomState {
   custom_cards: SpectrumCardItem[];
   selected_game?: PartyGameId;
   game_data?: any;
+  updated_at?: string | null;
 }
 
 interface PlayerItem {
@@ -253,19 +256,47 @@ export function App() {
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const lastBroadcastRef = useRef<number>(0);
 
+  // Room sync bookkeeping: the newest room we know of, how many of our writes are still
+  // travelling, and the stamp of our last write whose realtime echo hasn't come back yet
+  const roomRef = useRef<RoomState | null>(null);
+  roomRef.current = room;
+  const pendingRoomWritesRef = useRef<number>(0);
+  const awaitingEchoRef = useRef<string | null>(null);
+  const echoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resyncRoom = async (roomId: string) => {
+    const [{ data: freshRoom }, { data: freshPlayers }] = await Promise.all([
+      supabase.from('wavelength_rooms').select('*').eq('id', roomId).maybeSingle(),
+      supabase
+        .from('wavelength_players')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('joined_at', { ascending: true }),
+    ]);
+    if (freshRoom && pendingRoomWritesRef.current === 0 && roomRef.current?.id === roomId) {
+      awaitingEchoRef.current = null;
+      setRoom(freshRoom as RoomState);
+    }
+    if (freshPlayers && roomRef.current?.id === roomId) setPlayers(freshPlayers as PlayerItem[]);
+  };
+
   // Keep HTML dir and lang attributes synced
   useEffect(() => {
     document.documentElement.lang = lang;
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
 
-  // Check URL query param `?room=XXXX` on mount
+  // A `?room=XXXX` link goes straight to the room: right away if we already know your name,
+  // otherwise after a one-field name card
+  const [inviteCode, setInviteCode] = useState<string | null>(() => {
+    const codeParam = new URLSearchParams(window.location.search).get('room');
+    return codeParam ? codeParam.trim().toUpperCase() : null;
+  });
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const codeParam = params.get('room');
-    if (codeParam) {
-      setJoinCodeInput(codeParam.toUpperCase());
-    }
+    if (!inviteCode) return;
+    setJoinCodeInput(inviteCode);
+    if (playerName.trim()) handleJoinRoom(undefined, inviteCode);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Reset liveDialAngle to 0 at the start of a new round
@@ -277,16 +308,17 @@ export function App() {
     }
   }, [room?.round_number, room?.status, room?.mode, room?.dial_angle]);
 
-  // Trigger Psychic Safety Curtain at the start of every psychic_clue phase (for Wavelength)
+  // Trigger Psychic Safety Curtain at the start of every psychic_clue phase (for Wavelength).
+  // Only on a shared device: online, the target shows on the psychic's own screen only
   useEffect(() => {
     const activeGame = room?.selected_game || 'wavelength';
     if (activeGame === 'wavelength' && room?.status === 'psychic_clue') {
-      setLocalPeekTarget(false);
-      setPsychicCurtainOpen(true);
+      setLocalPeekTarget(!isPassAndPlay);
+      setPsychicCurtainOpen(isPassAndPlay);
     } else {
       setPsychicCurtainOpen(false);
     }
-  }, [room?.status, room?.round_number, room?.selected_game]);
+  }, [room?.status, room?.round_number, room?.selected_game, isPassAndPlay]);
 
   // Trigger confetti on high score reveal!
   useEffect(() => {
@@ -326,9 +358,17 @@ export function App() {
           filter: `id=eq.${currentRoomId}`,
         },
         (payload) => {
-          if (payload.new) {
-            setRoom(payload.new as RoomState);
+          const incoming = payload.new as RoomState | undefined;
+          if (!incoming?.id) return;
+          // Our own write is in flight: it will hand us the merged room when it lands
+          if (pendingRoomWritesRef.current > 0) return;
+          // Updates that landed before our last write arrive late; skip them until our own echo
+          const waitingFor = awaitingEchoRef.current;
+          if (waitingFor) {
+            if (!sameRoomStamp(incoming.updated_at, waitingFor)) return;
+            awaitingEchoRef.current = null;
           }
+          setRoom(incoming);
         }
       )
       .on(
@@ -388,13 +428,25 @@ export function App() {
           spawnReaction(payload.reactionType as ReactionType, payload.senderName || '');
         }
       })
-      .subscribe();
+      // (Re)connected: anything we missed while offline is only in the database now
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') resyncRoom(currentRoomId);
+      });
 
     channelRef.current = channel;
+
+    // A phone that slept or switched apps misses updates, so catch up when it comes back
+    const onWake = () => {
+      if (document.visibilityState === 'visible') resyncRoom(currentRoomId);
+    };
+    document.addEventListener('visibilitychange', onWake);
+    window.addEventListener('online', onWake);
 
     return () => {
       supabase.removeChannel(channel);
       channelRef.current = null;
+      document.removeEventListener('visibilitychange', onWake);
+      window.removeEventListener('online', onWake);
     };
   }, [room?.id, isPassAndPlay, playerId, spawnReaction, lang, room?.mode]);
 
@@ -720,12 +772,12 @@ export function App() {
   };
 
   // Join Online Room
-  const handleJoinRoom = async (e?: React.FormEvent) => {
+  const handleJoinRoom = async (e?: React.FormEvent, codeOverride?: string) => {
     if (e) e.preventDefault();
     const validName = ensurePlayerIdentity();
     if (!validName) return;
 
-    const cleanCode = joinCodeInput.trim().toUpperCase();
+    const cleanCode = (codeOverride ?? joinCodeInput).trim().toUpperCase();
     if (!cleanCode) {
       setErrorMsg(lang === 'ar' ? 'اكتب كود الغرفة بالأول!' : 'Please enter a room code!');
       return;
@@ -757,9 +809,11 @@ export function App() {
         .order('joined_at', { ascending: true });
 
       const list = (existingPlayers as PlayerItem[]) || [];
+      // Coming back through the link (a refresh, a dropped connection) keeps your team and score
+      const returning = list.find((p) => p.id === playerId);
       const countA = list.filter((p) => p.team === 'A').length;
       const countB = list.filter((p) => p.team === 'B').length;
-      const assignedTeam: 'A' | 'B' = countA <= countB ? 'A' : 'B';
+      const assignedTeam: 'A' | 'B' = returning?.team || (countA <= countB ? 'A' : 'B');
 
       await supabase.from('wavelength_players').upsert({
         room_id: roomData.id,
@@ -767,7 +821,7 @@ export function App() {
         name: validName,
         avatar_color: playerColor,
         team: assignedTeam,
-        score: 0,
+        score: returning?.score || 0,
         is_host: roomData.host_id === playerId,
       });
 
@@ -780,6 +834,7 @@ export function App() {
       setIsPassAndPlay(false);
       setRoom(roomData as RoomState);
       setPlayers((updatedPlayers as PlayerItem[]) || []);
+      setInviteCode(null);
       window.history.replaceState({}, '', `?room=${cleanCode}`);
     } catch (err: any) {
       setErrorMsg(err?.message || 'Failed to join room');
@@ -919,21 +974,68 @@ export function App() {
     }
 
     if (room.psychic_id === targetPlayerId && remaining.length > 0) {
-      await updateRoomState({ psychic_id: remaining[0].id });
+      const sameTeam =
+        room.mode === 'teams' ? remaining.find((p) => p.team === room.active_team) : undefined;
+      await updateRoomState({ psychic_id: (sameTeam || remaining[0]).id });
     }
   };
 
+  // Writes only land on the room version we last saw. If another player wrote first, we
+  // fetch their version, replay our change on top of it (game_data merges key by key so two
+  // votes at once both survive), and try again
   const updateRoomState = async (patch: Partial<RoomState>) => {
     if (!room) return;
-    if (isPassAndPlay) {
-      setRoom((prev) => (prev ? { ...prev, ...patch } : null));
-      return;
-    }
     setRoom((prev) => (prev ? { ...prev, ...patch } : null));
-    await supabase
-      .from('wavelength_rooms')
-      .update({ ...patch, updated_at: new Date().toISOString() })
-      .eq('id', room.id);
+    if (isPassAndPlay) return;
+
+    // `room` is the state this screen showed when the player acted: the base of their change
+    const base = room;
+    let toWrite: Partial<RoomState> = patch;
+    let knownStamp = roomRef.current?.updated_at ?? base.updated_at ?? null;
+    pendingRoomWritesRef.current += 1;
+    try {
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const stamp = makeRoomStamp();
+        let query = supabase
+          .from('wavelength_rooms')
+          .update({ ...toWrite, updated_at: stamp })
+          .eq('id', base.id);
+        query = knownStamp ? query.eq('updated_at', knownStamp) : query.is('updated_at', null);
+        const { data: written, error } = await query.select('id');
+        if (error) {
+          console.error('Room update failed', error);
+          return;
+        }
+        if (written && written.length > 0) {
+          awaitingEchoRef.current = stamp;
+          setRoom((prev) => (prev && prev.id === base.id ? { ...prev, updated_at: stamp } : prev));
+          if (echoTimerRef.current) clearTimeout(echoTimerRef.current);
+          echoTimerRef.current = setTimeout(() => {
+            // The echo never came (dropped event): read the room directly instead
+            if (awaitingEchoRef.current === stamp) resyncRoom(base.id);
+          }, 2500);
+          return;
+        }
+
+        const { data: latest } = await supabase
+          .from('wavelength_rooms')
+          .select('*')
+          .eq('id', base.id)
+          .maybeSingle();
+        if (!latest) return;
+        const latestRoom = latest as RoomState;
+        toWrite = { ...patch };
+        if ('game_data' in patch) {
+          toWrite.game_data = mergeJson(base.game_data, patch.game_data, latestRoom.game_data);
+        }
+        knownStamp = latestRoom.updated_at ?? null;
+        setRoom({ ...latestRoom, ...toWrite });
+      }
+      console.error('Room update gave up after repeated conflicts');
+      resyncRoom(base.id);
+    } finally {
+      pendingRoomWritesRef.current -= 1;
+    }
   };
 
   const handleSwitchTeam = async (newTeam: 'A' | 'B') => {
@@ -953,7 +1055,11 @@ export function App() {
     const activeGame = room.selected_game || 'wavelength';
     const card = pickNextCard([], room.custom_cards);
     const target = generateRandomTargetAngle();
-    const firstPsychic = players[0]?.id || playerId;
+    // In teams mode the first psychic comes from team A, so the guessing team matches them
+    const firstPsychicPlayer =
+      (room.mode === 'teams' && players.find((p) => p.team === 'A')) || players[0];
+    const firstPsychic = firstPsychicPlayer?.id || playerId;
+    const firstTeam: 'A' | 'B' = room.mode === 'teams' ? firstPsychicPlayer?.team || 'A' : 'A';
     const initGameData = buildInitialGameData(activeGame, players);
     setClueInput('');
     setPlayers((prev) => prev.map((p) => ({ ...p, score: 0 })));
@@ -969,7 +1075,7 @@ export function App() {
       status: activeGame === 'wavelength' ? 'psychic_clue' : 'guessing',
       round_number: 1,
       psychic_id: firstPsychic,
-      active_team: 'A',
+      active_team: firstTeam,
       target_angle: target,
       dial_angle: 0,
       clue: '',
@@ -1185,9 +1291,11 @@ export function App() {
       room.team_b_score + (room.active_team === 'B' ? pts : bonus);
 
     if (pts > 0) {
-      const winnerIds = new Set<string>();
+      // The guessing team earned these points, not whoever called left/right
+      const winnerIds = new Set<string>(
+        players.filter((p) => p.team === room.active_team).map((p) => p.id)
+      );
       if (room.psychic_id) winnerIds.add(room.psychic_id);
-      if (!isPassAndPlay && playerId) winnerIds.add(playerId);
 
       const updatedPlayers = players.map((p) =>
         winnerIds.has(p.id) ? { ...p, score: (p.score || 0) + pts } : p
@@ -1220,6 +1328,24 @@ export function App() {
     });
   };
 
+  // Who gives the clue next round: the other team's turn in teams mode, everyone in turn otherwise
+  const getNextPsychicId = (current: RoomState): string | null => {
+    if (players.length === 0) return null;
+    const nextTeam: 'A' | 'B' = current.active_team === 'A' ? 'B' : 'A';
+    const candidatePool =
+      current.mode === 'teams' ? players.filter((p) => p.team === nextTeam) : players;
+    const pool = candidatePool.length > 0 ? candidatePool : players;
+    let nextIdx: number;
+    if (current.mode === 'teams') {
+      // Each team gives a clue every other round, so walk through its members in turn
+      nextIdx = Math.floor(current.round_number / 2) % pool.length;
+    } else {
+      const currentIdx = pool.findIndex((p) => p.id === current.psychic_id);
+      nextIdx = (currentIdx + 1) % pool.length;
+    }
+    return pool[nextIdx].id;
+  };
+
   const handleNextRound = async () => {
     if (!room) return;
     if (room.round_number >= room.max_rounds) {
@@ -1232,21 +1358,11 @@ export function App() {
     const nextTarget = generateRandomTargetAngle();
     const nextTeam: 'A' | 'B' = room.active_team === 'A' ? 'B' : 'A';
 
-    let nextPsychicId = playerId;
-    if (players.length > 0) {
-      const candidatePool =
-        room.mode === 'teams'
-          ? players.filter((p) => p.team === nextTeam)
-          : players;
-      const pool = candidatePool.length > 0 ? candidatePool : players;
-      const currentIdx = pool.findIndex((p) => p.id === room.psychic_id);
-      const nextIdx = (currentIdx + 1) % pool.length;
-      nextPsychicId = pool[nextIdx].id;
-    }
+    const nextPsychicId = getNextPsychicId(room) || playerId;
 
     setClueInput('');
-    setLocalPeekTarget(false);
-    setPsychicCurtainOpen(true);
+    setLocalPeekTarget(!isPassAndPlay);
+    setPsychicCurtainOpen(isPassAndPlay);
     setLiveDialAngle(0);
 
     await updateRoomState({
@@ -1366,6 +1482,7 @@ export function App() {
 
   const isPsychic = room ? (isPassAndPlay ? true : room.psychic_id === playerId) : false;
   const psychicPlayer = players.find((p) => p.id === room?.psychic_id);
+  const nextPsychicIdPreview = room ? getNextPsychicId(room) : null;
   const myPlayer = players.find((p) => p.id === playerId);
 
   const shouldShowTarget = (() => {
@@ -1387,6 +1504,13 @@ export function App() {
     }
     return true;
   })();
+
+  const isOnRivalTeam =
+    !!room && room.mode === 'teams' && !!myPlayer && myPlayer.team !== room.active_team;
+  // Only the team that isn't guessing calls left/right (anyone can on a shared device)
+  const canCallLeftRight = isPassAndPlay || !room || room.mode !== 'teams' || !myPlayer || isOnRivalTeam;
+  const activeTeamName = room?.active_team === 'B' ? t.teamB : t.teamA;
+  const rivalTeamName = room?.active_team === 'B' ? t.teamA : t.teamB;
 
   const leftCardText = room
     ? lang === 'ar'
@@ -1475,12 +1599,8 @@ export function App() {
       </div>
 
       {/* Top Cartoon Header Bar (Hidden in Immersive Fullscreen Board/Tabletop Mode to maximize vertical space!) */}
-      {!(
-        room &&
-        room.status !== 'lobby' &&
-        room.status !== 'finished' &&
-        activeGameId === 'boomdeck'
-      ) && (
+      {/* During a game the game bar is the only header, so the table gets the screen */}
+      {!(room && room.status !== 'lobby' && room.status !== 'finished') && (
         <header className="w-full max-w-7xl mx-auto px-4 pt-4 pb-2 flex items-center justify-between gap-2">
           <div
             onClick={() => {
@@ -1570,7 +1690,27 @@ export function App() {
             : 'justify-start'
         } [overflow-anchor:none]`}
       >
-        {!room ? (
+        {!room && inviteCode ? (
+          <InviteJoinCard
+            lang={lang}
+            code={inviteCode}
+            playerName={playerName}
+            onPlayerNameChange={setPlayerName}
+            playerColor={playerColor}
+            onPlayerColorChange={(c) => {
+              setPlayerColor(c);
+              setLocalPlayerColor(c);
+            }}
+            loading={loading}
+            errorMsg={errorMsg}
+            onJoin={() => handleJoinRoom(undefined, inviteCode)}
+            onGoHome={() => {
+              setInviteCode(null);
+              setErrorMsg(null);
+              window.history.replaceState({}, '', window.location.pathname);
+            }}
+          />
+        ) : !room ? (
           /* ================= ARCADE HUB HOME PAGE ================= */
           <HomePage
             lang={lang}
@@ -1928,58 +2068,29 @@ export function App() {
         ) : (
           /* ================= ACTIVE GAMEPLAY BOARD ================= */
           <div className="w-full space-y-3.5">
-            {/* Sleek Top Active Game & Room Control Bar */}
+            {/* One compact bar: what we're playing on the start side, score/sound/menu on the end */}
             <div
-              className={`flex items-center justify-between bg-[#25204d] border-[#120f29] rounded-2xl ${
+              className={`flex items-center justify-between gap-2 bg-[#25204d] border-[#120f29] rounded-2xl ${
                 isImmersiveTable
-                  ? 'flex-nowrap sm:flex-wrap gap-1.5 sm:gap-2.5 border-3 sm:border-4 shadow-[0_3px_0_#120f29] sm:shadow-[0_6px_0_#120f29] px-1.5 sm:px-4 pt-1 pb-2 sm:py-2.5 overflow-x-auto no-scrollbar sm:overflow-visible'
-                  : 'flex-wrap gap-2.5 border-4 shadow-[0_6px_0_#120f29] px-4 py-2.5'
+                  ? 'border-3 sm:border-4 shadow-[0_3px_0_#120f29] sm:shadow-[0_6px_0_#120f29] px-1.5 sm:px-3 py-1 sm:py-2'
+                  : 'border-4 shadow-[0_5px_0_#120f29] px-2 sm:px-3 py-2'
               }`}
             >
-              <div className={`flex items-center gap-1.5 sm:gap-2 ${isImmersiveTable ? 'flex-nowrap sm:flex-wrap shrink-0' : 'flex-wrap'}`}>
-                {/* Active Game Badge */}
-                <div
-                  className={`cartoon-badge bg-[#fff9ec] text-[#161426] px-3.5 py-1 text-sm items-center gap-2 ${
-                    isImmersiveTable ? 'hidden sm:flex' : 'flex'
-                  }`}
-                >
-                  <PartyGameSvgIcon gameId={activeGameId} className="w-5 h-5" />
-                  <span>
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <div className="cartoon-badge bg-[#fff9ec] text-[#161426] ps-1.5 pe-3 py-1 text-sm flex items-center gap-1.5 min-w-0">
+                  <PartyGameSvgIcon gameId={activeGameId} className="w-5 h-5 shrink-0" />
+                  <span className="truncate">
                     {lang === 'ar' ? activeGameMeta.name_ar : activeGameMeta.name_en}
                   </span>
                 </div>
 
-                {/* Quick Animated Guide Button in Active Room */}
-                <button
-                  type="button"
-                  onClick={() => openHowToPlayFor(activeGameId)}
-                  className="cartoon-btn bg-[#00bbf9] text-[#161426] px-3 py-1.5 text-xs sm:text-sm flex items-center gap-1.5"
-                >
-                  <FilmStrip weight="fill" className="w-4 h-4" />
-                  <span className={isImmersiveTable ? 'hidden sm:inline' : ''}>
-                    {lang === 'ar' ? 'شرح متحرك' : 'Guide'}
-                  </span>
-                </button>
-
-                {/* Switch Game Modal Button (For Host / Pass & Play) */}
-                {(isHost || isPassAndPlay) && (
-                  <button
-                    type="button"
-                    onClick={() => setShowGamePickerModal(true)}
-                    className="cartoon-btn bg-[#ffca3a] text-[#161426] px-3.5 py-1.5 text-xs sm:text-sm flex items-center gap-1.5"
-                  >
-                    <SquaresFour weight="fill" className="w-4 h-4" />
-                    <span className={isImmersiveTable ? 'hidden sm:inline' : ''}>
-                      {lang === 'ar'
-                        ? `تبديل اللعبة (${PARTY_GAMES_CATALOG.length})`
-                        : `Switch Game (${PARTY_GAMES_CATALOG.length})`}
-                    </span>
-                  </button>
-                )}
-
                 {activeGameId === 'wavelength' && (
-                  <span className="cartoon-badge bg-[#191636] text-[#ffca3a] px-3 py-1 text-xs">
-                    {t.round} {room.round_number} {t.of} {room.max_rounds}
+                  <span
+                    className="cartoon-badge bg-[#191636] text-[#ffca3a] px-2.5 py-1 text-xs shrink-0"
+                    dir="ltr"
+                    aria-label={`${t.round} ${room.round_number} ${t.of} ${room.max_rounds}`}
+                  >
+                    {room.round_number}/{room.max_rounds}
                   </span>
                 )}
 
@@ -1987,64 +2098,69 @@ export function App() {
                   <button
                     type="button"
                     onClick={copyInviteLink}
-                    className="cartoon-badge bg-[#191636] text-[#00bbf9] px-3 py-1 text-xs flex items-center gap-1 cursor-pointer"
+                    aria-label={lang === 'ar' ? 'انسخ رابط الدعوة' : 'Copy invite link'}
+                    className="cartoon-badge bg-[#191636] text-[#00bbf9] px-2.5 py-1 text-xs hidden sm:flex items-center gap-1 cursor-pointer shrink-0"
                   >
-                    <span>#{room.code}</span>
+                    <span dir="ltr">#{room.code}</span>
                     {copiedCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 )}
               </div>
 
-              {/* Psychic Indicator (Only for Wavelength!) */}
-              {activeGameId === 'wavelength' && (
-                <div className="flex items-center gap-2 text-sm font-extrabold">
-                  <Sparkle weight="fill" className="w-5 h-5 text-[#ff924c]" />
-                  <span>{t.psychicRole}:</span>
-                  <span className="text-[#ffca3a]">
-                    {isPassAndPlay
-                      ? lang === 'ar'
-                        ? 'اللاعب الحالي'
-                        : 'Current Psychic'
-                      : psychicPlayer?.name || '...'}
-                  </span>
-                </div>
-              )}
-
-              {/* Room Total Score + Quick Lang/Exit in Immersive Tabletop Mode */}
-              <div className={`flex items-center gap-1.5 sm:gap-2 ${isImmersiveTable ? 'flex-nowrap sm:flex-wrap shrink-0' : 'flex-wrap'}`}>
-                <AudioControlPanel lang={lang} compact />
-
-                <div className="cartoon-badge bg-[#8ac926] text-[#161426] px-3.5 py-1 text-xs sm:text-sm flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <div
+                  className="cartoon-badge bg-[#8ac926] text-[#161426] px-2.5 py-1 text-xs sm:text-sm flex items-center gap-1"
+                  aria-label={`${t.totalScore}: ${room.coop_score}`}
+                >
                   <Trophy weight="fill" className="w-4 h-4" />
-                  <span>
-                    <span className={isImmersiveTable ? 'hidden sm:inline' : ''}>{t.totalScore}: </span>
-                    {room.coop_score}
-                  </span>
+                  <span>{room.coop_score}</span>
                 </div>
-
-                {activeGameId === 'boomdeck' && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
-                      className="cartoon-btn bg-[#00bbf9] text-[#161426] px-2.5 py-1 text-xs flex items-center gap-1"
-                    >
-                      <Globe weight="bold" className="w-4 h-4" />
-                      <span className="hidden sm:inline">{t.langToggle}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleLeaveRoom}
-                      className="cartoon-btn bg-[#ff595e] text-white px-2.5 py-1 text-xs flex items-center gap-1"
-                      title={t.leaveRoom}
-                    >
-                      <SignOut weight="bold" className="w-4 h-4" />
-                      <span className="hidden sm:inline">{t.leaveRoom}</span>
-                    </button>
-                  </>
-                )}
+                <AudioControlPanel lang={lang} compact />
+                <RoomMenu
+                  lang={lang}
+                  canSwitchGame={isHost || isPassAndPlay}
+                  gameCount={PARTY_GAMES_CATALOG.length}
+                  onGuide={() => openHowToPlayFor(activeGameId)}
+                  onSwitchGame={() => setShowGamePickerModal(true)}
+                  onToggleLang={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+                  onLeave={handleLeaveRoom}
+                  onCopyInvite={isPassAndPlay ? undefined : copyInviteLink}
+                />
               </div>
             </div>
+
+            {/* Who gives the clue this round (Wavelength only) */}
+            {activeGameId === 'wavelength' && (
+              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-extrabold text-[#fff9ec]">
+                <Sparkle weight="fill" className="w-5 h-5 text-[#ff924c]" />
+                <span>{t.psychicRole}:</span>
+                <span className="text-[#ffca3a]">
+                  {isPassAndPlay
+                    ? lang === 'ar'
+                      ? 'اللاعب الحالي'
+                      : 'Current Psychic'
+                    : isPsychic
+                    ? lang === 'ar'
+                      ? 'إنت!'
+                      : 'You!'
+                    : psychicPlayer?.name || '...'}
+                </span>
+                {room.mode === 'teams' && (
+                  <span
+                    className={`cartoon-badge px-2.5 py-0.5 text-xs text-[#161426] ${
+                      room.active_team === 'B' ? 'bg-[#00bbf9]' : 'bg-[#ff924c]'
+                    }`}
+                  >
+                    {lang === 'ar' ? `دور ${activeTeamName}` : `${activeTeamName}'s turn`}
+                    {myPlayer && !isPassAndPlay && myPlayer.team === room.active_team
+                      ? lang === 'ar'
+                        ? ' (فريقك)'
+                        : ' (yours)'
+                      : ''}
+                  </span>
+                )}
+              </div>
+            )}
 
             {/* MAIN GAMEPLAY + LEADERBOARD GRID (Full-width 12 cols for Board & Card Table Games!) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -2415,7 +2531,7 @@ export function App() {
                       </div>
                     )}
 
-                    {isPsychic && room.status === 'psychic_clue' && !psychicCurtainOpen && (
+                    {isPassAndPlay && isPsychic && room.status === 'psychic_clue' && !psychicCurtainOpen && (
                       <div className="flex justify-center">
                         <button
                           type="button"
@@ -2461,7 +2577,7 @@ export function App() {
                         (isPsychic ? (
                           <form
                             onSubmit={handleSubmitClue}
-                            className="cartoon-card p-5 space-y-3 text-center"
+                            className="cartoon-card p-3.5 sm:p-5 space-y-2.5 sm:space-y-3 text-center"
                           >
                             <div className="flex items-center justify-center gap-2 text-[#ff595e] font-extrabold text-lg">
                               <Sparkle weight="fill" className="w-6 h-6" />
@@ -2501,7 +2617,7 @@ export function App() {
                         ))}
 
                       {room.status === 'guessing' && (
-                        <div className="cartoon-card p-5 text-center space-y-3.5">
+                        <div className="cartoon-card p-3.5 sm:p-5 text-center space-y-2.5 sm:space-y-3.5">
                           {canDragDial ? (
                             <>
                               <p className="font-extrabold text-base text-[#161426]">
@@ -2545,7 +2661,13 @@ export function App() {
                           ) : (
                             <p className="font-extrabold text-base text-[#161426] flex items-center justify-center gap-2">
                               <Eye weight="fill" className="w-5 h-5 text-[#1982c4]" />
-                              <span>{t.psychicWatchingInstruction}</span>
+                              <span>
+                                {isPsychic || !isOnRivalTeam
+                                  ? t.psychicWatchingInstruction
+                                  : lang === 'ar'
+                                  ? `${activeTeamName} عم يحزر هلق. جهزوا حالكم، بعدها بتقولوا الهدف يمين ولا يسار.`
+                                  : `${activeTeamName} is guessing now. Get ready to call left or right next.`}
+                              </span>
                             </p>
                           )}
 
@@ -2601,6 +2723,16 @@ export function App() {
                           <h3 className="font-extrabold text-lg text-[#161426]">
                             {t.otherTeamTurn}
                           </h3>
+                          {!canCallLeftRight ? (
+                            <p className="font-extrabold text-sm text-[#3f3b5c] flex items-center justify-center gap-2">
+                              <Hourglass weight="bold" className="w-4 h-4" />
+                              <span>
+                                {lang === 'ar'
+                                  ? `استنوا ${rivalTeamName} يقرر: الهدف يمين المؤشر ولا يساره؟`
+                                  : `Waiting for ${rivalTeamName} to call left or right...`}
+                              </span>
+                            </p>
+                          ) : (
                           <div dir="ltr" className="grid grid-cols-2 gap-3">
                             <button
                               type="button"
@@ -2617,6 +2749,7 @@ export function App() {
                               {t.guessRight}
                             </button>
                           </div>
+                          )}
                         </div>
                       )}
 
@@ -2752,6 +2885,11 @@ export function App() {
                     .map((p, index) => {
                       const isCurrentPsychic =
                         activeGameId === 'wavelength' && p.id === room.psychic_id;
+                      const isNextPsychic =
+                        activeGameId === 'wavelength' &&
+                        room.round_number < room.max_rounds &&
+                        !isCurrentPsychic &&
+                        p.id === nextPsychicIdPreview;
                       return (
                         <div
                           key={p.id}
@@ -2802,6 +2940,11 @@ export function App() {
                               {isCurrentPsychic && (
                                 <span className="text-xs font-extrabold text-[#ffca3a] block">
                                   {t.currentPsychicBadge}
+                                </span>
+                              )}
+                              {isNextPsychic && (
+                                <span className="text-xs font-extrabold text-[#9fd8ff] block">
+                                  {lang === 'ar' ? 'العرّاف الجاي' : 'Psychic next round'}
                                 </span>
                               )}
                             </div>

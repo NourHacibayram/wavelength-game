@@ -179,7 +179,11 @@ export const WavelengthWheel: React.FC<WavelengthWheelProps> = ({
   ];
 
   return (
-    <div className="relative w-full max-w-[600px] mx-auto select-none">
+    <div
+      // Shrinks on short screens so the card and the clue box below it stay in view
+      style={{ maxWidth: 'min(600px, 62svh)' }}
+      className="relative w-full mx-auto select-none"
+    >
       {/* Status Pill Above the Wheel */}
       <div className="flex items-center justify-center mb-2">
         {showTarget ? (
@@ -443,10 +447,10 @@ export const WavelengthWheel: React.FC<WavelengthWheelProps> = ({
                 {otherTeamGuess === 'left'
                   ? lang === 'ar'
                     ? '← تخمين الخصم'
-                    : '← Team B Guess'
+                    : '← Rivals’ call'
                   : lang === 'ar'
                   ? 'تخمين الخصم →'
-                  : 'Team B Guess →'}
+                  : 'Rivals’ call →'}
               </text>
             </g>
           )}

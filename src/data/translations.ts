@@ -34,7 +34,7 @@ export const TRANSLATIONS = {
     teamB: 'الفريق الأزرق',
     joinTeamA: 'انضم للبرتقالي',
     joinTeamB: 'انضم للأزرق',
-    psychicRole: 'العرّاف (Psychic)',
+    psychicRole: 'العرّاف',
     youArePsychic: 'إنت العرّاف بهاي الجولة!',
     psychicHintInstruction: 'شوف وين الهدف الملوّن مخبّى، واكتب تلميح ذكي يخلّيهم يجيبوا المؤشر عالرقم 4!',
     cluePlaceholder: 'اكتب التلميح هون (مثلاً: قهوة الصبح)...',

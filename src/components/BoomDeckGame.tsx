@@ -4435,9 +4435,15 @@ const ScryMixOverlay: React.FC<{
           : 'These are the top 3. Remember them!'}
       </h3>
 
-      <div dir="ltr" className="flex items-center justify-center" style={{ height: slotH }}>
+      <div
+        dir="ltr"
+        className={`flex items-center justify-center ${ar ? 'flex-row-reverse' : ''}`}
+        style={{ height: slotH }}
+      >
         {cards.map((card, idx) => {
-          const toCenter = ((cards.length - 1) / 2 - idx) * slotW;
+          // the next card sits at the reading start, like every other deck row
+          const screenIdx = ar ? cards.length - 1 - idx : idx;
+          const toCenter = ((cards.length - 1) / 2 - screenIdx) * slotW;
           return (
             <motion.div
               key={card.id}
@@ -5033,43 +5039,48 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
   };
 
   // Countdown for the 3-second Counter ("بلوك!") Window (only when someone actually holds a Block card)
+  // The countdown is tied to one window, so a 0 left over from the last window can't
+  // resolve the next card before anyone gets a chance to block it
+  const counterWindowKey =
+    gameData.phase === 'counter_window' && gameData.pendingAction
+      ? `${gameData.pendingAction.id}:${gameData.pendingAction.blockedCount}`
+      : null;
+  const [expiredCounterKey, setExpiredCounterKey] = useState<string | null>(null);
+
   useEffect(() => {
-    if (gameData.phase !== 'counter_window' || !gameData.pendingAction) return;
+    if (!counterWindowKey || !gameData.pendingAction) return;
     const eligible = getEligibleBlockerIds(gameData, gameData.pendingAction);
     if (eligible.length === 0) {
       setCounterSecondsLeft(0);
+      setExpiredCounterKey(counterWindowKey);
       return;
     }
     setCounterSecondsLeft(3);
+    let left = 3;
     const interval = setInterval(() => {
-      setCounterSecondsLeft((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          return 0;
-        }
-        return prev - 1;
-      });
+      left -= 1;
+      setCounterSecondsLeft(Math.max(0, left));
+      if (left <= 0) {
+        clearInterval(interval);
+        setExpiredCounterKey(counterWindowKey);
+      }
     }, 1000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    gameData.phase,
-    gameData.pendingAction?.id,
-    gameData.pendingAction?.blockedCount,
-  ]);
+  }, [counterWindowKey]);
 
-  // Auto-resolve Counter Window when timer hits 0 (or immediately if no rival holds a Block card)
+  // Auto-resolve Counter Window when its own timer runs out (or right away if no rival holds a Block card)
   useEffect(() => {
     if (
-      gameData.phase === 'counter_window' &&
-      counterSecondsLeft === 0 &&
+      counterWindowKey &&
+      expiredCounterKey === counterWindowKey &&
       gameData.pendingAction &&
       (isHost || isPassAndPlay || myPlayerId === gameData.pendingAction.actorId)
     ) {
       resolvePendingAction();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [counterSecondsLeft, gameData.phase]);
+  }, [expiredCounterKey, counterWindowKey]);
 
   const toggleFullScreenArena = () => {
     const next = !isFullscreen;
@@ -7482,7 +7493,7 @@ export const BoomDeckGame: React.FC<BoomDeckGameProps> = ({
                   </button>
                 </div>
 
-                <div dir="ltr" className="flex items-start justify-center gap-1.5 sm:gap-3">
+                <div className="flex items-start justify-center gap-1.5 sm:gap-3">
                   {gameData.radarCards.map((rc, idx) => (
                     <div
                       key={rc.id}
