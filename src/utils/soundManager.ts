@@ -39,6 +39,7 @@ export type SfxId =
   | 'explosion'
   | 'heavy_slam'
   | 'metal_click'
+  | 'gun_click'
   | 'dice_shake'
   | 'dice_roll'
   | 'chip_place'
@@ -183,6 +184,13 @@ export const SFX_CATALOG: Record<SfxId, SfxMeta> = {
     label_en: 'Cartoon Radar Sonar Ping',
     baseVolume: 0.9,
   },
+  gun_click: {
+    id: 'gun_click',
+    urls: ['/audio/sfx/gun-click.ogg'],
+    label_ar: 'تلقيم مسدس الماء الكرتوني',
+    label_en: 'Cartoon Cap-Gun Cock',
+    baseVolume: 0.95,
+  },
   dice_shake: {
     id: 'dice_shake',
     urls: ['/audio/sfx/dice-shake.ogg'],
@@ -294,6 +302,8 @@ class SoundManager {
   private musicRequest = 0;
   private sfxPreloadCache: Map<string, HTMLAudioElement> = new Map();
   private sfxVariationCursor: Map<SfxId, number> = new Map();
+  private sfxLastPlayedAt: Map<SfxId, number> = new Map();
+  private lastTransitionSfxAt = 0;
   private activeLoopSfx: Map<SfxId, HTMLAudioElement> = new Map();
   private listeners: Set<() => void> = new Set();
   private unlocked: boolean = false;
@@ -527,6 +537,7 @@ class SoundManager {
     if (typeof window === 'undefined' || !this.sfxEnabled) return;
     const meta = SFX_CATALOG[id];
     if (!meta || meta.urls.length === 0) return;
+    this.sfxLastPlayedAt.set(id, Date.now());
 
     const cursor = this.sfxVariationCursor.get(id) || 0;
     const url = meta.urls[cursor % meta.urls.length];
@@ -583,7 +594,18 @@ class SoundManager {
   }
 
   /**
-   * Automatically triggers real Foley SFX across all 27 games when `game_data` updates!
+   * Plays a sound unless the same one already played in the last `windowMs`.
+   * The player who acts hears their sound right away, and the same move then
+   * arrives back from the server — this stops it from playing twice.
+   */
+  private playSfxOnce(id: SfxId, windowMs = 1500) {
+    const last = this.sfxLastPlayedAt.get(id) ?? 0;
+    if (Date.now() - last < windowMs) return;
+    this.playSfx(id);
+  }
+
+  /**
+   * Plays a sound when a synced game state changes, for every player in the room.
    */
   public playGameDataTransitionSfx(
     gameId: PartyGameId,
@@ -593,64 +615,63 @@ class SoundManager {
   ) {
     if (!this.sfxEnabled || !nextData) return;
 
-    // 1. Check if someone won the round or earned points
+    const phaseChanged = prevData?.phase !== nextData?.phase;
     const hasScoreAwards =
       scoreAwards &&
       Object.values(scoreAwards).some((pts) => typeof pts === 'number' && pts > 0);
 
-    // Special handling for BoomDeck ("الفتيل الملعون") cinematics
+    // Boom Deck: react to each new cinematic event once
     if (gameId === 'boomdeck') {
       const prevCinId = prevData?.lastCinematic?.id;
       const nextCin = nextData?.lastCinematic;
       if (nextCin && nextCin.id !== prevCinId) {
+        const id: string = String(nextCin.id || '');
+        // `cin_<time>` = a card was just thrown on the table; the effect sound plays when it resolves (`cin_res_`)
+        const isCardThrown = /^cin_\d/.test(id);
         switch (nextCin.type) {
           case 'exploded':
-            this.playSfx('explosion');
-            return;
+            this.playSfxOnce('explosion');
+            break;
           case 'defuse':
-            // Handled by defuseShowdown effect so it doesn't double-fire
-            return;
+            // the defuse showdown plays its own tick + snip
+            break;
           case 'planted':
-            this.playSfx('card_shove');
-            return;
-          case 'shuffle':
-          case 'scry':
-            this.playSfx('card_shuffle');
-            return;
-          case 'radar':
-          case 'stack_deck':
-            this.playSfx('metal_click');
-            return;
           case 'bottom_draw':
-            this.playSfx('card_shove');
-            return;
-          case 'block':
-            this.playSfx('heavy_slam');
-            return;
-          case 'magnet':
-            this.playSfx('card_shove');
-            return;
-          case 'attack':
-          case 'skip':
-          case 'reverse':
-            this.playSfx('card_play');
-            return;
+            this.playSfxOnce('card_shove');
+            break;
           case 'draw_safe':
           case 'bomb':
-            this.playSfx('card_draw');
-            return;
+            this.playSfxOnce('card_draw');
+            break;
+          case 'block':
+            this.playSfxOnce('heavy_slam');
+            break;
+          default:
+            if (isCardThrown) {
+              this.playSfxOnce('card_play');
+            } else if (nextCin.type === 'shuffle' || nextCin.type === 'scry') {
+              this.playSfxOnce('card_shuffle');
+            } else if (nextCin.type === 'radar' || nextCin.type === 'stack_deck') {
+              this.playSfxOnce('metal_click');
+            } else if (nextCin.type === 'magnet') {
+              this.playSfxOnce('card_shove');
+            } else {
+              this.playSfxOnce('ui_switch');
+            }
         }
       }
-      if (
-        prevData?.phase !== 'round_over' &&
-        nextData?.phase === 'round_over'
-      ) {
-        setTimeout(() => this.playSfx('applause_win'), 550);
+      if (prevData?.phase !== 'round_over' && nextData?.phase === 'round_over') {
+        setTimeout(() => this.playSfxOnce('applause_win', 2500), 550);
       }
       return;
     }
 
-    // 3. Card Games (Dixit, The Mind, Ito, Cockroach, Sheriff)
+    // Other games: one sound per change at most every 350ms, so fast updates don't stack up
+    const now = Date.now();
+    if (now - this.lastTransitionSfxAt < 350) return;
+    this.lastTransitionSfxAt = now;
+
+    // Card games
     if (
       gameId === 'dixit' ||
       gameId === 'themind' ||
@@ -658,23 +679,23 @@ class SoundManager {
       gameId === 'cockroach' ||
       gameId === 'sheriff'
     ) {
-      if (prevData?.phase !== nextData?.phase) {
+      if (phaseChanged) {
         if (
           nextData?.phase === 'reveal' ||
           nextData?.phase === 'inspection' ||
           nextData?.phase === 'round_over'
         ) {
-          this.playSfx('book_flip');
+          this.playSfxOnce('book_flip', 400);
         } else {
-          this.playSfx('card_fan');
+          this.playSfxOnce('card_fan', 400);
         }
         return;
       }
-      this.playSfx('card_play');
+      this.playSfxOnce('card_play', 300);
       return;
     }
 
-    // 4. Bidding, Chips & Bluffing Discs (Skull, Art Auction, Split or Steal, Wits)
+    // Bidding, chips and bluffing discs
     if (
       gameId === 'skull' ||
       gameId === 'artauction' ||
@@ -682,44 +703,45 @@ class SoundManager {
       gameId === 'wits'
     ) {
       if (hasScoreAwards) {
-        this.playSfx('applause_win');
+        this.playSfxOnce('applause_win', 2500);
         return;
       }
-      if (prevData?.phase !== nextData?.phase) {
-        this.playSfx('heavy_slam');
+      if (phaseChanged) {
+        this.playSfxOnce('heavy_slam', 400);
         return;
       }
-      this.playSfx('chip_place');
+      this.playSfxOnce('chip_place', 300);
       return;
     }
 
-    // 5. Word Bomb & Taboo
+    // Word Bomb: only the explosion and turn/phase changes, not every keystroke
     if (gameId === 'wordbomb') {
-      if (prevData?.explodedPlayerId !== nextData?.explodedPlayerId && nextData?.explodedPlayerId) {
-        this.playSfx('explosion');
-        return;
+      if (
+        nextData?.explodedPlayerId &&
+        prevData?.explodedPlayerId !== nextData?.explodedPlayerId
+      ) {
+        this.playSfxOnce('explosion');
+      } else if (phaseChanged) {
+        this.playSfxOnce('ui_switch', 400);
       }
-      this.playSfx('ui_switch');
       return;
     }
 
-    // 6. Cash 'n Guns
+    // Cash 'n Guns: cartoon cap-gun when the phase changes (aiming, firing)
     if (gameId === 'cashnguns') {
-      if (prevData?.phase !== nextData?.phase) {
-        this.playSfx('metal_click');
+      if (phaseChanged) {
+        this.playSfxOnce('gun_click', 400);
         return;
       }
-      this.playSfx('chip_place');
+      this.playSfxOnce('chip_place', 300);
       return;
     }
 
-    // 7. Generic fallback for all other games (One Night, Resistance, Chameleon, Insider, Decrypto, Alibi, Fake Artist, etc.)
+    // Everything else: only phase changes make a sound
     if (hasScoreAwards) {
-      this.playSfx('applause_win');
-    } else if (prevData?.phase !== nextData?.phase) {
-      this.playSfx('book_flip');
-    } else {
-      this.playSfx('ui_switch');
+      this.playSfxOnce('applause_win', 2500);
+    } else if (phaseChanged) {
+      this.playSfxOnce('book_flip', 400);
     }
   }
 }

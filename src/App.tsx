@@ -1534,21 +1534,17 @@ export function App() {
     soundManager.setGameContext(room ? activeGameId : homeSelectedGame);
   }, [room?.id, activeGameId, homeSelectedGame]);
 
-  // Automatically trigger real studio-recorded Foley SFX across all 27 games whenever `room.game_data` updates!
-  const prevGameDataRef = useRef<any>(null);
+  // Play a sound when the game state really changes (not on unrelated room updates or game switches)
+  const prevGameDataRef = useRef<{ gameId: PartyGameId; json: string; data: any } | null>(null);
   useEffect(() => {
-    if (!room || room.status === 'lobby') {
-      prevGameDataRef.current = room?.game_data || null;
-      return;
-    }
-    if (prevGameDataRef.current && room.game_data && prevGameDataRef.current !== room.game_data) {
-      soundManager.playGameDataTransitionSfx(
-        activeGameId,
-        prevGameDataRef.current,
-        room.game_data
-      );
-    }
-    prevGameDataRef.current = room.game_data;
+    const data = room?.game_data || null;
+    const json = data ? JSON.stringify(data) : '';
+    const prev = prevGameDataRef.current;
+    prevGameDataRef.current = data ? { gameId: activeGameId, json, data } : null;
+
+    if (!room || room.status === 'lobby' || !data || !prev) return;
+    if (prev.gameId !== activeGameId || prev.json === json) return;
+    soundManager.playGameDataTransitionSfx(activeGameId, prev.data, data);
   }, [room?.game_data, activeGameId, room?.status]);
 
   const wavelengthGuesses: Record<string, number> =
